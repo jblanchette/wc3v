@@ -314,6 +314,32 @@ const scout = window.createScout({
 // Free tags on a game, in a sidecar the schema cannot eat. See js/game-tags.js.
 const gameTags = window.createGameTags({ invoke, log, errText });
 
+// The replay folder tree: what is read, what each folder is called, which
+// game came from where. See js/folders.js. A change to it changes what the
+// scanner and the watcher cover, so both are restarted here; the watcher
+// REPLACES itself on a second start (watcher.rs), which is what makes a
+// folder added in Settings take effect without relaunching the app.
+const folders = window.createFolders({
+  invoke,
+  log,
+  errText,
+  onChange: async () => {
+    try {
+      const n = await invoke('start_watching');
+      log(`watching ${n} replay folder(s)`, 'ok');
+    } catch (e) {
+      log(`could not restart the folder watcher: ${errText(e)}`, 'err');
+    }
+    settingsView.renderRoots();
+    firstRun.renderRoots();
+    // Folder labels and on/off states show in the filters and on the report.
+    if (store.corpus) {
+      gamesView.render(store.corpus);
+      if (currentView === 'library') libraryView.render(store.corpus);
+    }
+  }
+});
+
 const gamesView = window.createGamesView({
   log,
   store,
@@ -324,7 +350,8 @@ const gamesView = window.createGamesView({
   // sends you there instead of carrying a second copy of the button.
   onGoToSettings: () => openSettings(),
   onOpenProfile: openProfile,
-  tags: gameTags
+  tags: gameTags,
+  folders
 });
 
 const profileView = window.createProfileView({
@@ -337,6 +364,7 @@ const profileView = window.createProfileView({
 const libraryView = window.createLibraryView({
   log,
   store,
+  folders,
   identityName: () => identity.name,
   onWatch: (summary, moment) => watchMoment(summary, moment),
   onReparse: (summary) => reparse(summary),
@@ -386,7 +414,13 @@ const backfill = window.createBackfill({
   // goes through the backfill, so a game just played always parses.
   peekOn: (worker, path) => peekPlayers(worker, path),
   only1v1: () => invoke('only_1v1_enabled'),
-  persistSummary: store.persistSummary,
+  // Where each game came from goes into the folder sidecar as it lands,
+  // batched by js/folders.js so a 4,000-game run is not 4,000 file writes.
+  persistSummary: async (out, key, playedAt, path) => {
+    const summary = await store.persistSummary(out, key, playedAt);
+    folders.recordSource(key, path);
+    return summary;
+  },
   isCurrent: (key) => store.isCurrent(key),
   status: (text) => {
     el('backfill-status').textContent = text;
@@ -443,9 +477,7 @@ const settingsView = window.createSettingsView({
   log,
   errText,
   backfill: () => backfill,
-  roots: () => state.roots,
-  addRoot: (root) => state.roots.push(root),
-  onScan: (path) => scan(path),
+  folders,
   identityName: () => identity.name,
   notifyEnabled,
   setNotifyEnabled: (on) => localStorage.setItem(NOTIFY_KEY, on ? '1' : '0'),
@@ -466,9 +498,7 @@ const firstRun = window.createFirstRun({
   invoke,
   log,
   errText,
-  roots: () => state.roots,
-  addRoot: (root) => state.roots.push(root),
-  onScan: (path) => scan(path),
+  folders,
   // Typing your own name is a confirmation, so auto-detection never overrides
   // it afterwards.
   setIdentity: (name) => identity.confirm(name),
@@ -514,16 +544,13 @@ const addReplayFolder = async () => {
   const dir = String(picked).replace(/[\\/][^\\/]*$/, '');
   if (!dir) { log('could not work out which folder that replay is in', 'err'); return; }
 
-  try {
-    const root = await invoke('add_root', { path: dir });
-    state.roots.push(root);
-    // Everything in that folder, not only the file that was clicked. Somebody
-    // pointing at one downloaded replay almost always has the rest beside it,
-    // and scanning the folder is already the path every other replay takes in.
-    log(`watching ${root.path}`, 'ok');
-    scan(root.path);
-  } catch (e) {
-    log(`could not add that folder: ${errText(e)}`, 'err');
+  // Everything in that folder, not only the file that was clicked. Somebody
+  // pointing at one downloaded replay almost always has the rest beside it,
+  // and the folder joins the tree in Settings like any other, remembered
+  // across restarts and watched from now on.
+  if (await folders.add(dir)) {
+    log('added that folder. It is in Settings under Replay folders.', 'ok');
+    scan(dir);
   }
 };
 
@@ -691,6 +718,7 @@ const run = async (path, opts = {}) => {
       setStatus(`read in ${(ms / 1000).toFixed(1)} s`);
       try {
         summary = await store.persistSummary(out, key, modifiedMs);
+        folders.recordSource(key, path);
       } catch (e) {
         log(`could not save that game: ${errText(e)}`, 'warn');
       }
@@ -1001,6 +1029,9 @@ const boot = async () => {
   await loadMapBounds();
   const info = await invoke('init');
   state.roots = info.roots;
+  // The folder tree, before anything that draws it. Settings and the
+  // first-run screen both mount it; the summary line reads its counts.
+  await folders.load();
   settingsView.renderRoots();
   settingsView.syncAutostart();
   settingsView.syncW3c();
@@ -1098,6 +1129,15 @@ const boot = async () => {
 
   store.loadCorpus().then((corpus) => {
     gamesView.render(corpus);
+    // Which folder each stored game came from. Games parsed before the
+    // sidecar existed are matched to their files by size, then hash, in one
+    // background pass; the feed repaints once it knows, so the folder filter
+    // and the report chip fill in rather than staying blank forever.
+    folders.resolveAll().then(() => {
+      if (!store.corpus) return;
+      gamesView.render(store.corpus);
+      if (currentView === 'library') libraryView.render(store.corpus);
+    });
     // The scout card may already be up, drawn before there was any history to
     // read the opponent's record out of.
     scout.refresh();

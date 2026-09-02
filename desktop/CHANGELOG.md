@@ -1,5 +1,30 @@
 # WC3V Desktop: changelog
 
+## 1.0.9
+
+### Your replay folders, as you sorted them
+
+People sort replays into folders to label them: a Ladder folder, a Study
+folder, one per opponent they are working on. The app used to see one flat
+pile per Battle.net account and nothing of that.
+
+Every folder that holds replays is now its own row, drawn as a tree under the
+account it lives in, with the game's own Autosaved folders beside the ones
+you made. Each row can be switched off, renamed, or removed, on the first-run
+screen and again in Settings under Replay folders. The name shown is the
+folder's own name until you change it; the app never shows a path. Nothing
+here touches the disk: off means the app skips that folder, remove means it
+stops looking there, and "Look again" brings everything back.
+
+The feed and the Library can filter to one folder, and every report shows the
+folder its replay came from beside the tags. Games parsed before this release
+are matched to their folders at start-up, in the background.
+
+Two things that were quietly broken are fixed with it. A folder added by hand
+was forgotten on the next restart and, while it lasted, was scanned once and
+never watched: a game saved into it did not appear until Parse all replays.
+Both now persist, and any folder change restarts the watcher on the spot.
+
 ## 1.0.8 — 31 Aug 2026
 
 ### Only parse 1v1 games, if that is all you care about

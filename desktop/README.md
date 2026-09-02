@@ -1,933 +1,378 @@
 # WC3V Desktop
 
-Watches your Warcraft III replay folders, parses each game locally the moment it
-finishes, and drives an OBS-ready overlay.
+Watches your Warcraft III replay folders, parses each game locally the moment
+it finishes, and drives an OBS-ready overlay. Public since 1.0.0 at
+[wc3v.com/download](https://wc3v.com/download); `CHANGELOG.md` is the version
+history.
 
-**Status: launched at 1.0.0.** Discovery, scanning, watching, local parsing,
-summary persistence, the backfill engine, the profile and coach layer, the OBS
-overlay, the games UI, the W3Champions Next game panel and the "open this
-moment in the viewer" handoff are all built and shipped.
-`wc3v.com/download.html` is the public download; it reads the same
-`latest.json` the updater does, so it always points at the current installer.
-Version history is in `CHANGELOG.md`.
+The window is a feed of your games. You finish a match, alt-tab, and the read
+is already done: did I win, what did they do, where did the game turn.
+Clicking a moment opens it in the 3D viewer on wc3v.com at that second.
 
-The window is a feed of your games. You finish a match, alt-tab, and the read is
-already done: did I win, what did they do, where did the game turn. Clicking a
-moment opens it in the 3D viewer on wc3v.com at that second.
+Every screen answers to one sentence. **Last game is the product. Coach is
+Last game aggregated over time. Library is everybody else's last game. Stream
+is any of them rendered for viewers.** One data model, four renderers. The tab
+is called Home because the column also shows the game you are about to play
+when W3Champions says there is one.
 
-Every screen answers to one sentence. **Last game is the product. Coach is Last
-game aggregated over time. Library is everybody else's last game. Stream is any
-of them rendered for viewers.** One data model, four renderers. The tab is
-called Home, because the column also shows the game you are about to play when
-W3Champions says there is one.
-
-The Library is a deliberate change to that sentence, which used to name three
-screens. Watching and studying other people's replays is most of how this game
-is consumed, and until that tab existed one of them opened a report that
-apologised for itself: no result claimed, no comparison, and your build card
-first even though neither seat was yours. Home and Library mount the SAME
-renderer (`js/game-report-view.js`); passing `seat: null` selects its symmetric
-presentation, where there is no "you" and the result is one player beating
-another.
-
-The numbers are one shared module too. `client/js/GameMetrics.js` turns a
-stored summary and a seat into scalars, so the window, the post-game
-notification and the OBS overlay cannot disagree about how a game went. There
-is no module that writes a sentence about how somebody played; there used to be
-(`GameReport.js`) and it was deleted.
+Home and Library mount the same report renderer (`js/game-report-view.js`);
+`seat: null` selects the symmetric presentation with no "you". The numbers are
+one shared module too: `client/js/GameMetrics.js` turns a stored summary and a
+seat into scalars, so the window, the notification and the overlay cannot
+disagree about how a game went. There is no module that writes a sentence
+about how somebody played.
 
 ## Design invariants
 
-Enforced in code rather than documented. They exist so the app can never be
-mistaken for a cheat and stays trivially auditable.
+Enforced in code, so the app can never be mistaken for a cheat and stays
+auditable.
 
-- Only ever **reads `.w3g` files the game already wrote**. No process injection,
-  no memory reading, no packet inspection, no input automation. That is also why
-  the OBS overlay is safe on a live stream: it cannot leak the state of a game in
-  progress, because it never sees one.
-- **No live in-game state.** WC3 writes the replay at match end, and that file is
-  the only data source that exists.
+- Only ever **reads `.w3g` files the game already wrote**. No process injection, no memory reading, no packet inspection, no input automation. That is also why the overlay is safe on a live stream: it cannot leak a game in progress because it never sees one.
+- **No live in-game state.** The replay written at match end is the only data source.
 - **Your replays never leave this machine.** No upload, no account. The only thing sent is an anonymous usage count (event name, version, OS family), with an off switch in Settings.
-  Not switchable, not configurable, absent.
-- **Nothing dials out unless you switch it on.** The one socket the binary opens
-  by itself is the overlay's loopback listener, on 127.0.0.1 only, token-gated,
-  GET-only, with read-only routes. `overlay.rs` enforces all four properties. An
-  OBS Browser Source is a separate Chromium process, and this is the only
-  offline read-only bridge to it. "Open in the viewer" opens the user's browser
-  and hands the replay over on loopback, with no upload and no server. Three
-  outbound exceptions exist, all disclosed in Settings: build-order icon art and
-  per-map parse data from `cdn.wc3v.com`, neither of which carries anything about
-  you, and **optional W3Champions ladder lookups** (`w3c.rs` refuses every
-  request unless its opt-in marker file exists, allows one host, sends GET only,
-  and transmits nothing about your games).
-
-  The binary's default is still OFF, and that is what "default" means here: the
-  marker file has to exist before a single request is made. The first-run screen
-  PROPOSES turning it on, with the box checked and what it sends stated on the
-  same screen, because an opt-in nobody is ever shown is an opt-in nobody gets.
-  Skipping that screen writes no marker and lookups stay off. The checkbox goes
-  through `set_w3c_enabled` like Settings does; it is not a second source of
-  truth.
-- **No overlay drawn over the game.** Output is an OBS Browser Source and an
-  ordinary window. Nothing is composited onto the game.
-- **The webview gets no arbitrary-filesystem primitive.** `read_replay` and
-  `read_map_file` canonicalise their argument and refuse anything outside a
-  registered replay root or the local map cache. The parse store commands
-  (`save_parse` and `read_parse`) accept only a `<size>-<hash>` key of digits,
-  hex and a dash, so no path fragment can reach them.
-- No accounts, no paywall, and nothing identifying ever sent. GPLv3, same as the parser.
+- **Nothing dials out unless you switch it on.** The one socket the binary opens by itself is the overlay's loopback listener: 127.0.0.1 only, token-gated, GET only, read-only routes, all enforced in `overlay.rs`. The outbound exceptions are icon art and map data from `cdn.wc3v.com`, the usage count, and optional W3Champions lookups. `w3c.rs` refuses every request unless its opt-in marker file exists; the first-run screen proposes turning it on with the box checked and what it sends stated on the same screen, and skipping that screen writes no marker.
+- **No overlay drawn over the game.** Output is an OBS Browser Source and an ordinary window.
+- **The webview gets no arbitrary-filesystem primitive.** `read_replay` and `read_map_file` canonicalise their argument and refuse anything outside a registered replay root or the local map cache. Store commands accept only a `<size>-<hash>` key of digits, hex and a dash.
+- No accounts, no paywall. GPLv3, same as the parser.
 
 ## Architecture
 
-There is **no parser in this app**. The existing browser parser bundle
-(`client/js/vendor/wc3v-parser.bundle.js`) runs unmodified in a Web Worker inside
-the Tauri webview, so there is one parser with one behaviour, verified by
-`tools/verify-bundle-parity.js`.
+There is **no parser in this app**. The browser parser bundle
+(`client/js/vendor/wc3v-parser.bundle.js`) runs unmodified in a Web Worker
+inside the Tauri webview, so there is one parser with one behaviour, verified
+by `tools/verify-bundle-parity.js`.
 
 ```
-Rust  ── discovery / watching / scoped reads / hashing / parse store / overlay server
+Rust  ── discovery / folders / watching / scoped reads / hashing / parse store / overlay server
   │
   ├─ Tauri IPC ──► webview ── parser Web Worker ──► .wc3v
   │                   ▲  │             │
   │                   │  └ summaries ──┴──► profile / coach (ProfileAggregate)
-  │                   └── map data ◄───┘   (worker can't reach IPC, so the
-  │                                         injectable mapDataLoader bounces
-  │                                         the request to the main thread)
+  │                   └── map data ◄───┘   (the worker cannot reach IPC; the
+  │                                         mapDataLoader bounces to main)
   ├─ 127.0.0.1 SSE ──► OBS Browser Source / player view (overlay/)
-  │     (webview publishes state; the server only relays it)
   └─ 127.0.0.1 ────► default browser ──postMessage──► wc3v.com viewer
-        (handoff.html; see "Opening a moment" below)
 ```
 
-The frontend is a coordinator (`js/app.js`) plus one module per concern: `store`
-(parse store and corpus), `identity`, `games-view` (the feed), `library-view`
-(everybody else's games), `profile-view`, `stream-view`, `settings-view`,
-`first-run`, `replay-index` (content key to file), `backfill`, `game-tags`
-(the tag sidecar), `overlay-state`, `w3c` (ladder client) and `scout` (the live
-match poller).
+The frontend is a coordinator (`js/app.js`) plus one module per concern:
+`store` (parse store and corpus), `folders` (the replay folder tree),
+`identity`, `games-view` (the feed), `library-view`, `profile-view`,
+`stream-view`, `settings-view`, `first-run`, `replay-index` (content key to
+file), `backfill`, `game-tags`, `overlay-state`, `w3c` and `scout`.
+`js/ui-bits.js` holds the pieces both screens build out of, including the one
+copy of the icon CDN base and its id whitelist.
 
-**The report is `js/game-report-view.js`**, mounted by both Home and the
-Library. It was ~490 lines inside `games-view.js`, which was right while one
-screen could show a game. `render(host, summary, opts)` returns a handle whose
-`destroy()` releases the chart, and `seat: null` selects its symmetric
-presentation. `js/ui-bits.js` holds the pieces both screens build out of,
-including the ONE copy of the icon CDN base and its id whitelist.
-
-The report's graphics come from `build-card`, a pure builder, plus
-`dominance-panel` and `economy-panel`, which mount the viewer's OWN widgets
-(`DominanceChart`, `ResourceCharts`) rather than redrawing them — see "Charts"
-below — and `chart-panel`, which wraps those two plus a `CompareCharts` army
-plot into one slot with three toggle chips.
-
-**Numbers come from `client/js/GameMetrics.js`**, which turns a stored summary
-and a seat into scalars: dominance, hero kills, effective APM and the timings.
-Everything that used to derive its own at the point of use reads it, which is
-why "workers at 5:00" no longer has three implementations. Dominance is
-TIME-weighted, because the stored series is not on a fixed grid and a plain
-mean over its samples over-weights the seconds around every hero death.
-
-**The stored-summary shape is `client/js/SummaryBuild.js`**, shared by
-`store.js` and the preview harness, which used to carry a hand-copied duplicate
-with the version number in only one of them.
+### The stored summary
 
 Each parsed game persists as one gzipped summary under
-`<app_data>/replays/<size>-<xxh3>.summary.json.gz`, single-digit KB per game,
-keyed by content so the same game re-opened or found under a second path loads
-from the store instead of re-parsing. Full parses are deliberately not stored.
-The raw `.w3g` is the source of truth and full viewing re-parses on demand.
+`<app_data>/replays/<size>-<xxh3>.summary.json.gz`, a few KB, keyed by
+content. Full parses are not stored; the `.w3g` is the source of truth and a
+report re-reads the game from disk when it opens. The corpus held in memory
+is a projection (`store.slimForCorpus`, an allowlist), which is what keeps a
+4,000-game history at 60 MB instead of 336; `tools/test-corpus-slim.js`
+proves the projection answers every question the feed and Coach ask.
 
-The summary is `SummaryExtract`'s per-player shape plus five things that have to
-be extracted at parse time, because they exist only in a full parse.
-**`moments`** is the ranked highlight reel, capped at 24. Per-player
-**`combat`** is the complete hero kill and death ledger, wipes and biggest
-trade, added in schema v3 — the review layer grades from it, and deriving one
-from the other under-counts, so don't. Both come out of `world.battles`.
-**`dominance`** and **`resources`**, schema v4, are the time series
-`lib/DominanceSeries.js` and `lib/ResourceSeries.js` produce inside
-`utils.buildOutputObject`; `client/js/SeriesExtract.js` packs them as parallel
-arrays and unpacks them for rendering. Measured cost of v4:
-**+1.7 KB gzipped per game**, about 26 MB for the whole 3,072-replay history
-(`node tools/measure-summary-v4.js`).
+The shape is `client/js/SummaryBuild.js`, shared with the preview harness.
+Beyond `SummaryExtract`'s per-player block it carries what exists only in a
+full parse: `moments` (ranked, capped at 24), per-player `combat` (the
+complete kill and death ledger; deriving counts from `moments` under-counts),
+`dominance` and `resources` (time series from `lib/DominanceSeries.js` and
+`lib/ResourceSeries.js`), per-player `build` (what `BuildOrderData` derives,
+stored rather than re-derived because re-implementing that class is how the
+two answers drift), and `mapInfo` (bounds, so camps and routes can be placed).
 
-Per-player **`build`**, schema v5, is what `client/js/BuildOrderData.js` derives
-from the event stream: per-tier production and the closing snapshot (supply,
-workers, gold and lumber spent, upgrades, every unit made with its count and its
-attack and armor types). Schema v5 also widens `neutralCamps` with claim state,
-owner, route order, the creeps in each camp and per-hero XP.
+**Bump `SCHEMA_VERSION` before adding anything with that property.** A summary
+written under an older schema cannot be upgraded in place. The app migrates
+itself: when `store.staleCount` is non-zero after the corpus loads, `app.js`
+runs the full backfill in the background under the `#migrate` strip, newest
+first. The backfill skips on `store.isCurrent(key)` (stored AND current), not
+on presence. A stale game renders the reason and a re-read button, never a
+partial report. On any schema bump, check what somebody with an existing
+corpus sees on first launch; both halves of this have shipped wrong before.
 
-**`build` is stored rather than re-derived, and that was the whole decision.**
-The obvious alternative was a second extractor inside `SummaryExtract`. It is
-wrong because `BuildOrderData.buildTierSnapshots` accumulates gold over the
-class's OWN synthesised event list — tier upgrades with cost overrides, hero
-training, worker assignment — not over the raw stream. Reimplementing that is
-reimplementing the class, and the two answers diverge the first time either is
-edited. So the class is dual-runtime (it guards `window.wc3v`, `PlayerNames` and
-`RaceLabels`, and ships none of them) and runs at parse time. Measured cost of
-v5: **+2.4 KB gzipped per game**, about 34 MB for the 3,072-replay history
-(`node tools/measure-summary-v5.js`).
+Two things a summary deliberately does not carry. **Tags** live in
+`<app_data>/labels.json`, keyed by content key, because a re-parse rebuilds
+the summary and a format upgrade must not eat the only thing a person typed.
+**Which folder a game came from** lives in `<app_data>/sources.json` for the
+same reason, and because a summary never carries a path.
 
-Three things `BuildOrderData` produces are deliberately dropped: `tiers` and
-`snapshots`, by far the heaviest and only useful to the viewer's live panel,
-which has the full parse in hand; and `production`, which is redundant with
-`finalSnapshot.army`.
+## Replay folders
 
-**All five are extract-at-parse-time-or-never.** Bump `SCHEMA_VERSION` in
-`client/js/SummaryBuild.js` before adding anything with that property, and make
-sure it is current before the backfill runs.
+People sort replays into folders to label them. Every directory that directly
+holds a `.w3g` file is a folder in the app, drawn as a tree under the root it
+was found in: the game's own `Autosaved\Multiplayer` and `Autosaved\Custom`
+next to whatever the person made. Each row can be switched off, renamed or
+removed, on the first-run screen and again in Settings. `js/folders.js` draws
+both; `src-tauri/src/folders.rs` owns the config and discovery.
 
-**Schema v6 adds no field.** It exists because a parse can be wrong rather than
-incomplete, and a stored summary records the result without recording which map
-produced it. Map resolution used to take the first library name that appeared
-anywhere in the replay's filename, so any map whose name is a prefix of another
-resolved to the shorter one — Echo Isles S2 parsed as classic Echo Isles, with
-starting positions 1536 units out and another map's creep camps. Nothing threw
-and nothing looked obviously wrong. `helpers/mapResolver.js` is the fix; the
-bump is the only thing that makes an installed app re-read what it already has.
-A correctness bump is the same mechanism as a field bump, and the rule for both
-is that staleness is the only route to games already on disk.
+Nothing here touches the disk. A label is a label, off means the scanner
+skips the files directly inside (subfolders keep their own switch, and the UI
+cascades a switch downward), and remove means the app stops looking there.
+Removed folders and hand-added roots persist in `<app_data>/folders.json`;
+"Look again" in Settings restores every removal. Before this existed a folder
+added by hand vanished on restart and was never watched.
 
-**Schema v7 adds `mapInfo`**: the resolved map's name, world bounds and grid
-size, about 160 bytes gzipped. A summary already carried where every creep camp
-is, where both players started and which camps each hero took — and no way to
-place any of it, because the bounds table lives in `helpers/mappings.js`, which
-is in the parser bundle, which is in the WORKER, while `buildSummary` runs on
-the main thread. Both runtimes now publish a slim copy of that table on the
-window (`window.__mapFoldersManifest`): the site fetches `/data/map-folders.json`,
-the desktop vendors the same tracked file via `tools/build-desktop-client.js` and
-loads it in `boot()`. `client/js/CreepRouteMap.js` is what it is for.
+A root is a directory the app may read under (`ensure_within` checks every
+scoped read against the root list). A folder is a finer grain inside a root
+that only decides what the scanner and watcher look at, so a game from a
+folder that is off can still open in the viewer. Changing anything restarts
+the watcher: `watcher::start` replaces the running loop rather than refusing
+a second start.
 
-**A schema bump only reaches the history if the backfill can see it.** The
-backfill skips a replay on `store.isCurrent(key)` — stored AND under the current
-schema — not on `store.has(key)`. It used to skip on presence, which meant every
-summary written before a bump stayed at the old version forever and the only way
-to upgrade one was the per-game "Re-read" button. `store.staleCount` is how many
-are behind.
+Folder names never carry a path. A discovered root is "Replays" ("Replays 2"
+for a second account); subfolders and manual roots take their directory
+name, which is the label the person chose when they made it. The feed and
+the Library filter by folder, and the report header shows the game's folder
+beside its tags. Games parsed before `sources.json` existed are matched to
+their files at boot by size, then hash (`resolve_sources`), the same trick
+the scan uses.
 
-Two things a summary deliberately does NOT carry. **Tags** live in a sidecar at
-`<app_data>/labels.json`, keyed by the same content key, because a re-parse
-rebuilds the summary and a schema bump re-parses everything: tags are the only
-thing in the store a person typed and a format upgrade must not eat them. And
-the **casting scoreboard** is live state in `localStorage`, not a record of a
-game, because a series score needs ordered games and a running total that free
-tags cannot express.
+Verified layout, because the obvious guess is wrong (there is no
+`Documents\Warcraft III\Replays`):
+
+```
+Documents\Warcraft III\BattleNet\<accountId>\Replays\
+  ├── *.w3g                  saved or downloaded
+  └── Autosaved\
+      ├── Custom\
+      └── Multiplayer\       ladder, the bulk
+```
+
+`<accountId>` is per Battle.net account and there is usually more than one,
+so all of `BattleNet\*` is enumerated. Dedupe is by content hash: a nested
+duplicate tree exists in the wild and `LastReplay.w3g` is not byte-identical
+to its autosave.
 
 ## The game report
 
-Four tabs. **Three of them are not this app's code.**
+Four tabs, three of them not this app's code. `client/js/MatchSummaryView.js`
+draws Overview, Army and Economy, the same renderer the site's viewer mounts;
+`js/summary-model.js` turns a stored summary into its model. Neither app
+draws a tab of its own: if this app grows its own version of one, the two
+products have begun telling different stories about one game. **Build** is
+the exception, the per-player build cards and one interleaved build order.
 
-`client/js/MatchSummaryView.js` draws Overview, Army and Economy, and it is the
-same renderer the site's viewer mounts in its Match Summary modal. It knows
-about neither app: it takes a model, an `icon(itemId)` resolver and an
-`asset(file)` resolver, and returns DOM. `js/summary-model.js` turns a stored
-summary into that model; `client/js/MatchSummary.js` does the same job on the
-viewer's side from live parse objects.
+The frame is one row (`.report-tabbar`): tabs left, Open in WC3V Viewer right,
+nothing else fixed above the scroller. The Overview header leads the ov-band
+beside the dominance plot; a team game drops the plot and the header leads.
+The band is three cells: dominance, the result and its numbers, and the creep
+routes on a fixed 176px map. Two things about it are load-bearing: a trailing
+`1fr` row absorbs the map's surplus height in one place, and the route legend
+goes two-column at four seats or more.
 
-It was six tabs until Aug 2026. Army/Upgrades and Economy/Creeps/Charts each
-held one short section list, so every one of them opened on a screen that was
-mostly background, and the sections that answer each other — what you built
-against what you upgraded, what you spent against the camps that paid for it —
-were never on screen together. **Army** is now production and research;
-**Economy** is resources, items, creeps and the four time series.
+Rules found by walking every tab with a DOM auditor, each worth 40 to 200px of
+nothing: nothing stretches to its neighbour (`align-items: start`); the unit
+roster is a grid, not a wrapping flex; the tier bars are one grid; matrix
+header icons sit above their label. Contested camps are read off
+`claimState`, never re-derived from the two players' camp lists.
 
-Neither app draws a tab. This is the mount-seam rule from **Charts** below,
-applied to a whole screen instead of one widget: if this app grows its own
-version of a tab, the two products have begun telling different stories about
-one game.
-
-The fourth tab, **Build**, is the only one with no equivalent on the site: the
-per-player build cards and the build order — ONE interleaved chronology, each
-row wearing its player's race ink and the reader's own rows at full ink.
-Buildings by tier and the upgrade/merc timeline used to live there and are
-gone, because the Army and Economy tabs are those sections drawn from the same
-data.
-
-**The frame is one row.** The tab strip on the left, Open in WC3V Viewer on
-the right (`.report-tabbar`), and nothing else fixed above the scroller. The
-verdict band that used to sit there is gone: its content — result, opponent,
-the all-time record, map, length, tags, the three benchmarks — leads the
-Overview tab as `.ov-head`, riding the ov-band's middle column beside the
-dominance plot. A game with no dominance (a team game) drops that column and
-the header leads the band. A team game gets no "carries no result"
-placeholder; the meta line already says 3v3.
-
-**The band is three cells across**: the dominance plot, the result and its
-numbers, and the creep routes, with the tier bars running under the first two.
-The routes used to sit full width under the player columns, where they opened
-at y=939 inside a 630px scroller — below the fold on every screen, so nobody
-met them without going looking. The map is a fixed 176px canvas, so its grid
-track is `auto` and the two flexible cells split what is left.
-
-Two things about that band are load-bearing and easy to undo by accident:
-
-- **The third grid row is slack.** The map cell spans the band, and in a 3v3
-  its legend lists six seats — far taller than a header and six tier bars.
-  With two auto rows the grid hands that surplus to *both*, so the band opens
-  with a gap under the header AND under the bars. A trailing `1fr` row absorbs
-  it in one place.
-- **The legend goes two-column at four seats or more**
-  (`.crm-read:has(.crm-seat:nth-child(4))`), which puts a six-player list back
-  inside the map's own height. The selector counts real seats: with three
-  players the fourth child is the footer, which does not match. The contested
-  line `column-span: all`s out of that flow, because it is a fact about the
-  match rather than about whoever the columns left it under.
-
-The legend prints a camp total per player and the contested count, and nothing
-else (`detail: 'camps'`). The levels/first/XP lines are the site compare
-drawer's, which is what `detail: 'full'` — the default — still gives it.
-
-### Four rules that keep the report tight
-
-Found by walking every tab with a DOM auditor rather than by eye. Each was
-worth 40-200px of nothing on some tab:
-
-- **Nothing stretches to its neighbour.** `.ms-blocks` and `.ms-players` both
-  get `align-items: start`. A `.ms-block` has no border, background or padding,
-  so a stretched one is pure void (Attack Upgrades: 201px tall around 66px of
-  content). A `.ms-player-col` does have a border, which makes stretching at
-  least arguable — but on Economy it put 196px of blank inside a drawn panel,
-  which reads as broken rather than as layout.
-- **The unit roster is a grid, not a wrapping flex.** Flex sized each tile to
-  its own text, so row two's columns started 24px off row one's. Equal tracks
-  need `min-width: 0` on the tile AND `flex-wrap` on the armour rows, because a
-  grid item's min-width is its min-content and an unbreakable "Unarmored" plus
-  an 18px icon is 103px against a 94px track.
-- **The tier bars are one grid** (`.ms-tier-row { display: contents }`). Per-row
-  flex let the "You" chip widen its own row's name cell, so the two bars being
-  compared started at different x.
-- **Matrix header icons sit above their label**, not beside it, or "Unarmored"
-  pushes the table past its card.
-
-What is NOT fixed: a short block still leaves a gap under it when its row-mate
-is taller (Army's Attack Upgrades against Research, ~135px), because the next
-section cannot start until the whole row band ends. That wants masonry. CSS
-columns was measured as an alternative and reclaimed 9px, so it was not worth
-the reading-order change.
-
-**Contested is read off `claimState`, never re-derived.** Every camp in the
-summary carries one (0 untouched, 1 contested, 2 cleared) from
-`lib/CampCreditModel.js`. The first cut of this intersected the two players'
-own camp lists and called an overlap contested; it reported 0 for every game in
-the corpus while `node inspect-replay.js --replay=NAME --show=camps` showed
-3, 3, 2, 5, 5. A player's camp list is the camps that fed THEIR heroes
-experience, so a camp one side fought over and lost never appears in it.
-
-**The moments timeline is gone** (deleted Aug 2026 with `js/game-timeline.js`).
-It was two lanes of typed moments, yours over theirs, under the band. It cost
-70px of the fold to restate what the dominance plot beside it already showed as
-a shape, and the creep routes took its place.
-
-What differs from the viewer, and why:
-
-- **Colour is the warm race ramp, not in-game player colours.** The token layer
-  forbids saturated colour on warm surfaces, and a stored summary has no
-  player-colour field: schema v5 drops it rather than letting the two apps
-  disagree. `colorOf` is injected, so neither app forks the renderer.
-- **Dominance on Overview is the scrubbable panel**, not the viewer's static
-  plot. The viewer draws it progressively because it has playback of its own; a
-  finished game has nothing left to spoil, so here dragging replays the momentum
-  and a double-click opens the viewer at that moment. This is why the chart
-  panel's Dominance chip is gone — two dominance plots on one screen is a
-  question about which of them is right.
-- **The head-to-head parts drop out above two seats.** The Damage Matchup and
-  the APM ghost line are about "the opponent", which is not a thing in a 2v2.
-  Everything per-player still renders.
-
-### A store behind the schema
-
-A summary written under an older schema is missing blocks only a full parse can
-produce, so it cannot be upgraded in place. Two rules, and the second is the one
-that is easy to get wrong.
-
-**The app migrates itself.** If `store.staleCount` is non-zero after the corpus
-loads, `app.js` `startMigration()` runs the full backfill in the background,
-newest first, reporting to the `#migrate` strip under the app bar. Nothing is
-behind a button. The backfill engine needs no special mode for this: it already
-walks every replay and skips whatever `store.isCurrent(key)` calls current, so a
-run re-reads exactly the stale games.
-
-**A stale game renders the reason and NOTHING else.** Not a partial report. The
-old data is enough to draw build cards and a build order, and doing so produces
-a screen that looks complete while silently omitting the unit roster, the creep
-route, the upgrades and every chart — indistinguishable from a game where none
-of that happened. `game-report-view.js` returns early on a null model: the
-tab row with the viewer button (no tabs), the Overview header (none of which
-comes from the missing block), one line and a re-read button.
-
-Both of these were shipped wrong once. The boot catch-up was gated on an **empty**
-corpus, so on a machine with history it never ran; the backfill skipped on
-presence rather than freshness, so the Settings button would not have helped
-either; and the re-read offer was a hint at the foot of a scroller. The result
-was an update that looked like it had done nothing. **On any future schema bump,
-check what somebody with an existing corpus sees on first launch.**
+What differs from the viewer: colour is the warm race ramp, not player
+colours (a summary carries none); dominance is the scrubbable panel, since a
+finished game has nothing to spoil; the head-to-head parts drop out above two
+seats.
 
 ## Charts
 
-The rule is **do not redraw a chart the viewer already has**. Dominance is the
-viewer's own `DominanceChart`, copied into `js/vendor` by
-`tools/build-desktop-client.js` and styled by `client/css/dominance.css` — the
-same stylesheet the viewer loads, split out of `main.css` for exactly this
-reason. `js/dominance-panel.js` mounts it from a stored summary and owns no
-drawing code. If it starts drawing a line, the mount seam has leaked.
-
-It takes data rather than a viewer: a `setPlayers()` array, ignoring the
-constructor argument, so the desktop passes null. What the desktop added to it
-is small and benefits both products: a published `GEOMETRY` so a pointer
-position can be mapped back to a game time, `scoresAt(t)` so the numbers can be
-shown beside the plot, a compensating `scaleX` on the momentum dots so a
-full-width chart draws circles instead of lozenges, and `setStart()`.
-
-**Resources is NOT the viewer's `ResourceCharts`, deliberately.** That class
-stacks food, gold lost and lumber lost, one line per player each. Measured over
-80 games (`node tools/analyse-resource-series.js`):
-
-| series | flat head (median) | worst | the two lines differ by |
-|---|---|---|---|
-| food used | 1% | 4% | 9% |
-| gold lost | 27% | 77% | 39% |
-| lumber lost | 43% | 100% | 57% |
-
-So gold lost draws a flat floor for a quarter of the game, lumber lost for
-nearly half and sometimes for all of it, and food draws four lines (used and cap
-per player) of which the two that matter trace each other. A cumulative loss
-curve only ever climbs, and "who is winning the trades" is the gap between two
-of them — the one thing a reader has to do arithmetic to get.
-
-`js/economy-panel.js` draws the difference instead: **trade balance**, their
-cumulative losses minus yours, filled back to a zero midline, plus **food**
-against the cap as a band rather than a fourth line. Both come from
-`CompareCharts`, the shared pure-SVG factory, which is where a derivation with
-no viewer class to borrow belongs — the same reason Army has always been there.
-`ResourceCharts` is no longer shipped to the desktop.
-
-**Every mode trims its own flat lead-in** and labels the axis with the second it
-actually starts, so a plot beginning at 9:40 never reads as a game that began
-late. `CompareCharts.firstChangeMs()` finds it for the SVG factories;
-`DominanceChart.firstMoveT()` for dominance, where the score eases out of an
-even 50/50 over the engine's 150s early ramp. Anything mapping a pointer back to
-a time must go through the drawn span, not the element width — the plot no
-longer starts at 0:00 and it never started at the left edge.
-
-`js/chart-panel.js` is the third layer and owns no drawing either. It puts the
-two panels and a `CompareCharts` army plot behind one set of toggle chips, so
-the three readings of a game share a slot instead of a chart and a whole tab.
-Each mode is built on first use and kept — rebuilding `DominanceChart` on every
-chip click would churn its ResizeObserver — and the panel's `destroy()` releases
-every mode it built, including the ones parked behind another chip. Whoever
-mounts it calls that; in `games-view.js` it is `dropChart()` at the top of
-`renderDetail`.
-
-**`DominanceBar`, the tug-of-war gauge, is deliberately not shipped here.** It
-sat in the report frame for one revision: 58px of chrome with its own chassis,
-its own identity caps and its own impact-FX engine, all designed for a game
-being watched live under a match header. In a finished-game report the only
-thing it added over the plot was the pair of numbers, and those are a readout on
-the chart's title row now, costing no height at all. The gauge's rules are still
-in `dominance.css`, because that file is the viewer's and the viewer still
-mounts it.
-
-There is no playback here, so the chart draws the whole game and is
-**scrubbable**: dragging it replays the momentum through the cursor and the
-readout, and a double-click opens the viewer at that second.
+**Do not redraw a chart the viewer already has.** Dominance is the viewer's
+own `DominanceChart`, styled by the viewer's own `dominance.css`, mounted by
+`js/dominance-panel.js`, which owns no drawing code. Resources is not
+`ResourceCharts`, deliberately: measured over 80 games its cumulative-loss
+lines draw a flat floor for a quarter to half of every game, so
+`js/economy-panel.js` draws the difference (trade balance around a zero line)
+and food against the cap as a band, both from the shared `CompareCharts`
+factory. Every mode trims its flat lead-in and labels the axis with the second
+it starts, and anything mapping a pointer back to a time goes through the
+drawn span, not the element width. `js/chart-panel.js` puts the modes behind
+one set of chips; its `destroy()` releases every mode it built.
 
 ## Library, tags and casting
 
-**The Library** lists games where no seat is yours, which is the whole rule: it
-covers a downloaded pro replay, a game you observed and a friend's replay you
-were sent, without any of them needing to be marked. With no identity set,
-nothing is yours, so the Library would be your entire history; it shows empty and
-says why instead.
+The Library lists games where no seat is yours, which covers a downloaded pro
+replay, an observed game and a friend's replay without marking any of them.
+With no identity set nothing is yours, so it shows empty and says why.
+"Open a replay…" takes a file and registers its folder through the same
+`add_root` as Settings, because `read_replay` refuses anything outside a
+registered root and a "just read this path" command would hand the webview
+the primitive it must not have.
 
-"Open a replay…" takes a FILE and registers the folder that holds it, then scans
-that folder. Registering rather than reading directly is not a detail:
-`read_replay` canonicalises its argument and refuses anything outside a
-registered root, and that refusal is the reason the webview has no
-arbitrary-filesystem primitive. A "just read this one path" command would hand it
-one.
+Tags are free text, on purpose: a tournament schema would guess at how
+somebody runs their event. Two commands, `read_tags` and `write_tags`, with
+the store's key validation and a temp-file-and-rename write.
 
-**Tags** are free text, deliberately. A schema for tournaments needs rounds,
-brackets, formats and a series model, and every one of those is a guess about how
-somebody runs their event. They live in `<app_data>/labels.json` keyed by content
-key, edited from the report header and filtered on in the Library. Two Tauri
-commands, `read_tags` and `write_tags`, with the same key validation the parse
-store uses and the same temp-file-and-rename write.
-
-**Casting is a second overlay page**, `/cast`, with its own renderer
-(`overlay/cast-render.js`) and its own stylesheet. The player overlay is one
-person's session said as "you", revealed after a game. A broadcast is two
-strangers said as neither, held up for a whole series. Bending one into the other
-would have meant a mode flag threaded through every module in
-`overlay-render.js`, and every OBS source already pointed at that file.
-
-It draws three things: an event line with the two players and a running score, a
-free-text format badge, and a symmetric stat bar. The stat bar has **no deltas
-and no baselines**, because every baseline this app has is built out of one
-person's history and on a broadcast neither player is that person. The scoreboard
-is live state typed in Stream → Casting, held in `localStorage` so it survives a
-restart mid-series, and it is never a record of a game.
-
-Both pages are under the same token gate and both are asserted so in
-`overlay.rs`'s tests. The `every_overlay_route_requires_the_token` test passed
-for the whole of the build that added `/cast` without ever looking at it, which
-is why the assertion is now explicit.
+Casting is a second overlay page, `/cast`, with its own renderer and
+stylesheet: an event line with a running score, a format badge, and a
+symmetric stat bar with no deltas and no baselines, because every baseline
+this app has is one person's history. The scoreboard is live state in
+`localStorage`, never a record of a game. Both pages sit under the same token
+gate, asserted explicitly in `overlay.rs`'s tests.
 
 ## First run
 
-One screen, once, on a machine with no `setup-done` marker: replay folder, your
-player name, W3Champions, and read-my-history. Every row is skippable and every
-control also lives in Settings, so nothing here is a decision anybody is stuck
-with.
-
-A marker FILE rather than `localStorage`, for the same reason the W3Champions
-opt-in is one: clearing the webview's storage is a normal thing to do while
-debugging and should not put a setup screen in front of somebody who has been
-using the app for months. A failed marker write is logged rather than swallowed,
-because the symptom is the screen coming back every launch.
+One screen, once, on a machine with no `setup-done` marker: the folder tree,
+your player name, W3Champions, read-my-history, and for a 500+ replay library
+the 1v1 filter. Every row is skippable and every control also lives in
+Settings. A marker file rather than `localStorage`, because clearing the
+webview's storage is a normal debugging move and should not put a setup
+screen in front of somebody who has used the app for months.
 
 ## Opening a moment in the viewer
 
-Clicking a moment opens the real 3D viewer on wc3v.com, seeked to that second
-(`?local=<id>&at=<ms>`). The route it takes is not the obvious one, because the
-obvious one is impossible.
-
-**Browsers block a public page from reaching 127.0.0.1.** Measured against the
-live loopback server from an `https://wc3v.com` tab: a `fetch` hangs pending and
-never settles, an iframe ends in `net::ERR_ABORTED`. The site cannot pull the
-replay from the app, and the app cannot embed the site to push it.
-
-Instead the browser starts on the loopback origin, where reading the replay is
-same-origin and unremarkable, and pushes it out to the site:
+Browsers block a public page from reaching 127.0.0.1 (measured: a `fetch`
+from wc3v.com to the loopback server hangs forever, an iframe aborts). So the
+browser starts on the loopback origin, where reading the replay is
+same-origin, and pushes it out to the site:
 
 ```
-app  ──open_in_viewer──►  127.0.0.1/open   ──postMessage(bytes)──►  wc3v.com/handoff
-     (stages bytes)       (handoff.html)    (private → public, no CORS needed)
-                                                       │
-                                       parses locally (UploadManager) → MyReplays
-                                                       ▼
-                                        wc3v.com/viewer?local=<id>&at=<ms>
+app ──open_in_viewer──► 127.0.0.1/open ──postMessage(bytes)──► wc3v.com/handoff
+                        (handoff.html)                          parses locally → MyReplays
+                                                                → viewer?local=<id>&at=<ms>
 ```
 
-It costs one click, because `window.open` without a user gesture is
-popup-blocked. The site remembers the mapping, so opening a second moment from
-the same game skips both the handoff and the re-parse.
+It costs one click, because `window.open` without a gesture is popup-blocked.
+The site remembers the mapping, so a second moment from the same game skips
+the handoff.
 
-The overlay is authored as three files (`overlay/shell.html`, `overlay.css`,
-`overlay-render.js`) and stitched into one self-contained document by
-`overlay.rs`. That split exists so the Stream screen's live preview renders from
-the same css and renderer the Browser Source loads. A preview drawn by separate
-code is a preview that can lie.
-
-**Panel names are permanent.** `shell.html` filters the `modules=` parameter
-against `ALL_MODULES`, so renaming or removing an entry silently blanks a panel
-in a scene somebody built months ago. Adding one is free; the current set is
-`scout, session, verdict, heroes, army, report, momentum, route, h2h, moments,
-build`, and `DEFAULT_MODULES` is everything but `route`, `moments` and `build`.
-
-**The card is art first.** `heroes` and `army` are portraits with a level and a
-count, because a viewer places a level 6 Death Knight and eleven Riflemen
-instantly and reads a number never. Everything the payload carries is an item
-**id**, resolved to one CDN image by the page — a real game's whole payload
-measures about 4 KB against the 256 KB publish cap in `main.rs`.
-
-`route` is off by default for one reason: it is the only panel that fetches
-anything but its own SSE stream. A failed map image leaves the routes on a plain
-field rather than an empty box.
-
-**The port is fixed, and the old one still answers.** `overlay.rs` binds a
-registered port (`HOME_PORT`) with a short ladder, and also binds every port
-this install previously served, so a URL already pasted into OBS keeps working
-across the change. It used to bind an *ephemeral* port — persisted, but from the
-same range Windows hands to outbound sockets, so another program could take it
-over a reboot and the Browser Source went blank with no explanation.
-`overlay_info` reports `orphaned`, the one case where a handed-out port is dead
-and a re-copy is genuinely needed; the Stream tab says so rather than leaving it
-to be discovered on air.
+The overlay is authored as `overlay/shell.html`, `overlay.css` and
+`overlay-render.js`, stitched into one document by `overlay.rs`, so the Stream
+screen's preview renders from exactly what OBS loads. **Panel names are
+permanent**: `shell.html` filters `modules=` against `ALL_MODULES`, and
+renaming one blanks a panel in a scene somebody built months ago. The port is
+fixed (`HOME_PORT`) and every port this install previously served is bound
+too, so a URL already in OBS keeps working; `overlay_info` reports `orphaned`
+for the one case where a re-copy is needed.
 
 ## The lifecycle
 
 `js/match-phase.js` owns `idle | live | post` and is the only thing that may
-change it. `app.js` subscribes once, below the views, and fans out to the report
-column, the broadcast payload and the Stream preview.
-
-Before it, phase was an emergent property of five booleans in five modules
-across three processes — `scout.js`'s match, `games-view.js`'s live/mode/latched
-id, `overlay-state.js`'s scout/lastGame, `shell.html`'s independently derived
-`data-phase` inside OBS, and `stream-view.js`'s manual stepper. Nothing
-arbitrated, so the window and the broadcast could disagree about whether a game
-was on.
-
-Two rules worth knowing before touching any of it:
-
-1. **`unknown` is not `none`.** `w3c.ongoing()` answers `live` / `none` /
-   `unknown`; only the server actually answering produces `none`, and only two
-   consecutive `none`s take a live card down. Everything else — timeout,
-   offline, 5xx, junk body — holds. A five-second timeout used to run the full
-   end-of-game transition.
-2. **A finished match cannot come back.** The ladder keeps serving a match for
-   ~20s after its replay is on disk, so `scout.dismiss(id)` records the id and
-   `tick` refuses to re-latch it. Without that the report column jumped off the
-   game you just finished onto a scouting panel for that same game.
-
-**Idle is a one-way door out of.** Once anything has been seen — a game played,
-or the newest stored game seeded at boot — the resting state is `post`, holding
-the previous game. A broadcast that blanks between games looks broken.
-
-`node tools/lifecycle-sim.js` drives the real `scout.js` and `match-phase.js`
-against a scripted tape of ladder answers on a fake clock: ten scenarios, no
-browser, no network, no timers. Run it after any change to either file. It is in
-`npm run desktop:test`.
-
-## Replay folder layout
-
-Verified against a real install, because the obvious guess is wrong. There is
-**no** `Documents\Warcraft III\Replays`:
-
-```
-Documents\Warcraft III\BattleNet\<accountId>\Replays\
-  ├── *.w3g                  manually saved / downloaded
-  ├── my-games\
-  └── Autosaved\
-      ├── Custom\            custom games
-      └── Multiplayer\       ladder + multiplayer  ← the bulk
-```
-
-`<accountId>` is per Battle.net account and there is usually more than one, with
-`0` holding offline and local games, so all of `BattleNet\*` gets enumerated.
-Reforged auto-saves every game as `Replay_YYYY_MM_DD_HHMM.w3g`, so nothing is
-lost by default. Dedupe is by content hash, because a nested duplicate folder
-tree exists in the wild and `LastReplay.w3g` is not byte-identical to its
-autosave.
+change it. Two rules: **`unknown` is not `none`** (only the server answering
+produces `none`, and only two consecutive `none`s take a live card down), and
+**a finished match cannot come back** (the ladder keeps serving a match for
+about 20 s after its replay lands, so `scout.dismiss(id)` refuses to re-latch
+it). Idle is a one-way door: once anything has been seen the resting state is
+`post`, holding the previous game. `node tools/lifecycle-sim.js` drives the
+real `scout.js` and `match-phase.js` against a scripted tape on a fake clock,
+and runs in `npm run desktop:test`.
 
 ## Running it
-
-Users double-click an installer and never see a terminal. You, from the repo
-root:
 
 ```sh
 npm run desktop         # run it
 npm run desktop:build   # produce the installer
-npm run desktop:test    # profile assertions + Rust suite
+npm run desktop:test    # profile assertions, backfill, lifecycle, Rust suite
 ```
 
 One-time setup: Rust (MSVC toolchain on Windows) and `cargo install tauri-cli
---version "^2.0" --locked`. If a fresh terminal cannot find `cargo`, it is in
-`%USERPROFILE%\.cargo\bin`.
+--version "^2.0" --locked`. `cargo` is in `%USERPROFILE%\.cargo\bin` if a
+fresh terminal cannot find it.
 
-Run `npm run build:parser` first if you changed `lib/` or `helpers/`, or the app
-silently uses the old parser.
+Run `npm run build:parser` first if you changed `lib/` or `helpers/`, or the
+app silently uses the old parser. Both desktop scripts assemble `desktop/dist`
+from `src-frontend/` and the committed parser bundle, and stage the ladder map
+pool into the installer. **`desktop/dist/` is build output**; editing it loses
+the edit.
 
-Both desktop scripts assemble `desktop/dist` from the frontend and the committed
-parser bundle, and stage the ladder map pool into the installer, so a fresh
-install parses ladder games offline with no extra steps.
-
-Once installed, the app lives in the tray. Closing the window keeps it watching
-for replays, and it can start with the OS.
-
-Only one copy runs at a time. Launching a second one hands its arguments to the
-copy already running and exits, which raises that window instead of starting
-over. The lock does not distinguish a dev build from an installed one, so **quit
-the tray copy before `npm run desktop`**, or the dev build exits on launch and
-the installed window is what pops up.
-
-**`desktop/src-frontend/` is the source. `desktop/dist/` is build output** and is
-wiped and regenerated by `tools/build-desktop-client.js` on every run. Editing
-`dist` loses the edit.
+Installed, the app lives in the tray; closing the window keeps it watching.
+Only one copy runs at a time, and the lock does not distinguish a dev build
+from an installed one: **quit the tray copy before `npm run desktop`**, or the
+dev build exits and the installed window pops up instead.
 
 ## Iterating on the UI
 
 `tools/desktop-preview.js` renders the real frontend against real summaries
-built from `client/replays/*.wc3v.gz`, with a stubbed Tauri IPC bridge. It is
-how the UI gets worked on without launching Tauri.
+from `client/replays/*.wc3v.gz` with a stubbed IPC bridge.
 
 ```sh
 node tools/build-desktop-client.js && node tools/desktop-preview.js --games=40 --w3c
 ```
 
-Then open `desktop/preview/preview.html`. Flags: `--games=N`, `--me="Name#1234"`,
-`--w3c` (fakes a live match so Next game renders), `--stale=N` (degrades the
-first N summaries so the schema-upgrade paths are reachable), `--match=<substr>`
-(pins the sample to particular replays — `--match=gso` is a 3v3, which is the
-only way to reach a team game, since the corpus is overwhelmingly 1v1 and sorts
-the numeric ladder filenames first), and `--setup` (shows the first-run screen,
-which otherwise only appears on a machine that has never run the app).
+Open `desktop/preview/preview.html`. Flags: `--games=N`, `--me="Name#1234"`,
+`--w3c` (fakes a live match), `--stale=N` (degrades summaries so the upgrade
+paths are reachable), `--match=<substr>` (`--match=gso` is the one 3v3),
+`--setup` (shows the first-run screen), `--out=NAME`, and `--mix=audit` (the
+standing audit corpus). The harness stubs tags and the folder tree in memory,
+so filters and the report chips have something to match.
 
-Two more flags exist for the audit matrix. `--out=NAME` writes
-`desktop/preview/NAME` so several pages coexist. `--mix=sub[:count],...`
-builds ONE page from buckets instead of the first N files; `--mix=audit` is
-the standing audit corpus (the preset lives in tools/desktop-preview.js):
+The preview cannot parse, so `app.js` publishes `window.__WC3V_VIEWS__` there:
+`gamesView`, `store`, `backfill`, `catchUpOnRecentGames`, `overlayState`,
+`matchPhase`, `streamView`. `overlayState.previewState()` is what OBS is being
+sent.
 
-```
-gso:1, test-4v4:1, happy-vs-grubby:1, Springtime13:2, EchoIsles22:1,
-hide-test:1, sellback-test:1
-```
+## The fold rule
 
-`tools/report-shots.js` walks preview pages headless — every game, every tab,
-every chart mode, at 900x600 and 1280x820 — running the fold assertions below
-at every stop and screenshotting each one. `--audit-only` skips the shots;
-non-empty audit exits 1. This subsumes the manual ritual; the snippet below
-stays as the fallback.
+**On the game report, `.report-body` is the only element allowed to scroll.**
+Not the window, not `document.body`, not `.detail-col`. Checked mechanically
+at **900x600** and **1280x820**, feed drawer open and closed:
 
 ```sh
 node tools/desktop-preview.js --mix=audit --out=preview-mix.html --me="Jeef#1496"
 node tools/report-shots.js --pages=preview-mix.html --audit-only
 ```
 
-The harness stubs the tag sidecar in memory and seeds two tags, so the Library's
-filter and the casting badge have something to match without typing first.
-
-The preview cannot run a real parse, because there are no `.w3g` files behind
-its summaries. Anything driven by a parse has to be driven by hand: set
-`window.__WC3V_PREVIEW__` (the harness does) and `app.js` publishes
-`window.__WC3V_VIEWS__` so the views are reachable from the console —
-`gamesView`, `store`, `backfill`, `catchUpOnRecentGames`, and `overlayState`,
-`matchPhase` and `streamView`, which a finished game would otherwise be the only
-way to reach. `overlayState.previewState()` returns exactly what OBS is being
-sent, which is the fastest way to check a payload change without playing a game.
-
-## The fold rule
-
-**On the game report, `.report-body` is the only element allowed to scroll.**
-Not the window, not `document.body`, not `.detail-col`. The tab row above it
-is fixed. This is the one invariant that has broken repeatedly and silently,
-so it is checked mechanically rather than by eye, at **900x600** and
-**1280x820**, with the feed drawer open and closed.
-
-Since the Library landed there are **two** `.detail-col`s in the document, one
-per screen, and only one of them is on screen at a time. Query them all and skip
-the hidden one (`offsetParent === null`) rather than `querySelector`, or the
-audit silently measures whichever comes first in the markup. That is also the
-class of bug the Library shipped with for one build: a global
-`.detail-col { grid-row: 3 }`, written for Home's three-row grid, put the
-Library's report under its list instead of beside it. Placement rules are scoped
-to `.view-games` now.
-
-```js
-(async () => {
-  const sleep = ms => new Promise(r => setTimeout(r, ms));
-  const bad = [];
-  for (const row of document.querySelectorAll('.qn-chip')) {
-    row.click(); await sleep(50);
-    // Every tab, and inside Charts every chart mode.
-    for (const tab of document.querySelectorAll('.ms-tabs .ms-tab')) {
-      tab.click(); await sleep(50);
-      const modes = [...document.querySelectorAll('.cp-seg .seg-btn')];
-      for (const step of (modes.length ? modes : [null])) {
-        if (step) { step.click(); await sleep(50); }
-        const doc = document.documentElement;
-        const cols = [...document.querySelectorAll('.detail-col')]
-          .filter(c => c.offsetParent !== null);
-        if (doc.scrollHeight > doc.clientHeight + 1) bad.push('page @' + tab.textContent);
-        if (document.body.scrollHeight > document.body.clientHeight + 1) bad.push('body @' + tab.textContent);
-        for (const col of cols) {
-          if (col.scrollHeight > col.clientHeight + 1) bad.push('detail-col @' + tab.textContent);
-        }
-      }
-    }
-  }
-  return [...new Set(bad)];
-})()
-```
-
-Pass is `[]`. The inner loop covers every tab and, inside Charts, every chart
-mode — which matters: Resources is the tallest by roughly 150px, and Economy is
-the tallest tab, now carrying the 520px creep-route map on top of the per-camp
-list that was already the longest block on the screen. Overview carries the same
-map at 340px under the player columns. Both are `.ms-route-slot`, filled by
-`game-report-view.js`; a canvas has an intrinsic size, so either one is a
-straightforward way to break the fold and both belong in every audit run. Also worth a second sweep for clipped or overflowing elements
-anywhere outside a `.scroll` container, since `overflow: hidden` hides a fold
-bug just as effectively as a scrollbar shows one.
-
-Note the audit drives `.ms-tabs .ms-tab`, not the old chart chips. A game the
-shared renderer cannot draw (a summary stored before schema v5) has **no tab
-strip at all** and shows the Build view alone, so `querySelectorAll` returning
-nothing there is correct rather than a broken selector.
-
-Games differ in ways that change the report's shape, so audit **every** game
-rather than one: whether you were in it (no read line and no benchmark readout
-if not), which chart modes have data, and whether the compact team-game path
-fires.
-
-The corpus is overwhelmingly 1v1 and the preview harness samples it in filename
-order, so **the team-game path is not in the default sample**. Audit it
-explicitly — `node tools/desktop-preview.js --games=1 --match=gso` is the one
-3v3 in `client/replays`.
-
-To drive any of this from a script, Chrome needs a debug port the MCP tools can
-attach to, on its own profile so it does not fight a running browser:
-
-```powershell
-Start-Process "C:\Program Files\Google\Chrome\Application\chrome.exe" -ArgumentList `
-  '--remote-debugging-port=9222', "--user-data-dir=$env:TEMP\wc3v-debug-profile", `
-  '--no-first-run', 'about:blank'
-```
-
-Set the viewport with the emulation override rather than by resizing the window
-— a window resize is clamped by the real display and silently gives you a
-different size than the one you audited at.
+`report-shots.js` walks every game, every tab and every chart mode at both
+sizes; a non-empty audit exits 1. Two `.detail-col`s exist since the Library
+landed, so anything querying one must skip the hidden one
+(`offsetParent === null`). Audit every game, not one: the frame changes shape
+with whether you were in it, which chart modes have data, and whether the team
+game path fires, and the team game is not in the default sample.
 
 ## Releasing
 
-Users install from `wc3v.com/download` with the one-line PowerShell command.
-That is the only path the page hands out and the only distribution channel: the
-installer URL still exists on R2, because install.ps1 and the updater both
-fetch it, but nothing links a human to it. A browser download picks up the Mark
-of the Web and walks into SmartScreen, and it cannot check the checksum, so
-offering it alongside the command only ever sent some people down the worse
-route.
+Users install from `wc3v.com/download` with one PowerShell line. That is the
+only path the page hands out: a browser download picks up the Mark of the Web
+and walks into SmartScreen, and cannot check the checksum.
 
-**The version lives in `desktop/src-tauri/tauri.conf.json` and nowhere else.**
-The installer, the binary and the update manifest all read it. It must be
-strictly greater than the last published version or no client is offered the
-update. `src-tauri/Cargo.toml` carries a stale version that nothing reads.
-
-### There is no code signing
-
-SignPath Foundation declined the project's application (submitted 11 Aug 2026,
-denied). Paid signing was considered and not taken up: Azure Artifact Signing
-is ~$120/yr and still does not silence SmartScreen (EV lost instant-trust in
-2024, and reputation has to accrue either way), and the Microsoft Store, the
-only genuinely warning-free option, would mean submitting a tool full of
-Blizzard-derived icons and models to Microsoft, who now own Blizzard.
-
-So the installer is unsigned, and `client/install.ps1` is the answer instead:
+**The version lives in `desktop/src-tauri/tauri.conf.json`.** `Cargo.toml`,
+`Cargo.lock` and the CHANGELOG heading are copies, kept in step by
+`node tools/version-check.js` (`--set=x.y.z` bumps all of them and stubs the
+changelog, `--stamp-date` dates the heading, `--fix` pulls the copies back).
+The build runs the check before it compiles.
 
 ```powershell
-irm https://wc3v.com/install.ps1 | iex
-```
-
-SmartScreen's prompt is triggered by the **Mark of the Web**, the
-`Zone.Identifier` stream a browser writes onto a downloaded file.
-`Invoke-WebRequest` does not write it, so this path is silent. The script also
-verifies the installer against the `sha256` in `latest.json` before running it,
-which the browser path cannot do. NSIS is `installMode: currentUser` by default
-(there is no `bundle.windows.nsis` block in `tauri.conf.json`), so `/S` installs
-into `%LOCALAPPDATA%` with no UAC prompt.
-
-Two things this does NOT fix, and the download page says both: **Smart App
-Control** blocks unsigned binaries regardless of MOTW, and no publisher
-reputation ever accrues.
-
-If a certificate ever does appear, `tools/deploy-desktop.js --installer=` is
-still wired for it and is the only correct way to publish a signed build:
-Authenticode changes the bytes, so the updater `.sig` must be regenerated
-against the signed file or every existing install rejects the update as
-tampered.
-
-`client/install.ps1` is **ASCII only, deliberately**. Windows PowerShell 5.1
-decodes a BOM-less file as ANSI, so one non-ASCII character makes the whole
-script a parse error on the runtime most users have. This was measured, not
-assumed: em dashes in the first draft broke it on 5.1 while working on
-PowerShell 7. `render.yaml` forces `Content-Type: text/plain` on `/install.ps1`
-because Render types `.ps1` as octet-stream and `Invoke-RestMethod` then hands
-back bytes instead of a string, which makes `| iex` fail confusingly.
-
-### Cutting a release
-
-```powershell
-# 1. bump the version everywhere at once
-node tools/version-check.js --set=1.0.4
-
-# 2. write the CHANGELOG entry under the stub it just added, then date it
+node tools/version-check.js --set=1.0.9
+# write the CHANGELOG entry, then
 node tools/version-check.js --stamp-date
-
-# 3. build
 $env:TAURI_SIGNING_PRIVATE_KEY = (Get-Content "$env:USERPROFILE\.tauri\wc3v-updater.key" -Raw).Trim()
 $env:TAURI_SIGNING_PRIVATE_KEY_PASSWORD = ""
 npm run desktop:build
-```
-
-`tauri.conf.json` is the source of truth for the version, and `Cargo.toml`,
-`Cargo.lock` and the CHANGELOG are copies of it. Bumping by hand is what put
-0.6.0 in `Cargo.toml` while 0.7.4 shipped, and 1.0.2 there while 1.0.3 was live
-on the CDN. `--set` writes all of them; `node tools/version-check.js` (also
-`npm run check-version`) tells you if they have drifted, and `--fix` pulls the
-copies back up to `tauri.conf.json`. The build runs the check before it
-compiles.
-
-**Pass the key's contents, not its path.** `TAURI_SIGNING_PRIVATE_KEY_PATH` is
-advertised in the CLI's help and is ignored by this version: the build runs to
-completion, produces an unsigned installer, then fails with "A public key has
-been found, but no private key". Artifacts land in
-`src-tauri/target/release/bundle/nsis/` as `WC3V_<version>_x64-setup.exe` and a
-`.sig` beside it. **Both must exist**, or the build cannot be served as an
-update.
-
-```sh
-node tools/deploy-desktop.js --dry-run --notes="..."   # look first
+node tools/deploy-desktop.js --dry-run --notes="..."
 node tools/deploy-desktop.js --notes="What changed, plainly."
 ```
 
-The script reads the version from `tauri.conf.json`, refuses a missing `.sig`,
-refuses a version that is not newer than what is published, uploads the
-installer before the manifest so clients are never pointed at a 404, and fetches
-both back to confirm. It needs `rclone` with an `r2:` remote.
+Pass the key's contents, not its path: `TAURI_SIGNING_PRIVATE_KEY_PATH` is
+ignored by this version and yields an unsigned installer. Artifacts land in
+`src-tauri/target/release/bundle/nsis/` as `WC3V_<version>_x64-setup.exe`
+plus a `.sig`; both must exist. `deploy-desktop.js` refuses a missing `.sig`
+or a version not newer than what is published, uploads the installer before
+the manifest, fetches both back, and runs `version-check.js --release`, which
+also reads the version out of the compiled binary. Everything lands in
+`r2:wc3v-cdn/desktop/`, public at `https://cdn.wc3v.com/desktop/`, and
+`latest.json` there is the release channel. Installers are never committed.
 
-It also runs `node tools/version-check.js --release`, which is stricter than the
-plain check in two ways that only matter at a release. The top CHANGELOG heading
-has to name the version being shipped and carry a date, so a release cannot go
-out undocumented. And the version is read back out of the compiled binary's PE
-resource, which is the only thing that catches editing `tauri.conf.json` *after*
-the Rust compile: the installer filename would say the new version while the
-running app reported the old one to the updater and in the UI.
+### There is no code signing
 
-**Installers are never committed.** 15 MB of binary does not belong in an
-open-source history, and this script is the only path from a build to the CDN.
-
-Everything lands in `r2:wc3v-cdn/desktop/`, public at
-`https://cdn.wc3v.com/desktop/`, which is the endpoint in `tauri.conf.json`
-under `plugins.updater.endpoints`. **Every build publishes to
-`desktop/latest.json`, which is *the* release channel — and as of 1.0.0 the
-public is on it.** Dev builds must no longer be pushed there casually: split a
-`desktop/dev/latest.json` (and point a dev install's endpoint at it) before
-the next round of dogfooding-grade builds.
+SignPath declined the project (Aug 2026). Paid signing would not silence
+SmartScreen (EV lost instant trust in 2024) and the Microsoft Store would mean
+submitting Blizzard-derived art to Microsoft, who own Blizzard. So
+`client/install.ps1` is the answer: `Invoke-WebRequest` does not write the
+Mark of the Web, and the script checks the installer against the `sha256` in
+`latest.json` before running it. NSIS installs per-user with no UAC prompt.
+Smart App Control still blocks unsigned binaries, and the download page says
+so. The script is ASCII only: Windows PowerShell 5.1 reads a BOM-less file as
+ANSI and one em dash broke it. `render.yaml` forces `text/plain` on it
+because Render types `.ps1` as octet-stream.
 
 ## Traps that have already bitten this
 
-- **Tauri runs sync commands on the main thread.** A slow one freezes the
-  window. Make it `async` and use `spawn_blocking`.
-- **Tauri v2 does not expose `window.__TAURI__`** unless `withGlobalTauri` is
-  true, and core plugin commands need explicit capability grants.
-- **Byte-returning commands use `tauri::ipc::Response`**, not `Vec<u8>`, which
-  would serialise as a JSON array of numbers.
-- **Editing an `include_str!`'d file while a build runs ships the OLD one.**
-  `overlay.rs` compiles `handoff.html`, `shell.html`, `overlay.css` and
-  `overlay-render.js` into the binary.
-- **Rebuild the parser bundle** after any `lib/` or `helpers/` change
-  (`npm run build:parser`), or the app silently uses the old parser.
-  `parserEntry.js` has silently dropped unknown parser options before;
-  `tools/verify-bundle-parity.js --fast` proves the passthrough.
-- **`rclone copyto` to R2 needs `--s3-no-check-bucket`.** Without it rclone
-  probes for the bucket, falls back to `CreateBucket`, and an object-scoped token
-  denies it — printing "AccessDenied: CreateBucket", which reads as a
-  credentials problem.
-- **Never enable reqwest's `gzip` feature** (or `deflate`, `brotli`, `zstd`).
-  The CDN stores `.json.gz` with `Content-Encoding: gzip`, so a transparently
-  decompressing client hands back plain JSON, which gets written under a `.gz`
-  name and fails to inflate later. The bytes off the wire are the file.
-- **`LastReplay.w3g` is not byte-identical to its autosave**, and no autosave
-  even shares its size, so content-hash dedupe can never collapse the pair. The
-  watcher holds it for a 30 s grace window instead, and the backfill filters it
-  out of the queue entirely.
-- **`moments` is capped at 24 by importance; the `combat` ledger is not.**
-  Deriving kill and death counts from `moments` under-counts any busy game, and
-  at most one moment is emitted per battle. Read `players[slot].combat` for
-  counts and `moments` for the highlight reel.
-- **`heroBuilds` carries Mirror Image illusions as extra level-1 heroes** with
-  the real hero's own itemId, so a raw read draws four Blademasters. Always go
-  through `BuildCard.heroesOf`. `t2Units`/`t3Units` likewise include a hero
-  trained inside that tier, which is why `BuildCard.keyUnits` filters them.
-- **`itemPurchases` has no category and never will**, because adding one is a
-  schema bump plus a re-parse of every stored game. Whether an item is kept or
-  spent comes from `js/item-classes.js`, generated out of `helpers/mappings.js`
-  (`itemAbilityData.category`, with `dropTables.json` `class` as the fallback)
-  by `tools/build-item-classes.js`. Re-run it and commit the output after any
-  change to either source; an id it does not list counts as kept.
-- **A grading constant that has not been run over the corpus is a guess.** Every
-  first-pass threshold in the old `GameReport.js` was too eager in the same
-  direction, and that whole module is gone now: see the 0.8.0 changelog for why
-  a per-race average of dominance or APM is not a benchmark either.
-  The unit test asserts shape and will pass with meaningless labels.
-- **Anything borrowed from the viewer was drawn against the viewer's geometry.**
-  Squeezing a chart to fit here has clipped it before, and `line-height: 1`
-  alone reads as overflow to the fold audit.
-- **`cargo` is not on PATH in fresh shells.** It is in `%USERPROFILE%\.cargo\bin`.
+- **Tauri runs sync commands on the main thread.** Make a slow one `async` and use `spawn_blocking`.
+- **Tauri v2 does not expose `window.__TAURI__`** unless `withGlobalTauri` is true, and plugin commands need explicit capability grants.
+- **Byte-returning commands use `tauri::ipc::Response`**, not `Vec<u8>`.
+- **Editing an `include_str!`'d file while a build runs ships the old one.** `overlay.rs` compiles the handoff and overlay files into the binary.
+- **Rebuild the parser bundle** after any `lib/` or `helpers/` change. `tools/verify-bundle-parity.js --fast` proves option passthrough.
+- **`rclone copyto` to R2 needs `--s3-no-check-bucket`**, or an object-scoped token fails with "AccessDenied: CreateBucket".
+- **Never enable reqwest's `gzip` feature.** The CDN stores `.json.gz` with `Content-Encoding: gzip`; a transparently decompressing client writes plain JSON under a `.gz` name.
+- **`LastReplay.w3g` is not byte-identical to its autosave.** The watcher holds it for a 30 s grace window; the backfill filters it out.
+- **`heroBuilds` carries Mirror Image illusions as extra level-1 heroes.** Go through `BuildCard.heroesOf`.
+- **`itemPurchases` has no category.** Kept versus spent comes from `js/item-classes.js`, generated from `helpers/mappings.js` by `tools/build-item-classes.js`.
+- **A grading constant that has not been run over the corpus is a guess.** Every first-pass threshold in the deleted `GameReport.js` was too eager in the same direction.
+- **Anything borrowed from the viewer was drawn against the viewer's geometry.** `line-height: 1` alone reads as overflow to the fold audit.
+- **Folder paths are compared as registered, not canonicalised.** The tree, the exclusion set and the scan all build from the same walk of the same root string; a `\\?\`-prefixed canonical path matches none of them.

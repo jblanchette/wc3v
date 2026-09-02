@@ -1,13 +1,22 @@
 // The first-run screen. Once, on a machine that has never been set up.
 //
-// Four rows: where your replays are, who you are, whether ladder lookups are
-// on, and whether to read the history already on disk. A fifth appears only
-// for a big library: whether to read 1v1 games only. Every one of them is
-// reachable from Settings afterwards, so nothing here is a decision anybody is
-// stuck with, and every row is skippable.
+// Four rows: your replay folders, who you are, whether ladder lookups are on,
+// and whether to read the history already on disk. A fifth appears only for a
+// big library: whether to read 1v1 games only. Every one of them is reachable
+// from Settings afterwards, so nothing here is a decision anybody is stuck
+// with, and every row is skippable.
 //
 // What it is NOT: a tour, a carousel, or a sequence of screens. The app is a
 // feed of your games and the fastest way to explain it is to show it.
+//
+// ── The folders row ─────────────────────────────────────────────────────────
+//
+// The tree js/folders.js draws: every directory that holds replays, under the
+// root it was found in. People sort replays into folders to label them, and
+// the walk-through is where they say which of those folders count. Each row
+// can be switched off, renamed or removed here, with the count beside it so
+// "3,128 replays" rather than "found a folder" is the reassurance. The same
+// renderer serves Settings, so the two cannot drift.
 //
 // ── The W3Champions row ─────────────────────────────────────────────────────
 //
@@ -27,9 +36,8 @@
   const el = (id) => document.getElementById(id);
 
   window.createFirstRun = (deps) => {
-    // deps: invoke, log, errText, roots(), addRoot(root), onScan(path),
-    //       setIdentity(name), startBackfill(), onW3cChange(on),
-    //       onOnly1v1Set(), onDone()
+    // deps: invoke, log, errText, folders, setIdentity(name), startBackfill(),
+    //       onW3cChange(on), onOnly1v1Set(), onDone()
 
     const sheet = () => el('setup-sheet');
 
@@ -39,21 +47,14 @@
     // person so the default is stated rather than sprung.
     const ONLY_1V1_SUGGEST_AT = 500;
 
+    // The count of replays the enabled folders hold, which is what the
+    // backfill would read. Redrawn whenever the tree changes.
     const renderRoots = () => {
-      const roots = deps.roots() || [];
+      const F = deps.folders;
       const line = el('setup-roots');
       const filterRow = el('setup-only1v1-row');
-      if (!roots.length) {
-        line.textContent = 'No replay folder found. Add the one Warcraft III saves to.';
-        if (filterRow) filterRow.hidden = true;
-        return;
-      }
-      // The count is the reassurance. "Found a folder" could be the wrong one;
-      // "3,128 replays" is somebody's actual history.
-      const total = roots.reduce((n, r) => n + (r.replay_count || 0), 0);
-      line.textContent = total
-        ? `${roots.length} folder${roots.length > 1 ? 's' : ''}, ${total.toLocaleString()} replays`
-        : `${roots.length} folder${roots.length > 1 ? 's' : ''}, no replays in it yet`;
+      line.textContent = F.summary();
+      const total = F.list.reduce((n, f) => n + (f.enabled ? (f.direct_count || 0) : 0), 0);
 
       if (filterRow) {
         filterRow.hidden = total < ONLY_1V1_SUGGEST_AT;
@@ -88,14 +89,8 @@
           return;
         }
         if (!dir) return;
-        try {
-          const root = await deps.invoke('add_root', { path: dir });
-          deps.addRoot(root);
-          renderRoots();
-          deps.onScan(root.path);
-        } catch (e) {
-          deps.log(`could not add that folder: ${deps.errText(e)}`, 'err');
-        }
+        await deps.folders.add(dir);
+        renderRoots();
       });
 
       // Enter on the name field is Start. Somebody who has typed their tag has
@@ -161,6 +156,9 @@
           deps.log(`could not check setup state: ${deps.errText(e)}`, 'warn');
         }
         if (done) return false;
+        // The tree mounts here rather than at boot, so a machine that is
+        // already set up never builds a tree nobody will see.
+        deps.folders.mount(el('setup-folders'), { compact: true });
         renderRoots();
         sheet().hidden = false;
         el('setup-name').focus();

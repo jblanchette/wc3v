@@ -424,6 +424,15 @@
         if (summary.gameMode && summary.gameMode !== '1v1') bits.push(summary.gameMode);
         meta.appendChild(node('span', null, bits.join(' · ')));
 
+        // The folder the replay sits in, as the person labelled it. Same chip
+        // shape as a tag, since it is a label they chose, but it is read-only
+        // here: folders are renamed in Settings, where the whole tree is.
+        if (o.folderLabel) {
+          const chip = node('span', 'tag tag-folder', o.folderLabel);
+          chip.title = 'Replay folder';
+          meta.appendChild(chip);
+        }
+
         // Tags ride the fact line rather than getting a row of their own. Most
         // games have none, and a permanently empty band is furniture.
         const tags = tagStrip();

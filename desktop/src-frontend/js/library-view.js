@@ -38,7 +38,7 @@
     let activeKey = null;
     let mounted = null;  // the report handle, for its chart teardown
 
-    const filters = { text: '', race: 'any' };
+    const filters = { text: '', race: 'any', folder: '' };
 
     // A game belongs here when no seat is yours. That is the whole rule: it
     // covers a downloaded pro replay, a game you observed, and a friend's
@@ -60,6 +60,10 @@
     const tagsOf = (summary) => (deps.tags ? deps.tags.get(summary.key) : []) || [];
 
     const matches = (summary) => {
+      if (filters.folder && deps.folders) {
+        const at = deps.folders.folderOf(summary.key);
+        if (!at || at.path !== filters.folder) return false;
+      }
       if (filters.race !== 'any') {
         const races = Object.values(summary.players || {}).map(p => p.race);
         if (races.indexOf(filters.race) === -1) return false;
@@ -197,6 +201,7 @@
         onReparse: deps.onReparse,
         onOpenProfile: deps.onOpenProfile,
         tags: deps.tags,
+        folderLabel: deps.folders ? deps.folders.labelFor(summary.key) : null,
         // A tag change reorders nothing but does change what the filter matches
         // and what each row shows, so the list redraws with it.
         onTagsChanged: () => { renderList(); }
@@ -240,6 +245,11 @@
         clearTimeout(filterTimer);
         filterTimer = setTimeout(applyFilters, 120);
       });
+      el('lib-folder').addEventListener('change', (e) => {
+        filters.folder = e.target.value;
+        e.target.classList.toggle('is-set', !!filters.folder);
+        applyFilters();
+      });
 
       // Opening a file has to REGISTER its folder as a replay root rather than
       // reach past the scoped-read guard. `read_replay` canonicalises its
@@ -254,6 +264,7 @@
     return {
       render (corpus) {
         all = (corpus || []).filter(notMine);
+        if (deps.folders) deps.folders.fillSelect(el('lib-folder'), all);
         applyFilters();
       },
       select,

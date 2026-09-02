@@ -96,3 +96,63 @@
   cursor: pointer;
 }
 .app-version:hover { color: var(--ink); }
+
+/* ── Replay folders ───────────────────────────────────────────────────────
+   The tree js/folders.js draws, in Settings and on the first-run screen.
+   One row per directory that holds replays, indented by --depth. Rows are
+   the same carved well the old folder rows were; the indent is a padding
+   rather than nested markup, so a deep tree stays one flat list of hit
+   targets at --hit-min. Scrolls inside itself past six rows or so: a
+   library with twenty folders must not push the Start button off the
+   setup screen. */
+.ftree {
+  display: grid;
+  gap: var(--sp-1);
+  max-height: 15rem;
+  margin-bottom: var(--sp-3);
+}
+.frow {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  min-height: var(--hit-min);
+  padding: var(--sp-1) var(--sp-2) var(--sp-1) calc(var(--sp-2) + var(--depth, 0) * 1.25rem);
+  background: var(--app-well);
+  border: 1px solid var(--app-line);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--cut-in);
+}
+.frow.is-root { background: var(--app-panel); }
+.frow-check { min-height: 0; padding: 0; }
+.frow-check input { margin: 0; }
+.frow-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.frow.is-root .frow-name { font-weight: 700; }
+.frow.is-off .frow-name { color: var(--ink-faint); font-weight: 500; }
+.frow-meta {
+  flex: none;
+  color: var(--ink-dim);
+  font-size: var(--fs-min);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.frow.is-off .frow-meta { color: var(--ink-faint); }
+.frow-act { flex: none; }
+.frow-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: var(--ico-sm);
+  padding: 0 var(--sp-2);
+  background: var(--app-bg);
+  border: 1px solid var(--app-edge);
+  border-radius: var(--radius-sm);
+  color: var(--ink);
+  font: inherit;
+  font-weight: 600;
+}
+/* A hint riding beside a button instead of under a heading. */
+.hint-inline { margin: 0; }

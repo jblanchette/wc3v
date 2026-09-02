@@ -162,7 +162,9 @@
           const t0 = performance.now();
           try {
             const out = await deps.parseOn(w, item.path);
-            await deps.persistSummary(out, key, playedAt);
+            // The path rides along so the caller can record which folder the
+            // game came from; the summary itself never carries one.
+            await deps.persistSummary(out, key, playedAt, item.path);
             st.counts.parsed++;
             st.durations.push(performance.now() - t0);
             if (st.durations.length > 20) st.durations.shift();

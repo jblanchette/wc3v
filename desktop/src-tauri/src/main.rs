@@ -15,12 +15,14 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 mod filter;
+mod folders;
 mod overlay;
 mod replays;
 mod stats;
 mod w3c;
 mod watcher;
 
+use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 use std::sync::Mutex;
 
@@ -29,9 +31,18 @@ use tauri::{Emitter, Manager, State};
 
 /// Roots the user has actually opted into. Every scoped read is checked
 /// against this list, so the set of readable paths is explicit and small.
+///
+/// `excluded` is the finer grain inside them: directories whose own files
+/// the scanner and the watcher skip because the folder is switched off or
+/// removed in Settings. Both are rebuilt from `folders.json` plus discovery
+/// by `refresh_folders`, and nothing else writes them.
 #[derive(Default)]
 struct AppState {
     roots: Mutex<Vec<PathBuf>>,
+    excluded: Mutex<HashSet<PathBuf>>,
+    /// Serialises read-modify-write of sources.json across concurrent
+    /// `record_sources` calls from the two backfill workers.
+    sources_lock: Mutex<()>,
 }
 
 #[derive(Serialize)]
@@ -109,40 +120,237 @@ fn ensure_within(candidate: &Path, allowed: &[PathBuf]) -> Result<PathBuf, Strin
     Err("path is outside the permitted directories".into())
 }
 
-#[tauri::command]
-fn discover_roots(state: State<'_, AppState>) -> Vec<replays::ReplayRoot> {
-    let found = replays::discover_roots();
-    let mut roots = state.roots.lock().unwrap();
-    for r in &found {
-        let p = PathBuf::from(&r.path);
-        if !roots.contains(&p) {
-            roots.push(p);
-        }
-    }
-    found
+// ── Folders ────────────────────────────────────────────────────
+
+fn folders_config_path(app: &tauri::AppHandle) -> PathBuf {
+    app.path()
+        .app_data_dir()
+        .unwrap_or_else(|_| PathBuf::from("."))
+        .join("folders.json")
 }
 
-/// Register a folder the user picked by hand. Needed on Linux/SteamOS, where
-/// the game lives inside a Wine/Proton prefix we may not guess.
+fn sources_path(app: &tauri::AppHandle) -> PathBuf {
+    app.path()
+        .app_data_dir()
+        .unwrap_or_else(|_| PathBuf::from("."))
+        .join("sources.json")
+}
+
+/// Rebuild the folder tree from disk plus discovery, and publish the two
+/// derived sets (readable roots, excluded folders) into `AppState`. Every
+/// command that changes the config ends by calling this, so the state can
+/// never lag the file.
+fn refresh_folders(app: &tauri::AppHandle, state: &AppState) -> Vec<folders::Folder> {
+    let config = folders::FolderConfig::load(&folders_config_path(app));
+    let tree = folders::build_tree(&config);
+    *state.roots.lock().unwrap() = folders::roots_of(&tree);
+    *state.excluded.lock().unwrap() = folders::excluded_of(&config, &tree);
+    tree
+}
+
+/// The roots as the frontend's boot payload has always described them.
+fn roots_payload(tree: &[folders::Folder]) -> Vec<replays::ReplayRoot> {
+    tree.iter()
+        .filter(|f| f.depth == 0)
+        .map(|f| replays::ReplayRoot {
+            path: f.path.clone(),
+            account_id: if f.manual { "manual".into() } else { String::new() },
+            replay_count: f.total_count,
+        })
+        .collect()
+}
+
 #[tauri::command]
-fn add_root(path: String, state: State<'_, AppState>) -> Result<replays::ReplayRoot, String> {
+fn list_folders(app: tauri::AppHandle, state: State<'_, AppState>) -> Vec<folders::Folder> {
+    refresh_folders(&app, &state)
+}
+
+/// Register a folder the user picked by hand, and remember it. Needed on
+/// Linux/SteamOS, where the game lives inside a Wine/Proton prefix we may
+/// not guess, and for anyone keeping replays outside the game's own tree.
+#[tauri::command]
+fn add_root(
+    path: String,
+    app: tauri::AppHandle,
+    state: State<'_, AppState>,
+) -> Result<replays::ReplayRoot, String> {
     let p = PathBuf::from(&path);
     if !p.is_dir() {
         return Err("not a directory".into());
     }
-    // A cheap count. The real scan happens when the folder is selected, so
-    // adding a folder never pays for a full dedupe pass.
-    let mut count = 0;
-    replays::count_replays(&p, &mut count);
-    let mut roots = state.roots.lock().unwrap();
-    if !roots.contains(&p) {
-        roots.push(p.clone());
+    let cfg = folders_config_path(&app);
+    let mut config = folders::FolderConfig::load(&cfg);
+    // Picking a folder that sits INSIDE a root already known (Autosaved\Custom
+    // under Replays) is a request to see it, not a second root: clear any
+    // removal and leave the tree to find it.
+    let existing_root = {
+        let roots = state.roots.lock().unwrap();
+        roots
+            .iter()
+            .find(|r| p.starts_with(r))
+            .map(|r| r.to_string_lossy().to_string())
+    };
+    if existing_root.is_some() {
+        folders::set_enabled(&mut config, &path, true);
+        if let Some(prefs) = config.folders.get_mut(&path) {
+            prefs.removed = false;
+        }
+    } else {
+        folders::add_manual_root(&mut config, &path);
     }
+    config.save(&cfg)?;
+    let tree = refresh_folders(&app, &state);
+    let total = tree
+        .iter()
+        .find(|f| f.path == path)
+        .map(|f| f.total_count)
+        .unwrap_or(0);
     Ok(replays::ReplayRoot {
-        path: p.to_string_lossy().to_string(),
+        path,
         account_id: "manual".into(),
-        replay_count: count,
+        replay_count: total,
     })
+}
+
+/// A label typed by the person. Empty or blank goes back to the default.
+/// Nothing on disk is renamed.
+#[tauri::command]
+fn set_folder_label(
+    path: String,
+    label: Option<String>,
+    app: tauri::AppHandle,
+    state: State<'_, AppState>,
+) -> Result<Vec<folders::Folder>, String> {
+    let cfg = folders_config_path(&app);
+    let mut config = folders::FolderConfig::load(&cfg);
+    folders::set_label(&mut config, &path, label.as_deref());
+    config.save(&cfg)?;
+    Ok(refresh_folders(&app, &state))
+}
+
+#[tauri::command]
+fn set_folder_enabled(
+    path: String,
+    enabled: bool,
+    app: tauri::AppHandle,
+    state: State<'_, AppState>,
+) -> Result<Vec<folders::Folder>, String> {
+    let cfg = folders_config_path(&app);
+    let mut config = folders::FolderConfig::load(&cfg);
+    folders::set_enabled(&mut config, &path, enabled);
+    config.save(&cfg)?;
+    Ok(refresh_folders(&app, &state))
+}
+
+/// Stop looking in a folder. Never deletes, moves or renames anything: the
+/// directory and every replay in it stay exactly where they are.
+#[tauri::command]
+fn remove_folder(
+    path: String,
+    app: tauri::AppHandle,
+    state: State<'_, AppState>,
+) -> Result<Vec<folders::Folder>, String> {
+    let cfg = folders_config_path(&app);
+    let mut config = folders::FolderConfig::load(&cfg);
+    folders::remove(&mut config, &path);
+    config.save(&cfg)?;
+    Ok(refresh_folders(&app, &state))
+}
+
+/// Bring back every removed folder. The way out of "I removed the wrong one".
+#[tauri::command]
+fn restore_folders(
+    app: tauri::AppHandle,
+    state: State<'_, AppState>,
+) -> Result<Vec<folders::Folder>, String> {
+    let cfg = folders_config_path(&app);
+    let mut config = folders::FolderConfig::load(&cfg);
+    folders::restore_removed(&mut config);
+    config.save(&cfg)?;
+    Ok(refresh_folders(&app, &state))
+}
+
+// ── Sources: which file a stored game came from ────────────────
+
+#[derive(serde::Deserialize)]
+struct SourceEntry {
+    key: String,
+    path: String,
+}
+
+/// Record where freshly parsed games came from. Batched by the frontend,
+/// because a 4,000-game backfill calling this once per game would rewrite
+/// the file 4,000 times.
+#[tauri::command]
+async fn record_sources(
+    entries: Vec<SourceEntry>,
+    app: tauri::AppHandle,
+    state: State<'_, AppState>,
+) -> Result<usize, String> {
+    let allowed = { state.roots.lock().unwrap().clone() };
+    let file = sources_path(&app);
+    let mut clean: Vec<(String, String)> = Vec::with_capacity(entries.len());
+    for e in entries {
+        if !valid_store_key(&e.key) {
+            return Err(format!("invalid store key: {}", e.key));
+        }
+        // The path must be one the app was allowed to read in the first place,
+        // and it is stored as given (not canonicalised) so it matches the
+        // folder tree, which is built from the same walk.
+        ensure_within(Path::new(&e.path), &allowed)?;
+        clean.push((e.key, e.path));
+    }
+    let n = clean.len();
+    let _guard = state.sources_lock.lock().unwrap();
+    let mut sources = folders::Sources::load(&file);
+    for (k, p) in clean {
+        sources.files.insert(k, p);
+    }
+    sources.save(&file)?;
+    Ok(n)
+}
+
+/// key → the directory each stored game was parsed from. Paths cross the
+/// bridge here and are turned into folder labels on the other side; nothing
+/// renders them.
+#[tauri::command]
+async fn game_sources(app: tauri::AppHandle) -> Result<std::collections::HashMap<String, String>, String> {
+    let file = sources_path(&app);
+    tauri::async_runtime::spawn_blocking(move || folders::Sources::load(&file).dirs())
+        .await
+        .map_err(|e| e.to_string())
+}
+
+/// Fill in sources for games parsed before sources existed, or whose file
+/// has since moved between folders. Scans every root WITHOUT the folder
+/// exclusions (a game from a folder that is off now still came from
+/// somewhere) and matches by size, then by hash through the persisted index.
+#[tauri::command]
+async fn resolve_sources(
+    app: tauri::AppHandle,
+    state: State<'_, AppState>,
+) -> Result<std::collections::HashMap<String, String>, String> {
+    let roots = { state.roots.lock().unwrap().clone() };
+    let file = sources_path(&app);
+    let index = hash_index_path(&app);
+    let keys = store_keys_with_ext(&parse_store_dir(&app), SUMMARY_EXT);
+    tauri::async_runtime::spawn_blocking(move || {
+        let mut files: Vec<replays::ReplayFile> = Vec::new();
+        for root in &roots {
+            files.extend(replays::scan_meta(root, &HashSet::new()).replays);
+        }
+        let mut sources = folders::Sources::load(&file);
+        // Drop entries whose file is gone, so a replay moved from one folder
+        // to another is re-resolved into its new one.
+        sources.files.retain(|_, p| Path::new(p).exists());
+        let found = folders::resolve_missing(&mut sources, &keys, &files, &index);
+        if found > 0 || sources.files.len() != keys.len() {
+            let _ = sources.save(&file);
+        }
+        Ok(sources.dirs())
+    })
+    .await
+    .map_err(|e| format!("resolve failed: {e}"))?
 }
 
 /// Scan a root. `async` is load-bearing, not stylistic: Tauri runs synchronous
@@ -159,12 +367,17 @@ async fn scan_replays(
     // Take and release the lock before any await. A std MutexGuard held across
     // an await point would make this future non-Send.
     let allowed = { state.roots.lock().unwrap().clone() };
-    let dir = ensure_within(Path::new(&root), &allowed)?;
+    let excluded = { state.excluded.lock().unwrap().clone() };
+    // The root as registered, not canonicalised: the folder tree and the
+    // exclusion set are built from the registered form, and a `\\?\`-prefixed
+    // canonical path would never match either.
+    ensure_within(Path::new(&root), &allowed)?;
+    let dir = PathBuf::from(&root);
     let index = hash_index_path(&app);
 
     // Phase 1: walk + stat only (~230 ms, reads no file contents). This is
     // everything the list needs, so it is what the caller gets back.
-    let meta = tauri::async_runtime::spawn_blocking(move || replays::scan_meta(&dir))
+    let meta = tauri::async_runtime::spawn_blocking(move || replays::scan_meta(&dir, &excluded))
         .await
         .map_err(|e| format!("scan failed: {e}"))?;
 
@@ -558,13 +771,14 @@ async fn scan_all(
     state: State<'_, AppState>,
 ) -> Result<replays::ScanResult, String> {
     let roots = { state.roots.lock().unwrap().clone() };
+    let excluded = { state.excluded.lock().unwrap().clone() };
     let index = hash_index_path(&app);
     tauri::async_runtime::spawn_blocking(move || {
         let mut all: Vec<replays::ReplayFile> = Vec::new();
         let mut walk_ms = 0;
         let mut stat_ms = 0;
         for root in &roots {
-            let meta = replays::scan_meta(root);
+            let meta = replays::scan_meta(root, &excluded);
             walk_ms += meta.stats.walk_ms;
             stat_ms += meta.stats.stat_ms;
             all.extend(meta.replays);
@@ -809,7 +1023,7 @@ async fn check_for_update(app: tauri::AppHandle, install: bool) -> Result<serde_
 
 #[tauri::command]
 fn init(app: tauri::AppHandle, state: State<'_, AppState>) -> InitPayload {
-    let roots = discover_roots(state);
+    let roots = roots_payload(&refresh_folders(&app, &state));
     let data_dir = app
         .path()
         .app_data_dir()
@@ -826,8 +1040,9 @@ fn init(app: tauri::AppHandle, state: State<'_, AppState>) -> InitPayload {
 #[tauri::command]
 fn start_watching(app: tauri::AppHandle, state: State<'_, AppState>) -> Result<usize, String> {
     let roots = state.roots.lock().unwrap().clone();
+    let excluded = state.excluded.lock().unwrap().clone();
     let index = hash_index_path(&app);
-    watcher::start(app, roots, index)
+    watcher::start(app, roots, excluded, index)
 }
 
 /// Show and focus the main window, restoring it from the tray.
@@ -939,8 +1154,15 @@ fn main() {
         })
         .invoke_handler(tauri::generate_handler![
             init,
-            discover_roots,
+            list_folders,
             add_root,
+            set_folder_label,
+            set_folder_enabled,
+            remove_folder,
+            restore_folders,
+            record_sources,
+            game_sources,
+            resolve_sources,
             scan_replays,
             read_replay,
             read_map_file,

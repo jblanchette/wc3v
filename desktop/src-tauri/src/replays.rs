@@ -43,7 +43,7 @@
 //! Everything the UI displays comes from the walk+stat pass, so the list can
 //! render in ~340 ms regardless of what dedupe is still doing.
 
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::fs;
 use std::io::Read;
 use std::path::{Path, PathBuf};
@@ -138,14 +138,14 @@ impl HashIndex {
         }
     }
 
-    fn get(&self, path: &str, size: u64, modified_ms: u64) -> Option<&str> {
+    pub fn get(&self, path: &str, size: u64, modified_ms: u64) -> Option<&str> {
         self.entries
             .get(path)
             .filter(|e| e.size == size && e.modified_ms == modified_ms)
             .map(|e| e.hash.as_str())
     }
 
-    fn put(&mut self, path: String, size: u64, modified_ms: u64, hash: String) {
+    pub fn put(&mut self, path: String, size: u64, modified_ms: u64, hash: String) {
         self.entries.insert(path, IndexEntry { size, modified_ms, hash });
     }
 
@@ -253,17 +253,22 @@ pub fn discover_roots() -> Vec<ReplayRoot> {
     out
 }
 
-/// Count `.w3g` files under a directory without stat-ing or reading them.
-pub fn count_replays(dir: &Path, out: &mut usize) {
-    walk(dir, &mut |_p| *out += 1);
-}
-
 /// Depth-first walk over `.w3g` files. Symlinks are not followed, so a loop
 /// in the tree cannot hang the scan.
-fn walk(dir: &Path, f: &mut impl FnMut(PathBuf)) {
+pub fn walk(dir: &Path, f: &mut impl FnMut(PathBuf)) {
+    walk_ex(dir, &HashSet::new(), f);
+}
+
+/// The same walk, skipping the files that sit DIRECTLY in any directory in
+/// `excluded`. Subdirectories are still descended into: a folder switched
+/// off in Settings is that folder, not everything under it, because under
+/// the "every directory holding replays is a folder" rule its children are
+/// folders of their own with their own switch.
+pub fn walk_ex(dir: &Path, excluded: &HashSet<PathBuf>, f: &mut impl FnMut(PathBuf)) {
     let Ok(entries) = fs::read_dir(dir) else {
         return;
     };
+    let skip_files = excluded.contains(dir);
     for entry in entries.flatten() {
         let path = entry.path();
         let Ok(meta) = entry.metadata() else { continue };
@@ -271,11 +276,12 @@ fn walk(dir: &Path, f: &mut impl FnMut(PathBuf)) {
             continue;
         }
         if meta.is_dir() {
-            walk(&path, f);
-        } else if path
-            .extension()
-            .map(|e| e.eq_ignore_ascii_case("w3g"))
-            .unwrap_or(false)
+            walk_ex(&path, excluded, f);
+        } else if !skip_files
+            && path
+                .extension()
+                .map(|e| e.eq_ignore_ascii_case("w3g"))
+                .unwrap_or(false)
         {
             f(path);
         }
@@ -309,13 +315,13 @@ fn unique_key(size: u64) -> String {
 /// Everything the UI displays comes from here, so the list can render before
 /// dedupe has done anything. `key` is left empty, because duplicates are in the
 /// list at this point.
-pub fn scan_meta(root: &Path) -> ScanResult {
+pub fn scan_meta(root: &Path, excluded: &HashSet<PathBuf>) -> ScanResult {
     let t_all = std::time::Instant::now();
     let mut stats = ScanStats::default();
 
     let t = std::time::Instant::now();
     let mut paths = Vec::new();
-    walk(root, &mut |p| paths.push(p));
+    walk_ex(root, excluded, &mut |p| paths.push(p));
     stats.walk_ms = t.elapsed().as_millis() as u64;
     stats.files_seen = paths.len();
 
@@ -429,7 +435,7 @@ pub fn dedupe(mut replays: Vec<ReplayFile>, index_path: &Path) -> ScanResult {
 /// write the hash index once rather than once per root.
 #[cfg(test)]
 pub fn scan_root(root: &Path, index_path: &Path) -> ScanResult {
-    let meta = scan_meta(root);
+    let meta = scan_meta(root, &HashSet::new());
     let mut res = dedupe(meta.replays, index_path);
     res.stats.walk_ms = meta.stats.walk_ms;
     res.stats.stat_ms = meta.stats.stat_ms;
@@ -485,6 +491,31 @@ mod tests {
         assert!(!is_autosave_name("Replay_2026_07_18.w3g"));
         assert!(!is_autosave_name("2980316660_Infi_Fly100%_Moon_Lyn_LostTemple.w3g"));
         assert!(!is_autosave_name("Replay_YYYY_MM_DD_HHMM.w3g"));
+    }
+
+    #[test]
+    fn an_excluded_folder_skips_its_own_files_and_keeps_its_children() {
+        let base = std::env::temp_dir().join(format!("wc3v-walk-ex-{}", std::process::id()));
+        let _ = fs::remove_dir_all(&base);
+        let root = base.join("Replays");
+        let auto = root.join("Autosaved");
+        let multi = auto.join("Multiplayer");
+        fs::create_dir_all(&multi).unwrap();
+        fs::write(root.join("r.w3g"), b"x").unwrap();
+        fs::write(auto.join("a.w3g"), b"x").unwrap();
+        fs::write(multi.join("m.w3g"), b"x").unwrap();
+
+        let mut ex = HashSet::new();
+        ex.insert(auto.clone());
+        let mut seen = Vec::new();
+        walk_ex(&root, &ex, &mut |p| seen.push(p));
+        assert!(seen.contains(&root.join("r.w3g")));
+        assert!(!seen.contains(&auto.join("a.w3g")), "the switched-off folder's own file");
+        assert!(seen.contains(&multi.join("m.w3g")), "its child folder has its own switch");
+
+        let res = scan_meta(&root, &ex);
+        assert_eq!(res.replays.len(), 2);
+        let _ = fs::remove_dir_all(&base);
     }
 
     #[test]

@@ -218,9 +218,19 @@
       const result = (f && f.result) || 'any';
       const race = (f && f.race) || 'any';
       const me = f && f.identityName ? PA.normName(f.identityName) : '';
+      // A folder path plus the function that says which folder a game is in
+      // (js/folders.js). The store knows nothing about folders itself: a
+      // summary carries no path, and the mapping lives in a sidecar.
+      const folder = (f && f.folder) || '';
+      const folderOf = f && typeof f.folderOf === 'function' ? f.folderOf : null;
 
       return (games || []).filter((g) => {
         const players = Object.values(g.players || {});
+
+        if (folder && folderOf) {
+          const at = folderOf(g.key);
+          if (!at || at.path !== folder) return false;
+        }
 
         // The map is matched on the name the feed shows. Summaries carry
         // `mapRaw` and `map`, which are file names with version suffixes, so

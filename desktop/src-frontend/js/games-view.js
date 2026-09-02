@@ -241,12 +241,15 @@
 
     // ── Filtering ───────────────────────────────────────────────────────────
 
-    const filters = { text: '', result: 'any', race: 'any' };
+    const filters = { text: '', result: 'any', race: 'any', folder: '' };
 
     const applyFilters = () => {
       render(deps.store.filterCorpus(allGames, {
         ...filters,
-        identityName: deps.identityName()
+        identityName: deps.identityName(),
+        // Which folder a game came from is the folder module's to answer;
+        // the store only compares paths it is handed.
+        folderOf: deps.folders ? deps.folders.folderOf : null
       }));
     };
 
@@ -272,6 +275,11 @@
       el('feed-search').addEventListener('input', (e) => {
         filters.text = e.target.value;
         scheduleFilter();
+      });
+      el('feed-folder').addEventListener('change', (e) => {
+        filters.folder = e.target.value;
+        e.target.classList.toggle('is-set', !!filters.folder);
+        applyFilters();
       });
       for (const group of ['feed-result', 'feed-race']) {
         el(group).addEventListener('click', (e) => {
@@ -721,6 +729,7 @@
         onReparse: deps.onReparse,
         onOpenProfile: deps.onOpenProfile,
         tags: deps.tags,
+        folderLabel: deps.folders ? deps.folders.labelFor(summary.key) : null,
         before: live ? modeSwitch() : null
       });
     };
@@ -751,6 +760,8 @@
       // The corpus changed. Everything else goes through the filter.
       render (corpus) {
         allGames = corpus || [];
+        // Folder options carry a game count each, so they follow the corpus.
+        if (deps.folders) deps.folders.fillSelect(el('feed-folder'), allGames);
         applyFilters();
       },
       select,

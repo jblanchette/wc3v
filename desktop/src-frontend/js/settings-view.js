@@ -4,46 +4,27 @@
 // opened on a file browser and a log.
 //
 // NEVER render a filesystem path. Paths contain the user's account name and
-// this window is aimed at streamers. Folders are "Replay folder 1/2" and the
-// raw path stays in state, out of the DOM as well as off screen.
+// this window is aimed at streamers. The folder tree (js/folders.js) shows
+// labels, and the raw path stays in state, out of the DOM as well as off
+// screen.
 
 (function () {
   'use strict';
 
   const el = (id) => document.getElementById(id);
 
-  const node = (tag, className, text) => {
-    const n = document.createElement(tag);
-    if (className) n.className = className;
-    if (text != null) n.textContent = text;
-    return n;
-  };
-
   window.createSettingsView = (deps) => {
-    // deps: invoke, log, backfill, onScan(path), roots(), addRoot(root),
-    //       errText, identityName(), onW3cChange(enabled)
+    // deps: invoke, log, backfill, folders, errText, identityName(),
+    //       onW3cChange(enabled)
 
+    // The folder tree is drawn by js/folders.js and redraws itself on every
+    // change; this only keeps the summary line above it current.
     const renderRoots = () => {
-      const host = el('roots');
-      host.innerHTML = '';
-      const roots = deps.roots();
-      if (!roots.length) {
-        host.appendChild(node('div', 'empty', 'No replay folders found.'));
-        return;
-      }
-      roots.forEach((r, i) => {
-        // Index, not path. The click handler closes over the index, so the
-        // path stays out of the DOM.
-        const row = node('div', 'root');
-        row.appendChild(node('span', 'root-name', `Replay folder ${i + 1}`));
-        row.appendChild(node('span', 'root-meta', `${r.replay_count.toLocaleString()} replays`));
-        const btn = node('button', 'btn btn-sm', 'Rescan');
-        btn.type = 'button';
-        btn.addEventListener('click', () => deps.onScan(deps.roots()[i].path));
-        row.appendChild(btn);
-        host.appendChild(row);
-      });
+      const line = el('folders-summary');
+      if (line) line.textContent = deps.folders.summary();
     };
+    deps.folders.mount(el('folders'));
+    renderRoots();
 
     const syncRetryButton = () => {
       const btn = el('backfill-retry');
@@ -76,15 +57,25 @@
     })();
 
     el('pick-folder').addEventListener('click', async () => {
-      const dir = await window.__TAURI__.dialog.open({ directory: true });
-      if (!dir) return;
+      let dir;
       try {
-        const root = await deps.invoke('add_root', { path: dir });
-        deps.addRoot(root);
-        renderRoots();
-        deps.onScan(root.path);
+        dir = await window.__TAURI__.dialog.open({ directory: true });
       } catch (e) {
-        deps.log(`could not add that folder: ${deps.errText(e)}`, 'err');
+        deps.log(`could not open the folder picker: ${deps.errText(e)}`, 'err');
+        return;
+      }
+      if (!dir) return;
+      await deps.folders.add(dir);
+      renderRoots();
+    });
+
+    // Bring back removed folders and look for new ones. The way out of
+    // "I removed the wrong one", and the way in for a folder made after the
+    // app last looked.
+    el('folders-restore').addEventListener('click', async () => {
+      if (await deps.folders.restore()) {
+        renderRoots();
+        deps.log('looked for replay folders again', 'ok');
       }
     });
 

@@ -171,6 +171,33 @@
 }
 .field input:focus { border-color: var(--app-edge); }
 
+/* A native select drawn as the same carved well as an input. The UA's
+   dropdown chrome is replaced by a drawn caret, since the platform's white
+   box on a dark panel is the most conspicuous thing on the screen. Options
+   themselves stay native: styling a popup list is not a thing CSS can do. */
+.select {
+  min-height: var(--ico-sm);
+  max-width: 14rem;
+  padding: 0 calc(var(--sp-3) + 14px) 0 var(--sp-3);
+  background: var(--app-well)
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 6'%3E%3Cpath fill='none' stroke='%239a8f7d' stroke-width='1.4' d='M1 1l4 4 4-4'/%3E%3C/svg%3E")
+    no-repeat right var(--sp-2) center / 10px 6px;
+  border: 1px solid var(--app-line);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--cut-in);
+  color: var(--ink-2);
+  font: inherit;
+  font-size: var(--fs-min);
+  font-weight: 600;
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+}
+.select:hover { color: var(--ink); border-color: var(--app-edge); }
+.select:focus { outline: none; border-color: var(--app-edge); }
+.select.is-set { color: var(--ink); }
+.select option { background: var(--app-panel); color: var(--ink); }
+
 .empty { color: var(--ink-faint); padding: var(--sp-4) var(--sp-2); }
 
 /* ── Activity ────────────────────────────────────────────────────────── */

@@ -25,10 +25,11 @@
 //!    (autosaves can be disabled) it is announced as the only record of the
 //!    game.
 
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::path::PathBuf;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::mpsc::channel;
-use std::sync::Mutex;
+use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
 use notify::{EventKind, RecursiveMode, Watcher};
@@ -43,7 +44,10 @@ const TICK: Duration = Duration::from_millis(500);
 /// How long a settled `LastReplay.w3g` waits for its autosave twin.
 const LAST_REPLAY_GRACE: Duration = Duration::from_secs(30);
 
-static STARTED: Mutex<bool> = Mutex::new(false);
+/// The stop flag of the loop currently running, if any. Starting again sets
+/// it and spawns a fresh loop over the new folder set; the old one notices
+/// on its next tick and returns, which drops its `notify` watcher.
+static CURRENT: Mutex<Option<Arc<AtomicBool>>> = Mutex::new(None);
 
 /// One settled, deduped replay. `path` is needed to read the file back and is
 /// never rendered; the UI shows `file_name` only.
@@ -66,24 +70,38 @@ pub enum Note {
     Error(String),
 }
 
-/// Begin watching `roots`. Returns how many roots are being watched.
-/// Idempotent. Calling twice will not start a second watcher.
-pub fn start(app: AppHandle, roots: Vec<PathBuf>, index_path: PathBuf) -> Result<usize, String> {
+/// Watch `roots`, skipping files directly inside any of `excluded`. Returns
+/// how many roots are being watched.
+///
+/// Calling it again REPLACES the running watcher rather than adding one, so
+/// a folder added, removed or switched off in Settings takes effect without
+/// a restart. Until Aug 2026 the second call was a no-op: a folder added by
+/// hand was scanned once and never watched, and the log said "watching" over
+/// a loop that had never heard of it.
+pub fn start(
+    app: AppHandle,
+    roots: Vec<PathBuf>,
+    excluded: HashSet<PathBuf>,
+    index_path: PathBuf,
+) -> Result<usize, String> {
+    let stop = Arc::new(AtomicBool::new(false));
     {
-        let mut started = STARTED.lock().unwrap();
-        if *started {
-            return Ok(roots.len());
+        let mut current = CURRENT.lock().unwrap();
+        if let Some(old) = current.take() {
+            old.store(true, Ordering::SeqCst);
         }
-        *started = true;
+        *current = Some(stop.clone());
     }
 
     let count = roots.len();
     spawn_with_sink(
         roots,
+        excluded,
         index_path,
         SETTLE,
         TICK,
         LAST_REPLAY_GRACE,
+        stop,
         move |note| match note {
             Note::Detected(d) => {
                 let _ = app.emit("replay-detected", &d);
@@ -101,13 +119,17 @@ pub fn start(app: AppHandle, roots: Vec<PathBuf>, index_path: PathBuf) -> Result
 /// constants and forwards notes to Tauri events.
 pub(crate) fn spawn_with_sink(
     roots: Vec<PathBuf>,
+    excluded: HashSet<PathBuf>,
     index_path: PathBuf,
     settle: Duration,
     tick: Duration,
     last_replay_grace: Duration,
+    stop: Arc<AtomicBool>,
     sink: impl Fn(Note) + Send + 'static,
 ) -> std::thread::JoinHandle<()> {
-    std::thread::spawn(move || watch_loop(roots, index_path, settle, tick, last_replay_grace, sink))
+    std::thread::spawn(move || {
+        watch_loop(roots, excluded, index_path, settle, tick, last_replay_grace, stop, sink)
+    })
 }
 
 fn is_last_replay(path: &PathBuf) -> bool {
@@ -117,12 +139,15 @@ fn is_last_replay(path: &PathBuf) -> bool {
         .unwrap_or(false)
 }
 
+#[allow(clippy::too_many_arguments)]
 fn watch_loop(
     roots: Vec<PathBuf>,
+    excluded: HashSet<PathBuf>,
     index_path: PathBuf,
     settle: Duration,
     tick: Duration,
     last_replay_grace: Duration,
+    stop: Arc<AtomicBool>,
     sink: impl Fn(Note),
 ) {
     let (tx, rx) = channel();
@@ -156,7 +181,7 @@ fn watch_loop(
     // hash index when it finishes, so per-root passes would write it N times.
     let mut metas: Vec<replays::ReplayFile> = Vec::new();
     for root in &roots {
-        metas.extend(replays::scan_meta(root).replays);
+        metas.extend(replays::scan_meta(root, &excluded).replays);
     }
     for rf in replays::dedupe(metas, &index_path).replays {
         let p = PathBuf::from(&rf.path);
@@ -179,6 +204,12 @@ fn watch_loop(
     let mut last_regular_announce: Option<Instant> = None;
 
     loop {
+        // Replaced by a newer loop over a different folder set. Returning
+        // drops `watcher`, which unregisters every path it was watching.
+        if stop.load(Ordering::SeqCst) {
+            return;
+        }
+
         // Drain whatever the watcher has produced without blocking long,
         // so the settle check below still runs on a regular cadence.
         while let Ok(res) = rx.recv_timeout(tick) {
@@ -192,6 +223,17 @@ fn watch_loop(
                     .map(|e| e.eq_ignore_ascii_case("w3g"))
                     .unwrap_or(false);
                 if !is_w3g {
+                    continue;
+                }
+                // Same rule as the scan: a folder switched off is not watched
+                // for its own files. `notify` watches the root recursively and
+                // cannot be told to skip one subdirectory, so it is filtered
+                // here.
+                let off = path
+                    .parent()
+                    .map(|d| excluded.contains(d))
+                    .unwrap_or(false);
+                if off {
                     continue;
                 }
                 let size = std::fs::metadata(&path).map(|m| m.len()).unwrap_or(0);
@@ -320,10 +362,12 @@ mod tests {
         let (tx, rx) = mpsc::channel();
         spawn_with_sink(
             vec![root.clone()],
+            HashSet::new(),
             index.clone(),
             T_SETTLE,
             T_TICK,
             T_GRACE,
+            Arc::new(AtomicBool::new(false)),
             move |note| {
                 if let Note::Detected(d) = note {
                     let _ = tx.send(d);

@@ -279,6 +279,28 @@ window.__WC3V_PREVIEW__ = true;
 var TAGS = PREVIEW_TAGS;
 var SHOW_SETUP = ${JSON.stringify(!!args.setup)};
 
+// The replay folder tree (js/folders.js). Two roots, the game's own two
+// Autosaved folders, and the kind of folders people make by hand. Paths are
+// fake and never rendered; labels are.
+var FOLDERS = [
+  { path: 'X', root: 'X', depth: 0, name: 'Replays', label: 'Replays', custom_label: false,
+    enabled: true, direct_count: 14, total_count: 3128, manual: false },
+  { path: 'X/Autosaved/Custom', root: 'X', depth: 2, name: 'Custom', label: 'Custom', custom_label: false,
+    enabled: false, direct_count: 412, total_count: 412, manual: false },
+  { path: 'X/Autosaved/Multiplayer', root: 'X', depth: 2, name: 'Multiplayer', label: 'Multiplayer', custom_label: false,
+    enabled: true, direct_count: 2611, total_count: 2611, manual: false },
+  { path: 'X/Ladder practice', root: 'X', depth: 1, name: 'Ladder practice', label: 'Ladder practice', custom_label: false,
+    enabled: true, direct_count: 58, total_count: 58, manual: false },
+  { path: 'X/vs Happy', root: 'X', depth: 1, name: 'vs Happy', label: 'Study: Happy', custom_label: true,
+    enabled: true, direct_count: 33, total_count: 33, manual: false },
+  { path: 'Y', root: 'Y', depth: 0, name: 'Replays', label: 'Replays 2', custom_label: false,
+    enabled: true, direct_count: 0, total_count: 999, manual: false },
+  { path: 'Y/Autosaved/Multiplayer', root: 'Y', depth: 2, name: 'Multiplayer', label: 'Multiplayer', custom_label: false,
+    enabled: true, direct_count: 999, total_count: 999, manual: false },
+  { path: 'Z', root: 'Z', depth: 0, name: 'Downloads', label: 'Downloads', custom_label: false,
+    enabled: true, direct_count: 7, total_count: 7, manual: true }
+];
+
 window.__TAURI__ = {
   core: {
     invoke: async (cmd, args) => {
@@ -286,6 +308,45 @@ window.__TAURI__ = {
         case 'init': return { roots: [
           { path: 'X', replay_count: 3128 }, { path: 'Y', replay_count: 999 }
         ], map_cache_dir: 'X' };
+        // The folder tree, as the real app would find it on a machine with
+        // two accounts and a couple of hand-made folders. Held in memory so
+        // rename / switch off / remove all work on the page; nothing persists.
+        case 'list_folders': return FOLDERS.filter(f => !f.removed).map(f => ({ ...f }));
+        case 'set_folder_label': {
+          const f = FOLDERS.find(x => x.path === args.path);
+          if (f) {
+            const label = String(args.label || '').trim();
+            f.custom_label = !!label;
+            f.label = label || f.name;
+          }
+          return FOLDERS.filter(x => !x.removed).map(x => ({ ...x }));
+        }
+        case 'set_folder_enabled': {
+          const f = FOLDERS.find(x => x.path === args.path);
+          if (f) f.enabled = !!args.enabled;
+          return FOLDERS.filter(x => !x.removed).map(x => ({ ...x }));
+        }
+        case 'remove_folder': {
+          const f = FOLDERS.find(x => x.path === args.path);
+          if (f) f.removed = true;
+          return FOLDERS.filter(x => !x.removed).map(x => ({ ...x }));
+        }
+        case 'restore_folders':
+          for (const f of FOLDERS) f.removed = false;
+          return FOLDERS.filter(x => !x.removed).map(x => ({ ...x }));
+        case 'add_root':
+          throw 'adding a folder needs the real app (this is the UI preview)';
+        // Every stored game is placed in a folder, round-robin over the ones
+        // that hold replays, so the folder filter and the report chip have
+        // something to show.
+        case 'game_sources':
+        case 'resolve_sources': {
+          const dirs = {};
+          const holders = FOLDERS.filter(f => f.direct_count > 0);
+          Object.keys(STORE).forEach((k, i) => { dirs[k] = holders[i % holders.length].path; });
+          return dirs;
+        }
+        case 'record_sources': return (args.entries || []).length;
         case 'list_parses': return Object.keys(STORE);
         case 'list_parse_failures': return [];
         case 'read_parse': return b64(STORE[args.key]);
