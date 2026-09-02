@@ -192,6 +192,24 @@
     /* Hiding this on a manifest failure needs the [hidden] rule to win. */
     .dl-meta[hidden] { display: none; }
     .dl-meta b { color: var(--text); font-weight: 700; }
+    /* ── The source, under the screenshot ──────────────────────────────── */
+    /* An unsigned installer from a fan site is a fair thing to distrust, and
+       the answer is the code, one click away, drawn as a button rather than
+       a footnote. It lives in the middle column because that is the one
+       column that can absorb a row: the frame above it is sized by the
+       column and simply gives up the height. The strip cannot take it (4px of
+       slack at 1280 wide, and a wrap there costs every column 70px). */
+    .dl-open {
+      display: flex; align-items: center; gap: var(--sp-3);
+      margin-top: var(--sp-3); padding-top: var(--sp-3);
+      border-top: 1px solid var(--border);
+      flex: 0 0 auto;
+    }
+    .dl-open p { margin: 0; font-size: var(--fs-min); color: var(--text-muted); line-height: 1.45; }
+    .dl-open p a { color: var(--accent); }
+    .dl-open code { font-family: var(--mono); font-size: var(--fs-min); color: var(--text); background: var(--bg-deep); border: 1px solid var(--border); border-radius: 4px; padding: 1px 4px; }
+    .dl-src { display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; text-decoration: none; flex: 0 0 auto; }
+    .dl-src svg { flex: 0 0 auto; }
 
     /* ── The three columns ─────────────────────────────────────────────── */
     .dl-cols { display: grid; gap: var(--sp-3); min-height: 0; flex: 1 1 auto; }
@@ -444,7 +462,7 @@
               <li><b>Never touches the game.</b> No injection, no memory reading, no packet capture, no input automation.</li>
               <li><b>Nothing leaves your PC.</b> No upload, no account. The app sends only an anonymous usage count, and Settings can switch that off.</li>
               <li><b>One local socket.</b> The overlay binds <code>127.0.0.1</code>, token-gated, GET only.</li>
-              <li><b>Open source.</b> GPLv3 on <a href="https://github.com/jblanchette/wc3v" target="_blank" rel="noopener noreferrer">GitHub</a>, so you can check all of it.</li>
+              <li><b>Open source.</b> GPLv3, the <a href="https://github.com/jblanchette/wc3v/tree/master/desktop" target="_blank" rel="noopener noreferrer"><code>desktop/</code> folder on GitHub</a>.</li>
             </ul>
           </section>
         </div>
@@ -480,6 +498,13 @@
                 alt="A 3v3 team game report showing tier progression and unit rosters for all six players">
             </div>
             <p class="dl-stage-note" id="dl-stage-note" aria-live="polite">Home is a feed of your games, newest first, each one graded as it lands. The bar along the bottom says whether it is watching.</p>
+            <div class="dl-open">
+              <a class="btn dl-src" href="https://github.com/jblanchette/wc3v/tree/master/desktop" target="_blank" rel="noopener noreferrer">
+                <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
+                Source on GitHub
+              </a>
+              <p>Open source, GPLv3. The app is the <code>desktop/</code> folder of the <a href="https://github.com/jblanchette/wc3v" target="_blank" rel="noopener noreferrer">wc3v repository</a>, a Rust shell around the same parser the website runs. Read it, build it yourself, or file an issue.</p>
+            </div>
           </section>
         </div>
 

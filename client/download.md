@@ -2,7 +2,7 @@
 title: "WC3V Desktop for Windows | WC3V"
 url: https://wc3v.com/download
 description: "A free Windows app that reviews your Warcraft III games for you. It watches your replay folder, reads each game on your own PC, and has the report ready before you have alt-tabbed. Includes an OBS overlay."
-updated: 2026-08-31
+updated: 2026-09-02
 ---
 
 WC3V Desktop · free · Windows 10 and 11
@@ -25,13 +25,17 @@ Leave it running. Every game you finish is read on your own PC and laid out befo
 
 - **One local socket.** The overlay binds `127.0.0.1`, token-gated, GET only.
 
-- **Open source.** GPLv3 on [GitHub](https://github.com/jblanchette/wc3v), so you can check all of it.
+- **Open source.** GPLv3, the [`desktop/` folder on GitHub](https://github.com/jblanchette/wc3v/tree/master/desktop).
 
 ## The whole game, laid out
 
 ![The WC3V desktop app's Home tab: a strip of recently parsed games along the top and a status bar reading Watching for new games](https://wc3v.com/assets/press/app-home.webp) ![The Overview tab: victory header, dominance chart, moments timeline, and both players' unit rosters and match stats](https://wc3v.com/assets/press/report-overview.webp) ![The Build tab: hero cards with skills and items for both players, above their build orders interleaved as one timeline](https://wc3v.com/assets/press/report-build.webp) ![The Economy tab: APM over time, an action breakdown, trade balance and food charts for both players](https://wc3v.com/assets/press/report-economy.webp) ![A 3v3 team game report showing tier progression and unit rosters for all six players](https://wc3v.com/assets/press/report-team.webp)
 
 Home is a feed of your games, newest first, each one graded as it lands. The bar along the bottom says whether it is watching.
+
+[ Source on GitHub ](https://github.com/jblanchette/wc3v/tree/master/desktop)
+
+Open source, GPLv3. The app is the `desktop/` folder of the [wc3v repository](https://github.com/jblanchette/wc3v), a Rust shell around the same parser the website runs. Read it, build it yourself, or file an issue.
 
 ## On stream
 
