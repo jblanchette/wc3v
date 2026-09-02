@@ -1,6 +1,6 @@
 # WC3V Desktop: changelog
 
-## 1.0.9
+## 1.0.9 — 2 Sep 2026
 
 ### Your replay folders, as you sorted them
 
