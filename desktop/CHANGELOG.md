@@ -25,6 +25,26 @@ was forgotten on the next restart and, while it lasted, was scanned once and
 never watched: a game saved into it did not appear until Parse all replays.
 Both now persist, and any folder change restarts the watcher on the spot.
 
+Every folder row now opens on its chevron into the newest five replays inside
+it, by name and age, with a button to read those games right away. Same in
+Settings.
+
+### A first run that looks like one
+
+The setup screen is a four-step walk-through under the WC3V mark: Welcome,
+Folders, You, History. The first step says what stays on your machine (your
+replays, always; no account; nothing dials out unless you switch it on) and
+asks you to tick that you have read the privacy policy and the terms, which
+open in your browser from the screen. That tick is the only thing that has
+to happen; every other step has a default that works, and Skip is gone.
+
+"Which player are you?" is answered from your own games. The app reads the
+headers of your ten most recent replays and lays out every name in them as a
+card with the races it played and how many of those games it was in. Yours is
+the one in nearly all of them, and it is tagged as such. If none of the cards
+is you, type your name: "jeef" finds "Jeef#1496". The same cards are behind
+the You button in the app bar from now on.
+
 ## 1.0.8 — 31 Aug 2026
 
 ### Only parse 1v1 games, if that is all you care about

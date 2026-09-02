@@ -263,12 +263,85 @@ const overlayState = window.createOverlayState({
 
 const w3c = window.createW3c({ invoke, log });
 
+// ── Who you are, from your most recent games ────────────────────────────────
+//
+// The seats named in the headers of the newest few replays on disk. One read
+// per session, shared by the first-run screen and the "You" popover, since
+// both ask the same question of the same ten files. Headers only: ~50 ms a
+// replay, no map data, no parse.
+//
+// With nothing readable (a scan that failed, or the preview harness with no
+// .w3g behind its summaries) the parsed history answers instead, so the
+// cards still say something.
+const RECENT_SEATS = 10;
+let recentSeatsPromise = null;
+
+const seatsFromCorpus = (corpus) => {
+  const seats = [];
+  for (const g of (corpus || []).slice(0, RECENT_SEATS)) {
+    for (const k of Object.keys(g.players || {})) {
+      const p = g.players[k];
+      if (p && p.name) seats.push({ name: p.name, race: p.race || null, fileName: g.key, playedAt: g.playedAt || 0 });
+    }
+  }
+  return seats;
+};
+
+const readRecentSeats = async () => {
+  const { replays } = await invoke('scan_all');
+  const pool = replays
+    .filter(r => r.interesting && !/^lastreplay\.w3g$/i.test(r.file_name))
+    .slice(0, RECENT_SEATS);
+  const seats = [];
+  const worker = makeWorker();
+  try {
+    for (const r of pool) {
+      try {
+        const { players } = await peekPlayers(worker, r.path);
+        for (const p of players) {
+          if (p && p.name) seats.push({ name: p.name, race: p.race || null, fileName: r.file_name, playedAt: r.modified_ms || 0 });
+        }
+      } catch (e) { /* one odd header; the rest still answer */ }
+    }
+  } finally {
+    worker.terminate();
+  }
+  if (!seats.length) return seatsFromCorpus(store.corpus);
+  return seats;
+};
+
+const recentSeats = () => {
+  if (!recentSeatsPromise) {
+    recentSeatsPromise = readRecentSeats().catch((e) => {
+      log(`could not read your recent games: ${errText(e)}`, 'warn');
+      recentSeatsPromise = null;
+      return seatsFromCorpus(store.corpus);
+    });
+  }
+  return recentSeatsPromise;
+};
+
+// Two pickers, one set of answers: one in the "You" popover, one on the
+// first-run screen. Both commit through identity.confirm.
+const pickerDeps = {
+  recentSeats,
+  knownNames: () => window.ProfileAggregate.knownNames(store.corpus || []).map(n => n.name),
+  onPick: (name) => identity.confirm(name),
+  current: () => identity.name,
+  log
+};
+const identityPicker = window.createIdentityPicker(pickerDeps);
+const setupPicker = window.createIdentityPicker(pickerDeps);
+
 const identity = window.createIdentity({
   log,
   makeWorker,
   peekPlayers,
   overlayState,
   replays: () => state.replays,
+  picker: identityPicker,
+  // The first-run screen asks on its own step; the popover waits its turn.
+  suppressPrompt: () => firstRun.open,
   onChange: () => {
     // Every verdict is scored from this seat, so the feed, the open game and
     // anything already on stream get re-read when it changes.
@@ -323,6 +396,20 @@ const folders = window.createFolders({
   invoke,
   log,
   errText,
+  // "Read these N games now" on an open tree row: the newest few in that one
+  // folder, through the same engine as the first-boot catch-up, with the
+  // same parse chips in the quick nav. One run at a time; a run already
+  // going keeps the button pressed and says so.
+  readRecent: async (folder, files) => {
+    if (backfill.running) {
+      log('a parse is already running; that folder joins it when it finishes', 'warn');
+      return false;
+    }
+    const wanted = new Set(files.map(f => f.path));
+    log(`reading the newest ${files.length} game(s) in ${folder.label}`, 'ok');
+    catchUpOn(files.length, (r) => wanted.has(r.path));
+    return true;
+  },
   onChange: async () => {
     try {
       const n = await invoke('start_watching');
@@ -499,9 +586,9 @@ const firstRun = window.createFirstRun({
   log,
   errText,
   folders,
-  // Typing your own name is a confirmation, so auto-detection never overrides
+  // Clicking a card is the confirmation, so auto-detection never overrides
   // it afterwards.
-  setIdentity: (name) => identity.confirm(name),
+  picker: setupPicker,
   // Pause if one is running, otherwise start a FULL run — explicitly, not
   // `toggle()`. Toggle resumes with the options the last run carried, which is
   // right for the migration strip's own Pause/Resume and wrong here: after a
@@ -866,9 +953,15 @@ const idleStatus = () => store.size
 // The newest few games, read on a fresh install. Failures here are not fatal
 // and are not worth a red line in the log: the watcher is still running, the
 // Settings button still exists, and the next game the user plays still lands.
-const catchUpOnRecentGames = () => {
+const catchUpOnRecentGames = () => catchUpOn(CATCH_UP_LIMIT);
+
+// The newest `limit` games, optionally narrowed by `only(replay)`, with the
+// quick-nav parse chips. The first-boot catch-up and the tree row's "Read
+// these" button are the same run with different arguments.
+const catchUpOn = (limit, only) => {
   if (backfill.running) return;
-  backfill.catchUp(CATCH_UP_LIMIT, {
+  backfill.catchUp(limit, {
+    only,
     onQueue: (files) => gamesView.setParseQueue(files),
     onProgress: (file, phase) => {
       gamesView.setParseProgress(file, phase);
@@ -1026,6 +1119,8 @@ const loadMapBounds = async () => {
 };
 
 const boot = async () => {
+  // Section marks written in the markup as `data-glyph`, filled once.
+  window.Glyphs.fill(document);
   await loadMapBounds();
   const info = await invoke('init');
   state.roots = info.roots;
@@ -1180,15 +1275,6 @@ const boot = async () => {
     // Something is on screen, so idle is now unreachable and the app rests in
     // `post` between games instead of blanking.
     if (corpus.length) matchPhase.seedGame();
-    // Autocomplete covers every name ever seen. Identity is a separate and
-    // explicit choice that never comes out of this box.
-    const names = window.ProfileAggregate.knownNames(corpus).slice(0, 200);
-    el('known-names').innerHTML = '';
-    for (const n of names) {
-      const opt = document.createElement('option');
-      opt.value = n.name;
-      el('known-names').appendChild(opt);
-    }
     log(`${corpus.length.toLocaleString()} game(s) in your history`, 'ok');
   }).catch(e => log(`could not load your history: ${errText(e)}`, 'warn'));
 };

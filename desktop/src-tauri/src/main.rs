@@ -762,6 +762,68 @@ fn mark_setup_done(app: tauri::AppHandle) -> Result<(), String> {
     std::fs::write(&marker, b"1").map_err(|e| e.to_string())
 }
 
+/// Which policy text the person accepted on the first-run screen, as the
+/// effective dates of the two pages, or None. A marker file for the same
+/// reason `setup-done` is one. Nothing in the app is gated on it after the
+/// first run: the record exists so the acceptance is a fact on disk rather
+/// than a checkbox nobody can prove was ticked.
+fn terms_marker(app: &tauri::AppHandle) -> PathBuf {
+    app.path()
+        .app_data_dir()
+        .unwrap_or_else(|_| PathBuf::from("."))
+        .join("terms-accepted")
+}
+
+#[tauri::command]
+fn terms_accepted(app: tauri::AppHandle) -> Option<String> {
+    std::fs::read_to_string(terms_marker(&app)).ok()
+}
+
+#[tauri::command]
+fn accept_terms(version: String, app: tauri::AppHandle) -> Result<(), String> {
+    let marker = terms_marker(&app);
+    if let Some(parent) = marker.parent() {
+        std::fs::create_dir_all(parent).map_err(|e| e.to_string())?;
+    }
+    // A short fixed vocabulary is all that ever goes in this file.
+    let clean: String = version.chars().filter(|c| c.is_ascii_graphic()).take(80).collect();
+    std::fs::write(&marker, clean).map_err(|e| e.to_string())
+}
+
+/// Open one of the site's policy pages in the default browser. An allow-list
+/// of two rather than a URL argument: the webview gets no "open anything"
+/// primitive, for the same reason it gets no "read any path" one.
+#[tauri::command]
+fn open_site_page(page: String, app: tauri::AppHandle) -> Result<(), String> {
+    use tauri_plugin_opener::OpenerExt;
+    let path = match page.as_str() {
+        "privacy" => "/privacy",
+        "terms" => "/terms",
+        _ => return Err("not a page this app opens".into()),
+    };
+    app.opener()
+        .open_url(format!("https://wc3v.com{path}"), None::<&str>)
+        .map_err(|e| e.to_string())
+}
+
+/// The newest few replays directly inside one folder: the preview a tree row
+/// opens into. Scoped like every read, and capped so a click cannot ask for
+/// a directory listing of four thousand names.
+#[tauri::command]
+async fn folder_recent(
+    path: String,
+    limit: usize,
+    state: State<'_, AppState>,
+) -> Result<Vec<folders::RecentReplay>, String> {
+    let allowed = { state.roots.lock().unwrap().clone() };
+    ensure_within(Path::new(&path), &allowed)?;
+    let dir = PathBuf::from(&path);
+    let limit = limit.clamp(1, 50);
+    tauri::async_runtime::spawn_blocking(move || folders::recent_in(&dir, limit))
+        .await
+        .map_err(|e| format!("listing failed: {e}"))
+}
+
 /// Scan every registered root and dedupe across ALL of them in one pass, so
 /// a game copied between accounts collapses too. This is the backfill queue
 /// source; the interactive per-root scan stays `scan_replays`.
@@ -1178,6 +1240,10 @@ fn main() {
             write_tags,
             setup_done,
             mark_setup_done,
+            terms_accepted,
+            accept_terms,
+            open_site_page,
+            folder_recent,
             app_version,
             scan_all,
             publish_overlay_state,

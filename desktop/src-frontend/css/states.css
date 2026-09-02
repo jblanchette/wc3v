@@ -68,87 +68,28 @@ main :focus-visible,
   to   { background-position: -200% 0; }
 }
 
-/* ── First run ───────────────────────────────────────────────────────────
-   Nothing parsed yet is not an error and must not read like one. */
-
-.first-run {
-  display: grid;
-  place-content: center;
-  gap: var(--sp-3);
-  height: 100%;
-  padding: var(--sp-7) var(--sp-5);
-  text-align: center;
-  /* Spans the detail column's banded grid when it is the only child. */
-  grid-row: 1 / -1;
-}
-.first-run h2 {
-  margin: 0;
-  font-size: var(--fs-h2);
-  font-weight: 700;
-  color: var(--ink);
-}
-.first-run p {
-  margin: 0 auto;
-  max-width: 34rem;
-  color: var(--ink-dim);
-}
-.first-run .btn { justify-self: center; margin-top: var(--sp-2); }
-
-/* ── Narrow windows ──────────────────────────────────────────────────── */
-
-@media (max-width: 1040px) {
-  /* The report is full width at every size now, so there is no rail to
-     narrow. What a narrow window costs is quick-nav chips, and they scroll. */
-  .detail-col { padding: var(--sp-3); }
-  .bc-grid { grid-template-columns: minmax(0, 1fr); }
-}
-
-/* ── Short windows ───────────────────────────────────────────────────────
-   At the 600px minimum the report frame and the one scroller are competing
-   for the same 507px. The frame gives up what it can spare: lane height,
-   ruler height, cell padding and the gaps between bands. Nothing is removed
-   and no type gets smaller. */
-
-@media (max-height: 700px) {
-  .detail-col { gap: var(--sp-1); }
-
-  /* The frame above the scroller gives up what it can spare. Nothing is
-     removed and no type gets smaller — these are all padding and gaps.
-
-     The worst case at 900x600 is a live match, because the mode switch costs
-     another ~38px: main 507, gamebar 63, and after padding, gaps, the switch
-     and the tab row the body is what is left. The verdict band used to be
-     the biggest line in this budget; it is gone — its content scrolls with
-     Overview now. */
-  .cp { margin-bottom: var(--sp-1); }
-  .report-body { padding: var(--sp-2) var(--sp-2) var(--sp-1); }
-  /* 11vh is 66px here, and the dashboard is 10px short of fitting with it. The
-     plot is still legible at 56 and the alternative is the chart pushing the
-     roster under the fold on the app's default tab. */
-  .dom-panel .dmc-svg { height: 56px; }
-  /* The Overview band's own clamp is more specific than the line above, so it
-     has to be named or the short-window budget silently does not apply to the
-     one tab that opens by default. */
-  .ms-ov-band .dom-panel .dmc-svg { height: 56px; }
-}
-
 /* ── First run ────────────────────────────────────────────────────────────
-   The setup screen, once, on a machine that has never been set up. A centred
-   panel rather than the right-hand drawer `.sheet` normally is: Settings slides
-   in beside what you were doing, and this has nothing to sit beside. */
+   The setup wizard, once, on a machine that has never been set up. A centred
+   panel rather than the right-hand drawer `.sheet` normally is: Settings
+   slides in beside what you were doing, and this has nothing to sit beside.
+   Four steps under a rail; js/first-run.js switches them.
+
+   The head is NAVY, like the app bar: it is the brand surface, and it is the
+   first thing a new install shows. Everything under the rail is warm. */
 
 .setup {
   inset: 0;
   display: grid;
   grid-template-rows: auto minmax(0, 1fr) auto;
   justify-self: center;
-  width: min(34rem, 94vw);
+  width: min(42rem, 94vw);
   margin: auto;
   height: fit-content;
   max-height: 100%;
   border: 1px solid var(--app-edge);
   border-radius: var(--radius);
   box-shadow: 0 18px 40px rgba(0, 0, 0, 0.6);
+  overflow: hidden;
 }
 /* The dim behind it. The app is loading its corpus underneath and that is fine
    to see; what is not fine is being able to click it. */
@@ -160,19 +101,272 @@ main :focus-visible,
   background: rgba(6, 4, 2, 0.72);
 }
 
-.setup-row { padding: var(--sp-4) 0; border-bottom: 1px solid var(--app-line); }
-.setup-row:last-child { border-bottom: 0; }
-.setup-row h3 {
-  margin: 0 0 var(--sp-1);
-  font-size: var(--fs-base);
+.setup-head {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  column-gap: var(--sp-4);
+  align-items: center;
+  margin: 0 calc(-1 * var(--sp-4));
+  padding: var(--sp-4) var(--sp-5) 0;
+  background: linear-gradient(180deg, var(--bg), var(--bg-deep));
+  border-bottom: 1px solid var(--border);
+}
+/* The lockup: the shield drawn for this screen, and the same wordmark the
+   app bar and the site carry. Weight 900, the 3 in --accent. */
+.wiz-lockup { display: flex; align-items: center; gap: var(--sp-3); }
+.wiz-shield { width: 44px; height: 52px; flex: none; }
+.wiz-shield-bg { fill: #1b2133; stroke: #0a0704; stroke-width: 1.5; }
+.wiz-shield-rim { stroke: var(--accent); stroke-width: 1.2; }
+.wiz-shield-mark { fill: var(--gold); }
+.wiz-word {
+  font-size: 2rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  line-height: 1.1;
+  color: var(--text);
+  white-space: nowrap;
+}
+.wiz-word > span { color: var(--accent); }
+.wiz-text { min-width: 0; }
+.setup-head h2 {
+  margin: 0;
+  font-size: var(--fs-h3);
   font-weight: 700;
+  color: var(--text);
 }
-.setup-row .hint { margin: var(--sp-1) 0 var(--sp-2); }
-.setup-row input[type="text"],
-.setup-row input:not([type]) {
+.wiz-sub { margin: var(--sp-1) 0 0; color: var(--text-muted); font-size: var(--fs-sm); }
+
+/* The rail: four steps, the current one lit, the ones behind it clickable.
+   Numbers and glyphs both, because at a glance the number says how far
+   along you are and the glyph says what the step is about. */
+.wiz-rail {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--sp-2);
+  margin: var(--sp-4) 0 0;
+  padding: 0 0 var(--sp-3);
+  list-style: none;
+}
+.wiz-step {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-2);
   width: 100%;
-  max-width: 20rem;
+  min-height: var(--ico-sm);
+  padding: 0 var(--sp-2);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  color: var(--text-dim);
+  font: inherit;
+  font-size: var(--fs-min);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: default;
 }
+.wiz-step.is-done { color: var(--text-muted); cursor: pointer; }
+.wiz-step.is-done:hover { border-color: var(--border-2); color: var(--text); }
+.wiz-step.is-active {
+  color: var(--text);
+  background: var(--surface);
+  border-color: var(--border-2);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 -1px 0 rgba(0, 0, 0, 0.45);
+}
+.wiz-n {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 22px;
+  height: 22px;
+  background: var(--bg-deep);
+  border: 1px solid var(--border-2);
+  border-radius: 50%;
+  font-size: var(--fs-min);
+  letter-spacing: 0;
+}
+.wiz-step.is-active .wiz-n { background: var(--accent); border-color: transparent; color: #fff; }
+.wiz-step.is-done .wiz-n { background: var(--surface); color: var(--text); }
+.wiz-glyph { width: 20px; height: 20px; flex: none; }
+.wiz-glyph svg { width: 100%; height: 100%; fill: currentColor; display: block; }
+
+/* ── The steps ── */
+.setup-step { padding: var(--sp-2) 0 var(--sp-3); }
+.step-head { display: flex; align-items: flex-start; gap: var(--sp-3); margin-bottom: var(--sp-3); }
+.step-head > div { min-width: 0; flex: 1 1 auto; }
+.step-head h3 { margin: 0; font-size: var(--fs-base); font-weight: 700; }
+.step-head .hint { margin: var(--sp-1) 0 0; }
+/* A carved tile with the step's glyph, bronze on the panel gradient. The
+   same tile heads the matching Settings panel at a smaller size. */
+.step-mark {
+  position: relative;
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: var(--ico-sm);
+  height: var(--ico-sm);
+  background: linear-gradient(180deg, var(--app-panel-2), var(--app-panel));
+  border: var(--outline);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--cut);
+  color: var(--dom-gold);
+}
+.step-mark svg { width: 22px; height: 22px; fill: currentColor; display: block; }
+/* The one mark that talks to a server wears a signal badge. */
+.ladder-mark .online-dot {
+  position: absolute;
+  right: -6px;
+  bottom: -6px;
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  background: var(--app-well);
+  border: var(--outline);
+  border-radius: 50%;
+  color: var(--dom-green);
+}
+.ladder-mark .online-dot svg { width: 12px; height: 12px; }
+
+/* Step 1: what stays on this machine, then the acceptance. */
+.safe-list {
+  display: grid;
+  gap: var(--sp-2);
+  margin: 0 0 var(--sp-3);
+  padding: var(--sp-3) var(--sp-4);
+  list-style: none;
+  background: var(--app-well);
+  border: 1px solid var(--app-line);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--cut-in);
+}
+.safe-list li { display: flex; align-items: flex-start; gap: var(--sp-3); }
+.safe-tick { flex: none; width: 20px; height: 20px; color: var(--dom-green); }
+.safe-tick svg { width: 100%; height: 100%; fill: currentColor; display: block; }
+.safe-except { margin: 0 0 var(--sp-3); }
+.accept {
+  padding: var(--sp-3);
+  background: var(--app-panel);
+  border: 1px solid var(--app-edge);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--cut);
+}
+.accept > span { display: inline; line-height: 1.6; }
+/* A link that is a button, because the page opens through Rust. */
+.linkish {
+  padding: 0;
+  background: none;
+  border: 0;
+  color: var(--dom-gold);
+  font: inherit;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+.linkish:hover { color: var(--ink); }
+
+/* Step 3: the identity picker (js/identity-picker.js). Also mounted in the
+   "You" popover in compact form, one column. */
+.who-status { margin: 0 0 var(--sp-3); color: var(--ink-dim); font-size: var(--fs-min); }
+.who-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr));
+  gap: var(--sp-3) var(--sp-2);
+  padding-top: var(--sp-2);
+  margin-bottom: var(--sp-3);
+}
+.who.is-compact .who-grid { grid-template-columns: minmax(0, 1fr); }
+.who-card {
+  position: relative;
+  display: grid;
+  gap: var(--sp-1);
+  padding: var(--sp-3);
+  background: linear-gradient(180deg, var(--rc-head-a), var(--rc-head-b));
+  border: var(--outline);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--cut), inset 0 0 0 1px var(--rc-rim);
+  color: var(--ink);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.who-card:hover { box-shadow: var(--cut), inset 0 0 0 1px var(--app-edge); }
+.who-card.is-active { box-shadow: var(--cut-in), inset 0 0 0 2px var(--dom-green); }
+.who-head { display: flex; align-items: center; gap: var(--sp-2); min-width: 0; }
+.who-name { flex: 1 1 auto; min-width: 0; font-size: var(--fs-base); font-weight: 700; overflow-wrap: anywhere; }
+.who-races { display: flex; flex: none; gap: 2px; }
+.who-meta { display: flex; flex-wrap: wrap; gap: var(--sp-2); color: var(--ink-dim); font-size: var(--fs-min); }
+.who-tag {
+  position: absolute;
+  top: calc(-1 * var(--sp-2));
+  right: var(--sp-2);
+  padding: 1px var(--sp-2);
+  background: var(--app-panel-2);
+  border: var(--outline);
+  border-radius: var(--radius-xs);
+  color: var(--dom-gold);
+  font-size: var(--fs-min);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.who-tag.is-you { color: var(--verdict-win); }
+.who-else { margin-bottom: var(--sp-2); }
+.who-search .field { margin-bottom: var(--sp-2); }
+.who-matches { display: flex; flex-wrap: wrap; gap: var(--sp-2); }
+.who-matches .hint { flex-basis: 100%; margin: 0; }
+.choice-typed { color: var(--dom-gold); }
+.ladder-row { margin-top: var(--sp-3); }
+.ladder-row .step-head { margin-bottom: 0; }
+.ladder-row .check { padding: var(--sp-1) 0 0; }
+.ladder-row .hint { margin-top: 0; }
+
+/* Step 4: two cards, one choice. */
+.opt-cards {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--sp-2);
+  margin-bottom: var(--sp-3);
+}
+.opt-card {
+  position: relative;
+  display: grid;
+  gap: var(--sp-1);
+  padding: var(--sp-3) var(--sp-3) var(--sp-3) calc(var(--sp-3) + 26px);
+  background: var(--app-well);
+  border: 1px solid var(--app-line);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--cut-in);
+  cursor: pointer;
+}
+.opt-card input {
+  position: absolute;
+  top: calc(var(--sp-3) + 1px);
+  left: var(--sp-3);
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  appearance: none;
+  -webkit-appearance: none;
+  background: var(--app-bg);
+  border: var(--outline);
+  border-radius: 50%;
+  box-shadow: var(--cut-in);
+  cursor: pointer;
+}
+.opt-card input:checked {
+  background: radial-gradient(circle, var(--dom-gold) 0 4px, var(--app-bg) 5px);
+  border-color: var(--dom-orange);
+}
+.opt-card:has(input:checked) { background: var(--app-panel); border-color: var(--dom-orange); box-shadow: var(--cut); }
+.opt-title { font-weight: 700; }
+.opt-body { color: var(--ink-dim); font-size: var(--fs-min); }
+
+.setup-row { padding: var(--sp-3) 0 0; }
+.setup-row .hint { margin: var(--sp-1) 0 0; }
 
 .sheet-foot {
   display: flex;
@@ -181,3 +375,4 @@ main :focus-visible,
   padding: var(--sp-3) 0 0;
   border-top: 1px solid var(--app-line);
 }
+#setup-back { margin-right: auto; }

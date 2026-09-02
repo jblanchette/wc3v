@@ -381,6 +381,28 @@ window.__TAURI__ = {
         case 'app_version': return 'preview';
         case 'setup_done': return !SHOW_SETUP;
         case 'mark_setup_done': SHOW_SETUP = false; return null;
+        // The acceptance on the first-run screen. Nothing persists here.
+        case 'terms_accepted': return null;
+        case 'accept_terms': return null;
+        case 'open_site_page': console.log('preview: would open wc3v.com/' + args.page); return null;
+        // The newest few files in a folder, for the open tree row. Fake
+        // names in the game's own pattern, one of them too short to parse.
+        case 'folder_recent': {
+          const f = FOLDERS.find(x => x.path === args.path);
+          const n = Math.min(args.limit || 5, f ? f.direct_count : 0);
+          return Array.from({ length: n }, (_, i) => {
+            const at = new Date(Date.now() - i * 5.5 * 3600e3);
+            const pad = (x) => String(x).padStart(2, '0');
+            const name = 'Replay_' + at.getFullYear() + '_' + pad(at.getMonth() + 1) + '_' +
+              pad(at.getDate()) + '_' + pad(at.getHours()) + pad(at.getMinutes()) + '.w3g';
+            return { path: args.path + '/' + name, file_name: name, size: i === 2 ? 4000 : 400000,
+              modified_ms: at.getTime(), interesting: i !== 2, autosaved: true };
+          });
+        }
+        // No .w3g exists behind a preview summary, so a header peek fails and
+        // the identity picker falls back to the parsed history, which is the
+        // same path a real install takes when a scan fails.
+        case 'read_replay': throw 'no replay files behind the preview';
         case 'start_watching': return 2;
         case 'get_autostart': return false;
         case 'publish_overlay_state': return null;

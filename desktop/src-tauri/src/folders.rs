@@ -253,6 +253,63 @@ pub fn build_tree(config: &FolderConfig) -> Vec<Folder> {
     out
 }
 
+/// One of the newest files directly inside a folder, for the preview a row
+/// opens into on the first-run screen and in Settings. No hash, no key:
+/// this is "what is in here", not the scan.
+#[derive(Debug, Clone, Serialize)]
+pub struct RecentReplay {
+    pub path: String,
+    pub file_name: String,
+    pub size: u64,
+    pub modified_ms: u64,
+    /// False for the sub-20KB aborted games, so the list can say so.
+    pub interesting: bool,
+    pub autosaved: bool,
+}
+
+/// The `limit` newest `.w3g` files DIRECTLY inside `dir`, newest first.
+/// Subfolders are their own rows and are not looked into. A directory that
+/// cannot be read lists as empty rather than failing: the row above it
+/// already says how many files the walk counted.
+pub fn recent_in(dir: &Path, limit: usize) -> Vec<RecentReplay> {
+    let Ok(entries) = fs::read_dir(dir) else {
+        return Vec::new();
+    };
+    let mut out: Vec<RecentReplay> = Vec::new();
+    for entry in entries.flatten() {
+        let path = entry.path();
+        let is_w3g = path
+            .extension()
+            .map(|e| e.eq_ignore_ascii_case("w3g"))
+            .unwrap_or(false);
+        if !is_w3g {
+            continue;
+        }
+        let Ok(meta) = entry.metadata() else { continue };
+        if !meta.is_file() {
+            continue;
+        }
+        let modified_ms = meta
+            .modified()
+            .ok()
+            .and_then(|t| t.duration_since(std::time::UNIX_EPOCH).ok())
+            .map(|d| d.as_millis() as u64)
+            .unwrap_or(0);
+        let file_name = entry.file_name().to_string_lossy().to_string();
+        out.push(RecentReplay {
+            size: meta.len(),
+            modified_ms,
+            interesting: meta.len() >= replays::MIN_INTERESTING_BYTES,
+            autosaved: replays::is_autosave_name(&file_name),
+            file_name,
+            path: path.to_string_lossy().to_string(),
+        });
+    }
+    out.sort_by(|a, b| b.modified_ms.cmp(&a.modified_ms).then_with(|| b.file_name.cmp(&a.file_name)));
+    out.truncate(limit);
+    out
+}
+
 /// The readable set: every root in the tree.
 pub fn roots_of(tree: &[Folder]) -> Vec<PathBuf> {
     let mut out: Vec<PathBuf> = Vec::new();
@@ -538,6 +595,48 @@ mod tests {
         remove(&mut config, &root_s);
         let tree = build_tree(&config);
         assert!(!roots_of(&tree).contains(&root));
+        let _ = fs::remove_dir_all(&base);
+    }
+
+    #[test]
+    fn recent_lists_direct_files_newest_first_and_stops_at_the_limit() {
+        let base = temp("recent");
+        let dir = base.join("Replays");
+        let sub = dir.join("Study");
+        fs::create_dir_all(&sub).unwrap();
+        // Three direct files with distinct mtimes, one in a subfolder, one
+        // that is not a replay, and one tiny aborted game.
+        let big = vec![0u8; (replays::MIN_INTERESTING_BYTES + 1) as usize];
+        let stamp = |p: &Path, secs: u64| {
+            let t = std::time::SystemTime::UNIX_EPOCH + std::time::Duration::from_secs(secs);
+            let f = fs::OpenOptions::new().write(true).open(p).unwrap();
+            f.set_modified(t).unwrap();
+        };
+        let old = dir.join("Replay_2026_01_01_1200.w3g");
+        let mid = dir.join("saved.W3G");
+        let new = dir.join("Replay_2026_03_01_1200.w3g");
+        fs::write(&old, &big).unwrap();
+        fs::write(&mid, &big).unwrap();
+        fs::write(&new, b"tiny").unwrap();
+        fs::write(sub.join("Replay_2026_04_01_1200.w3g"), &big).unwrap();
+        fs::write(dir.join("notes.txt"), b"x").unwrap();
+        stamp(&old, 1_700_000_000);
+        stamp(&mid, 1_700_000_100);
+        stamp(&new, 1_700_000_200);
+
+        let all = recent_in(&dir, 10);
+        let names: Vec<&str> = all.iter().map(|r| r.file_name.as_str()).collect();
+        assert_eq!(names, vec!["Replay_2026_03_01_1200.w3g", "saved.W3G", "Replay_2026_01_01_1200.w3g"]);
+        assert!(!all[0].interesting, "a tiny file is listed but flagged");
+        assert!(all[0].autosaved);
+        assert!(!all[1].autosaved);
+        assert!(all[1].interesting);
+
+        let two = recent_in(&dir, 2);
+        assert_eq!(two.len(), 2);
+        assert_eq!(two[0].file_name, "Replay_2026_03_01_1200.w3g");
+
+        assert!(recent_in(&base.join("nope"), 5).is_empty(), "unreadable lists as empty");
         let _ = fs::remove_dir_all(&base);
     }
 

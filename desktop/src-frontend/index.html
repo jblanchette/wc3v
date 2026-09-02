@@ -82,16 +82,12 @@
           <span class="identity-label">You</span>
           <span class="identity-name" id="identity-name">not set</span>
         </button>
+        <!-- The same picker the first-run screen shows (js/identity-picker.js):
+             the seats in your most recent games as cards, and a forgiving
+             search behind "None of these are me". -->
         <div class="identity-pop" id="identity-pop" hidden>
           <p class="pop-lead">Wins and losses are scored from this seat.</p>
-          <div id="identity-choices" class="choices"></div>
-          <label class="field">
-            <span class="field-label">Or type a name</span>
-            <input id="identity-input" list="known-names" autocomplete="off"
-                   placeholder="exact in-game name">
-          </label>
-          <datalist id="known-names"></datalist>
-          <button id="identity-save" class="btn btn-primary" type="button">That's me</button>
+          <div id="identity-picker"></div>
         </div>
       </div>
 
@@ -268,9 +264,9 @@
 
       <!-- ── First run ────────────────────────────────────────────────────
            Shown once, over everything, on a machine that has never been set
-           up. Four rows and a Start button; every row is skippable, because a
-           setup screen you cannot get past is a worse first impression than a
-           half-configured app.
+           up. Four steps under a rail (js/first-run.js): Welcome, Folders,
+           You, History. There is no Skip; step 1 needs the privacy and terms
+           box ticked, every other step has a working default.
 
            The W3Champions row ships CHECKED. It is the one thing here that
            leaves the machine, so it says exactly what it sends and where to
@@ -280,69 +276,144 @@
            every request until its marker file exists, checkbox or no. -->
       <aside class="sheet setup" id="setup-sheet" role="dialog" aria-modal="true"
              aria-labelledby="setup-title" hidden>
-        <header class="sheet-head">
-          <h2 id="setup-title">Set up WC3V</h2>
+        <header class="setup-head">
+          <div class="wiz-lockup" aria-hidden="true">
+            <svg class="wiz-shield" viewBox="0 0 48 56">
+              <path class="wiz-shield-bg" d="M24 2 45 9v17c0 12.6-8.9 22.7-21 27C11.9 48.7 3 38.6 3 26V9z"/>
+              <path class="wiz-shield-rim" fill="none" d="M24 5.2 42 11.2v14.8c0 10.8-7.6 19.6-18 23.4C13.6 45.6 6 36.8 6 26V11.2z"/>
+              <path class="wiz-shield-mark" d="M24 12l3.4 8.2 8.6.7-6.5 5.6 2 8.4L24 30.5l-7.5 4.4 2-8.4-6.5-5.6 8.6-.7z"/>
+            </svg>
+            <div class="wiz-word">WC<span>3</span>V</div>
+          </div>
+          <div class="wiz-text">
+            <h2 id="setup-title">Welcome to WC3V</h2>
+            <p class="wiz-sub">One-time setup. Four short steps, and every choice stays in Settings.</p>
+          </div>
+          <ol class="wiz-rail" aria-label="Setup steps">
+            <li><button class="wiz-step" type="button" data-step="welcome"><span class="wiz-n">1</span><span class="wiz-glyph" data-glyph="shield"></span><span class="wiz-label">Welcome</span></button></li>
+            <li><button class="wiz-step" type="button" data-step="folders"><span class="wiz-n">2</span><span class="wiz-glyph" data-glyph="scroll"></span><span class="wiz-label">Folders</span></button></li>
+            <li><button class="wiz-step" type="button" data-step="you"><span class="wiz-n">3</span><span class="wiz-glyph" data-glyph="heroes"></span><span class="wiz-label">You</span></button></li>
+            <li><button class="wiz-step" type="button" data-step="history"><span class="wiz-n">4</span><span class="wiz-glyph" data-glyph="hourglass"></span><span class="wiz-label">History</span></button></li>
+          </ol>
         </header>
         <div class="sheet-body scroll">
-          <!-- The folder tree: every directory holding replays, under the
-               root it was found in, drawn by js/folders.js. Each row can be
-               switched off, renamed or removed here, and again in Settings.
-               Nothing here touches the disk. -->
-          <div class="setup-row">
-              <h3>Replay folders</h3>
-              <p class="hint" id="setup-roots">Looking for your replays…</p>
-              <div class="ftree scroll" id="setup-folders"></div>
-              <div class="row">
-                <button id="setup-folder" class="btn" type="button">Add a folder…</button>
-                <span class="hint hint-inline">Untick a folder to skip it. Removing one deletes nothing.</span>
+
+          <!-- 1 · Welcome. What stays on this machine, and the acceptance. -->
+          <section class="setup-step" id="setup-step-welcome">
+            <div class="step-head">
+              <span class="step-mark" data-glyph="shield"></span>
+              <div>
+                <h3>Stays on your machine</h3>
+                <p class="hint">WC3V reads the replay files Warcraft III already writes. Nothing else.</p>
               </div>
             </div>
+            <ul class="safe-list">
+              <li><span class="safe-tick" data-glyph="check"></span>Your replays never leave this PC. No upload, no cloud.</li>
+              <li><span class="safe-tick" data-glyph="check"></span>No account, no login, no paywall. Free and open source.</li>
+              <li><span class="safe-tick" data-glyph="check"></span>No game injection, no memory reading. It cannot see a game in progress.</li>
+              <li><span class="safe-tick" data-glyph="check"></span>Nothing dials out unless you switch it on.</li>
+            </ul>
+            <p class="hint safe-except">Two exceptions, both with a switch in Settings: an anonymous
+              usage count (app started, game parsed, version number, nothing about you), and
+              W3Champions lookups if you turn them on in step 3.</p>
+            <label class="check accept">
+              <input type="checkbox" id="setup-accept">
+              <span>I have read the
+                <button class="linkish" type="button" data-site-page="privacy">Privacy Policy</button>
+                and the
+                <button class="linkish" type="button" data-site-page="terms">Terms of Service</button>
+              </span>
+            </label>
+          </section>
 
-          <div class="setup-row">
-              <h3>Your player name</h3>
-              <p class="hint">Wins and losses are scored from this seat.</p>
-              <input id="setup-name" list="known-names" autocomplete="off"
-                     placeholder="Name#1234">
+          <!-- 2 · Folders. The tree js/folders.js draws: every directory
+               holding replays, under the root it was found in. Each row can
+               be switched off, renamed, removed or opened to see what is in
+               it, here and again in Settings. Nothing here touches the disk. -->
+          <section class="setup-step" id="setup-step-folders" hidden>
+            <div class="step-head">
+              <span class="step-mark" data-glyph="scroll"></span>
+              <div>
+                <h3>Your replay folders</h3>
+                <p class="hint" id="setup-roots">Looking for your replays…</p>
+              </div>
             </div>
+            <div class="ftree scroll" id="setup-folders"></div>
+            <div class="row">
+              <button id="setup-folder" class="btn" type="button">Add a folder…</button>
+              <span class="hint hint-inline">Untick a folder to skip it. Open one to see what is inside. Removing one deletes nothing.</span>
+            </div>
+          </section>
 
-          <div class="setup-row">
-              <h3>W3Champions</h3>
-              <label class="check">
-                <input type="checkbox" id="setup-w3c" checked>
-                <span>Look up ladder rank and live matches</span>
+          <!-- 3 · You. The seats in your most recent games, as cards. -->
+          <section class="setup-step" id="setup-step-you" hidden>
+            <div class="step-head">
+              <span class="step-mark" data-glyph="heroes"></span>
+              <div>
+                <h3>Which player are you?</h3>
+                <p class="hint">Wins and losses are scored from this seat.</p>
+              </div>
+            </div>
+            <div id="setup-who"></div>
+
+            <div class="setup-row ladder-row">
+              <div class="step-head">
+                <span class="step-mark ladder-mark" data-glyph="fight"><span class="online-dot" data-glyph="online"></span></span>
+                <div>
+                  <h3>W3Champions</h3>
+                  <label class="check">
+                    <input type="checkbox" id="setup-w3c" checked>
+                    <span>Look up ladder rank and live matches</span>
+                  </label>
+                  <p class="hint">
+                    Sends your battle tag to W3Champions and nothing else. Your
+                    replays never leave this machine. Off any time in Settings.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- 4 · History. New games only, or also the games on disk. -->
+          <section class="setup-step" id="setup-step-history" hidden>
+            <div class="step-head">
+              <span class="step-mark" data-glyph="hourglass"></span>
+              <div>
+                <h3>Your past games</h3>
+                <p class="hint">Every game you finish from now on is read on its own. The replays already on disk are up to you.</p>
+              </div>
+            </div>
+            <div class="opt-cards" role="radiogroup" aria-label="Past games">
+              <label class="opt-card">
+                <input type="radio" name="setup-history" id="setup-history-new" value="new">
+                <span class="opt-title">Only new games</span>
+                <span class="opt-body">Start clean. Parse all replays is in Settings if you change your mind.</span>
               </label>
-              <p class="hint">
-                Sends your battle tag to W3Champions and nothing else. Your
-                replays never leave this machine. Turn it off any time in
-                Settings.
-              </p>
-            </div>
-
-          <div class="setup-row">
-              <h3>Your history</h3>
-              <label class="check">
-                <input type="checkbox" id="setup-backfill" checked>
-                <span>Read the replays already on disk</span>
+              <label class="opt-card">
+                <input type="radio" name="setup-history" id="setup-history-all" value="all" checked>
+                <span class="opt-title">Also read my past games</span>
+                <span class="opt-body" id="setup-history-hint"></span>
               </label>
-              <p class="hint">Runs in the background. You can play while it works.</p>
             </div>
 
-          <!-- Only shown for a big library (first-run.js decides), because on
-               a small one the whole question is moot and the screen stays
-               short. Pre-checked when shown; the count and the consequence go
-               in the hint so the default is stated, not sprung. -->
-          <div class="setup-row" id="setup-only1v1-row" hidden>
-              <h3>1v1 only</h3>
+            <!-- Only shown for a big library (first-run.js decides), because on
+                 a small one the whole question is moot and the screen stays
+                 short. Pre-checked when shown; the count and the consequence go
+                 in the hint so the default is stated, not sprung. -->
+            <div class="setup-row" id="setup-only1v1-row" hidden>
               <label class="check">
                 <input type="checkbox" id="setup-only1v1" checked>
-                <span>Only parse 1v1 games</span>
+                <span>Only parse 1v1 games
+                  <span class="hint" id="setup-only1v1-hint"></span>
+                </span>
               </label>
-              <p class="hint" id="setup-only1v1-hint"></p>
             </div>
+          </section>
         </div>
         <footer class="sheet-foot">
-          <button id="setup-skip" class="btn" type="button">Skip</button>
-          <button id="setup-start" class="btn btn-primary" type="button">Start</button>
+          <button id="setup-back" class="btn" type="button" hidden>Back</button>
+          <button id="setup-next" class="btn btn-primary" type="button">Next</button>
+          <button id="setup-start" class="btn btn-primary" type="button" hidden>Start</button>
         </footer>
       </aside>
 
@@ -382,7 +453,7 @@
                the hint says so because "Remove" next to a folder of four
                thousand games is the one place a wrong guess would hurt. -->
           <section class="panel">
-            <h2>Replay folders</h2>
+            <h2><span class="panel-mark" data-glyph="scroll"></span>Replay folders</h2>
             <p class="hint" id="folders-summary"></p>
             <div id="folders" class="ftree scroll"></div>
             <div class="row">
@@ -395,7 +466,7 @@
           </section>
 
           <section class="panel">
-            <h2>Your history</h2>
+            <h2><span class="panel-mark" data-glyph="hourglass"></span>Your history</h2>
             <div class="row">
               <button id="backfill-toggle" class="btn btn-primary" type="button">Parse all replays</button>
               <button id="backfill-retry" class="btn" type="button" hidden>Retry failed</button>
@@ -433,7 +504,7 @@
                default, and the refusal is enforced in src-tauri/src/w3c.rs
                rather than by this checkbox. -->
           <section class="panel">
-            <h2>W3Champions</h2>
+            <h2><span class="panel-mark ladder-mark" data-glyph="fight"><span class="online-dot" data-glyph="online"></span></span>W3Champions</h2>
             <label class="check">
               <input type="checkbox" id="w3c-toggle">
               <span>
@@ -525,6 +596,9 @@
   <!-- node/buildIcon/raceMark/playerTitle and friends. Both the feed and the
        Library build out of these, so they load before either. -->
   <script src="./js/ui-bits.js"></script>
+  <!-- The "which player are you" cards. Builds out of ui-bits, so it loads
+       after it; identity.js and first-run.js mount it at run time. -->
+  <script src="./js/identity-picker.js"></script>
   <!-- The replay folder tree: what is read, what it is called, which game
        came from where. Both setup screens and both filter bars read it. -->
   <script src="./js/folders.js"></script>

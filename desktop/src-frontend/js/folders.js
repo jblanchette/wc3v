@@ -41,20 +41,64 @@
     return i > 0 ? s.slice(0, i) : '';
   };
 
+  // How many of a folder's newest replays the open row shows. Enough to
+  // recognise the folder by its contents; few enough that the tree stays a
+  // tree with one row open.
+  const PEEK = 5;
+
+  // A file's age, as a person would say it. The list is the newest few, so
+  // "today" and "yesterday" do most of the work.
+  const fmtWhen = (ms) => {
+    if (!ms) return '';
+    const d = new Date(ms);
+    const now = new Date();
+    const day = 24 * 60 * 60 * 1000;
+    const startOf = (x) => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
+    const days = Math.round((startOf(now) - startOf(d)) / day);
+    const hm = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    if (days === 0) return `today ${hm}`;
+    if (days === 1) return `yesterday ${hm}`;
+    if (days < 7) return `${days} days ago`;
+    return d.toLocaleDateString([], { day: 'numeric', month: 'short', year: d.getFullYear() === now.getFullYear() ? undefined : 'numeric' });
+  };
+
   window.createFolders = (deps) => {
-    // deps: invoke, log, errText, onChange()
+    // deps: invoke, log, errText, onChange(), readRecent(folder, files) [optional]
     //
     // onChange fires after every mutation that changes what the scanner
     // reads, so app.js can rescan and restart the watcher.
+    //
+    // readRecent is the "Read these" button on an open row: parse the newest
+    // few games in that one folder now. Absent (the preview harness), the
+    // button is not drawn.
     let list = [];
     let dirs = {};             // game key -> directory it was parsed from
     let pending = [];          // sources not yet written
     let flushTimer = 0;
     const hosts = new Set();   // mounted trees, redrawn on every change
+    const open = new Set();    // paths whose row is expanded
+    const recent = new Map();  // path -> newest files, or a promise of them
 
     const apply = (tree) => {
       list = Array.isArray(tree) ? tree : [];
+      // The tree changed under the previews, so they are re-read on the
+      // next open rather than shown stale.
+      recent.clear();
       for (const h of hosts) draw(h.host, h.opts);
+    };
+
+    // The newest few files in one folder, cached per path for as long as the
+    // tree stands. A folder that cannot be listed reads as empty.
+    const recentIn = (path) => {
+      if (!recent.has(path)) {
+        recent.set(path, deps.invoke('folder_recent', { path, limit: PEEK })
+          .then(files => Array.isArray(files) ? files : [])
+          .catch((e) => {
+            deps.log(`could not list that folder: ${deps.errText(e)}`, 'warn');
+            return [];
+          }));
+      }
+      return recent.get(path);
     };
 
     const load = async () => {
@@ -212,6 +256,27 @@
         box.disabled = false;
       });
       check.appendChild(box);
+
+      // Opens the row into its newest replays. A folder with nothing directly
+      // inside has nothing to show, so its chevron is a spacer that keeps the
+      // names aligned.
+      const chev = node('button', 'frow-open');
+      chev.type = 'button';
+      const isOpen = open.has(f.path);
+      chev.textContent = isOpen ? '▾' : '▸';
+      chev.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+      chev.setAttribute('aria-label', isOpen ? `Close ${f.label}` : `Look inside ${f.label}`);
+      chev.title = isOpen ? 'Close' : 'Look inside';
+      if (!f.direct_count) {
+        chev.disabled = true;
+        chev.textContent = '';
+        chev.title = '';
+      }
+      chev.addEventListener('click', () => {
+        if (open.has(f.path)) open.delete(f.path); else open.add(f.path);
+        for (const h of hosts) draw(h.host, h.opts);
+      });
+      r.appendChild(chev);
       r.appendChild(check);
 
       const name = node('span', 'frow-name', f.label);
@@ -278,13 +343,72 @@
       return r;
     };
 
+    // The panel under an open row: the newest few replays by name and age,
+    // and a button to read them now. File names are the game's own
+    // (`Replay_2026_09_02_1410.w3g`) or whatever the person saved one as,
+    // never a path.
+    const peekPanel = (f) => {
+      const panel = node('div', 'fpeek');
+      panel.style.setProperty('--depth', String(f.depth));
+      const head = node('div', 'fpeek-head');
+      head.appendChild(node('span', 'fpeek-title',
+        f.direct_count > PEEK ? `Newest ${PEEK} of ${fmt(f.direct_count)}` : `All ${fmt(f.direct_count)}`));
+      panel.appendChild(head);
+      const ul = node('ul', 'fpeek-list');
+      ul.appendChild(node('li', 'fpeek-wait', 'Looking…'));
+      panel.appendChild(ul);
+
+      recentIn(f.path).then((files) => {
+        ul.innerHTML = '';
+        if (!files.length) {
+          ul.appendChild(node('li', 'fpeek-wait', 'Nothing readable here.'));
+          return;
+        }
+        for (const file of files) {
+          const li = node('li', 'fpeek-row');
+          const nm = node('span', 'fpeek-name', file.file_name.replace(/\.w3g$/i, ''));
+          li.appendChild(nm);
+          const when = node('span', 'fpeek-when', fmtWhen(file.modified_ms));
+          li.appendChild(when);
+          if (!file.interesting) {
+            li.classList.add('is-short');
+            li.appendChild(node('span', 'fpeek-tag', 'too short'));
+          }
+          ul.appendChild(li);
+        }
+        const playable = files.filter(x => x.interesting);
+        if (deps.readRecent && playable.length) {
+          const act = node('div', 'fpeek-act');
+          if (!f.enabled) {
+            act.appendChild(node('span', 'hint hint-inline', 'Switched off. Tick the folder to read it.'));
+          } else {
+            const btn = node('button', 'btn btn-sm',
+              `Read ${playable.length === 1 ? 'this game' : `these ${playable.length} games`} now`);
+            btn.type = 'button';
+            btn.title = 'Parse the newest games in this folder. The rest wait for Parse all replays.';
+            btn.addEventListener('click', async () => {
+              btn.disabled = true;
+              const ok = await deps.readRecent(f, playable);
+              if (!ok) btn.disabled = false;
+            });
+            act.appendChild(btn);
+          }
+          panel.appendChild(act);
+        }
+      });
+      return panel;
+    };
+
     const draw = (host, opts) => {
       host.innerHTML = '';
       if (!list.length) {
         host.appendChild(node('div', 'empty', 'No replay folders found.'));
         return;
       }
-      list.forEach((f, i) => host.appendChild(row(f, i, opts)));
+      list.forEach((f, i) => {
+        host.appendChild(row(f, i, opts));
+        if (open.has(f.path) && f.direct_count) host.appendChild(peekPanel(f));
+      });
     };
 
     // Fill a filter <select> with the folders, indented by depth, each with

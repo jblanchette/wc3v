@@ -13,6 +13,10 @@
 //
 // Only autosaved replays get sampled. The Replays root also holds downloaded
 // and manually saved games the user was never in, which would poison the count.
+//
+// The picker itself (the cards under "You" in the app bar) is
+// js/identity-picker.js, the same component the first-run screen mounts, so
+// changing your mind later looks exactly like choosing the first time.
 
 (function () {
   'use strict';
@@ -26,8 +30,8 @@
   const el = (id) => document.getElementById(id);
 
   window.createIdentity = (deps) => {
-    // deps: log, makeWorker, peekPlayers, overlayState, replays(), onChange
-    let candidates = [];
+    // deps: log, makeWorker, peekPlayers, overlayState, replays(), picker,
+    //       suppressPrompt(), onChange
     let scanned = false;
 
     const confirmed = () => localStorage.getItem('wc3v-user-name-confirmed') === '1';
@@ -82,8 +86,7 @@
         name: top.name,
         share,
         read,
-        confident: share >= MIN_SHARE && clearOfSecond,
-        ranked: ranked.slice(0, 6)
+        confident: share >= MIN_SHARE && clearOfSecond
       };
     };
 
@@ -91,50 +94,30 @@
       const known = deps.overlayState.userName;
       el('identity-name').textContent = known || 'not set';
       el('identity-btn').dataset.set = known ? '1' : '0';
-
-      // The picker is always available. A wrong auto-detection has to be one
-      // click to fix, which a prefilled text box failed to make obvious.
-      const choices = el('identity-choices');
-      choices.innerHTML = '';
-      for (const name of candidates) {
-        const b = document.createElement('button');
-        b.type = 'button';
-        b.className = 'choice' + (name === known ? ' is-active' : '');
-        b.textContent = name;
-        b.addEventListener('click', () => {
-          set(name, { confirmed: true });
-          close();
-          deps.log(`you are ${name}`, 'ok');
-        });
-        choices.appendChild(b);
-      }
+      // The cards mark whichever name is current, wherever it was set.
+      deps.picker.redraw();
     };
 
+    let pickerShown = false;
     const open = () => {
       el('identity-pop').hidden = false;
       el('identity-btn').setAttribute('aria-expanded', 'true');
-      el('identity-input').value = deps.overlayState.userName || '';
-      el('identity-input').focus();
+      // The recent headers are read the first time the popover opens and kept
+      // for the session; a new game landing is not worth a re-read for this.
+      if (!pickerShown) {
+        pickerShown = true;
+        deps.picker.refresh();
+      }
     };
     const close = () => {
       el('identity-pop').hidden = true;
       el('identity-btn').setAttribute('aria-expanded', 'false');
     };
 
+    deps.picker.mount(el('identity-picker'), { compact: true });
+
     el('identity-btn').addEventListener('click', () => {
       if (el('identity-pop').hidden) open(); else close();
-    });
-    el('identity-save').addEventListener('click', () => {
-      const name = el('identity-input').value.trim();
-      if (!name) return;
-      // Typed by hand, so it outranks any detection.
-      if (candidates.indexOf(name) === -1) candidates.unshift(name);
-      set(name, { confirmed: true });
-      close();
-      deps.log(`you are ${name}`, 'ok');
-    });
-    el('identity-input').addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') el('identity-save').click();
     });
     document.addEventListener('click', (e) => {
       if (el('identity-pop').hidden) return;
@@ -145,11 +128,16 @@
     return {
       render,
       open,
+      close,
       get name () { return deps.overlayState.userName; },
-      // Somebody typing their own name IS the confirmation, whether they typed
-      // it in the picker or on the first-run screen. Exposed so first-run.js
-      // does not reach into localStorage to say the same thing.
-      confirm (name) { set(name, { confirmed: true }); },
+      // Somebody choosing their own name IS the confirmation, whether they
+      // clicked a card in the popover or on the first-run screen. Exposed so
+      // neither reaches into localStorage to say the same thing.
+      confirm (name) {
+        set(name, { confirmed: true });
+        close();
+        deps.log(`you are ${name}`, 'ok');
+      },
       async resolve () {
         // A guess never overrides an explicit choice.
         if (confirmed()) { render(); return; }
@@ -158,22 +146,19 @@
         scanned = true;
 
         const det = await detectFromDisk().catch(() => null);
-        if (det) {
-          candidates = det.ranked.map(r => r.name);
-          if (det.confident) {
-            set(det.name, { confirmed: false });
-            deps.log(`you look like ${det.name}, in ${Math.round(det.share * 100)}% of ` +
-              `${det.read} sampled replays. Click your name up top to change it.`, 'ok');
-            return;
-          }
+        if (det && det.confident) {
+          set(det.name, { confirmed: false });
+          deps.log(`you look like ${det.name}, in ${Math.round(det.share * 100)}% of ` +
+            `${det.read} sampled replays. Click your name up top to change it.`, 'ok');
+          return;
         }
 
-        if (!candidates.length) candidates = deps.overlayState.lastGameCandidates;
         render();
-        if (candidates.length) {
-          deps.log('Click "You" up top and pick your name, so games can be scored.', 'warn');
-          open();
-        }
+        // The first-run screen is asking the same question on its own step,
+        // so the popover stays shut while it is up.
+        if (deps.suppressPrompt && deps.suppressPrompt()) return;
+        deps.log('Click "You" up top and pick your name, so games can be scored.', 'warn');
+        open();
       }
     };
   };

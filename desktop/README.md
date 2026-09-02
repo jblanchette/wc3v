@@ -30,7 +30,7 @@ auditable.
 - Only ever **reads `.w3g` files the game already wrote**. No process injection, no memory reading, no packet inspection, no input automation. That is also why the overlay is safe on a live stream: it cannot leak a game in progress because it never sees one.
 - **No live in-game state.** The replay written at match end is the only data source.
 - **Your replays never leave this machine.** No upload, no account. The only thing sent is an anonymous usage count (event name, version, OS family), with an off switch in Settings.
-- **Nothing dials out unless you switch it on.** The one socket the binary opens by itself is the overlay's loopback listener: 127.0.0.1 only, token-gated, GET only, read-only routes, all enforced in `overlay.rs`. The outbound exceptions are icon art and map data from `cdn.wc3v.com`, the usage count, and optional W3Champions lookups. `w3c.rs` refuses every request unless its opt-in marker file exists; the first-run screen proposes turning it on with the box checked and what it sends stated on the same screen, and skipping that screen writes no marker.
+- **Nothing dials out unless you switch it on.** The one socket the binary opens by itself is the overlay's loopback listener: 127.0.0.1 only, token-gated, GET only, read-only routes, all enforced in `overlay.rs`. The outbound exceptions are icon art and map data from `cdn.wc3v.com`, the usage count, and optional W3Champions lookups. `w3c.rs` refuses every request unless its opt-in marker file exists; the first-run screen proposes turning it on with the box checked and what it sends stated on the same screen.
 - **No overlay drawn over the game.** Output is an OBS Browser Source and an ordinary window.
 - **The webview gets no arbitrary-filesystem primitive.** `read_replay` and `read_map_file` canonicalise their argument and refuse anything outside a registered replay root or the local map cache. Store commands accept only a `<size>-<hash>` key of digits, hex and a dash.
 - No accounts, no paywall. GPLv3, same as the parser.
@@ -104,6 +104,13 @@ was found in: the game's own `Autosaved\Multiplayer` and `Autosaved\Custom`
 next to whatever the person made. Each row can be switched off, renamed or
 removed, on the first-run screen and again in Settings. `js/folders.js` draws
 both; `src-tauri/src/folders.rs` owns the config and discovery.
+
+A row opens on its chevron into the newest five files directly inside it,
+by name and age (`folder_recent`, a plain directory listing with no hash),
+with a "Read these games now" button that runs the catch-up engine over
+just those files (`backfill.start({ limit, only })`), parse chips and all.
+It is how a person tells a folder by what is in it before deciding to keep
+it on.
 
 Nothing here touches the disk. A label is a label, off means the scanner
 skips the files directly inside (subfolders keep their own switch, and the UI
@@ -208,12 +215,32 @@ gate, asserted explicitly in `overlay.rs`'s tests.
 
 ## First run
 
-One screen, once, on a machine with no `setup-done` marker: the folder tree,
-your player name, W3Champions, read-my-history, and for a 500+ replay library
-the 1v1 filter. Every row is skippable and every control also lives in
-Settings. A marker file rather than `localStorage`, because clearing the
+One panel, once, on a machine with no `setup-done` marker, four steps under
+a rail (`js/first-run.js`): Welcome, Folders, You, History. There is no
+Skip. Step 1 states what stays on the machine and needs the privacy policy
+and terms box ticked; `accept_terms` writes the two pages' effective dates
+to `<app_data>/terms-accepted`, and the Privacy Policy and Terms links open
+in the browser through `open_site_page`, an allow-list of exactly those two.
+Every other step has a working default and every control also lives in
+Settings. Marker files rather than `localStorage`, because clearing the
 webview's storage is a normal debugging move and should not put a setup
 screen in front of somebody who has used the app for months.
+
+Step 3 is `js/identity-picker.js`: the newest ten replays on disk are read
+header-only (`peekPlayers`, which now carries each seat's race) and every
+name in them is a card with its races and how many of those games it was in.
+The account owner is in nearly all of them, so the right card is the first
+one and is tagged "Most likely" when it leads clearly. "None of these are
+me" opens a search over every name the app has seen, where "jeef" finds
+"Jeef#1496" (`IdentityPicker.matchNames`: exact, then the part before the
+tag, then prefix, then anywhere). The same component sits in the "You"
+popover in the app bar, so changing your mind later looks exactly like
+choosing the first time. `tools/test-identity-picker.js` pins the folding
+and the matching.
+
+Step 4 is one choice: only new games from here on, or also read the
+replays on disk in the background. A 500+ replay library adds the 1v1
+filter, pre-checked.
 
 ## Opening a moment in the viewer
 

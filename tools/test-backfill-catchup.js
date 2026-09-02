@@ -17,6 +17,8 @@
  *   • a known-bad key is skipped without being retried
  *   • onQueue/onProgress report every file exactly once
  *   • one replay failing does not stop the rest of the run
+ *   • `only` narrows the queue BEFORE the limit, and a throwing filter
+ *     matches nothing
  *   • an unlimited run is unchanged by any of the above
  */
 
@@ -147,6 +149,30 @@ const runToIdle = async (bf) => {
     assert.strictEqual(h.parsed.length, 4, 'the other four still parse');
     assert.ok(h.progress.includes('game2.w3g:failed'), 'the failure is reported as failed');
     assert.ok(!h.progress.includes('game2.w3g:done'), 'and not also as done');
+  }
+
+  // ── `only` narrows the queue before the limit ──────────────────────────
+  //
+  // The tree row's "Read these" button: the newest N in ONE folder, which
+  // means the filter has to run before the slice or a limit of 3 would take
+  // the three newest anywhere and then throw two of them away.
+  {
+    const h = harness({ scan: scanOf(12) });
+    const bf = createBackfill(h.deps);
+    const odd = (r) => /game(1|3|5|7|9|11)\.w3g$/.test(r.path);
+    await bf.catchUp(3, { ...h.hooks, only: odd });
+    await runToIdle(bf);
+
+    assert.deepStrictEqual(h.queued, ['game1.w3g', 'game3.w3g', 'game5.w3g'],
+      'the newest three that pass the filter, not the newest three filtered');
+    assert.strictEqual(h.parsed.length, 3);
+  }
+  {
+    const h = harness({ scan: scanOf(4) });
+    const bf = createBackfill(h.deps);
+    await bf.catchUp(3, { ...h.hooks, only: () => { throw new Error('boom'); } });
+    await runToIdle(bf);
+    assert.deepStrictEqual(h.queued, [], 'a filter that throws matches nothing rather than everything');
   }
 
   // ── An unlimited run is the old behaviour ──────────────────────────────

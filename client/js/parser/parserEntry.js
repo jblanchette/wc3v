@@ -90,9 +90,30 @@ const Wc3vParser = {
         .map(s => s.playerId)
     );
 
+    // The race each seat picked, off the slot record, so a caller can draw a
+    // race mark beside a name without a parse. The parser's own mapping
+    // covers the fixed-race flags (0x41..0x48); the low nibble covers the
+    // bare ones, and 0x20 is "random" in either form.
+    const raceOf = (slot) => {
+      if (!slot) return null;
+      const flag = slot.raceFlag | 0;
+      const mapped = utils.getRaceFromFlag(flag);
+      if (mapped !== 'R') return mapped;
+      const low = flag & 0x0f;
+      if (low === 1) return 'H';
+      if (low === 2) return 'O';
+      if (low === 4) return 'E';
+      if (low === 8) return 'U';
+      return (flag & 0x20) ? 'R' : null;
+    };
+    const slotById = new Map();
+    for (const s of (info.metadata.slotRecords || [])) {
+      if (s) slotById.set(s.playerId, s);
+    }
+
     const players = [...byId.entries()]
       .filter(([id]) => humanIds.size === 0 || humanIds.has(id))
-      .map(([playerId, name]) => ({ playerId, name }));
+      .map(([playerId, name]) => ({ playerId, name, race: raceOf(slotById.get(playerId)) }));
 
     // The mode, from the same slot records, so a caller can gate on "is this
     // a 1v1" without paying for a parse. Derived through the shared

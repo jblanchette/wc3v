@@ -163,7 +163,7 @@ impl HashIndex {
 
 // ── Discovery ───────────────────────────────────────────────────────────────
 
-fn is_autosave_name(name: &str) -> bool {
+pub fn is_autosave_name(name: &str) -> bool {
     // Replay_2026_07_18_1527.w3g
     let stem = name.strip_suffix(".w3g").unwrap_or(name);
     let Some(rest) = stem.strip_prefix("Replay_") else {

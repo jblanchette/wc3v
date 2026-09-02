@@ -142,9 +142,16 @@
 .identity-pop {
   position: absolute;
   top: calc(100% + var(--sp-2));
-  left: 0;
+  /* Hung from the button's right edge: the button sits near the window's
+     right edge, and a popover opening leftward from its left edge ran off
+     the screen at 1280px. */
+  right: 0;
   z-index: 20;
-  width: 22rem;
+  width: 24rem;
+  /* The picker lists up to four cards and a search; past the window's
+     height it scrolls inside itself rather than off the bottom. */
+  max-height: calc(100vh - 96px);
+  overflow-y: auto;
   padding: var(--sp-4);
   background: var(--app-panel);
   border: 1px solid var(--app-edge);

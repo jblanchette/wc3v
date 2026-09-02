@@ -156,3 +156,77 @@
 }
 /* A hint riding beside a button instead of under a heading. */
 .hint-inline { margin: 0; }
+
+/* The chevron that opens a row into its newest replays. A spacer on a row
+   with nothing directly inside, so names stay aligned. */
+.frow-open {
+  flex: none;
+  width: 22px;
+  height: var(--ico-sm);
+  padding: 0;
+  background: transparent;
+  border: 0;
+  color: var(--ink-dim);
+  font: inherit;
+  cursor: pointer;
+}
+.frow-open:hover { color: var(--ink); }
+.frow-open[disabled] { cursor: default; }
+
+/* The panel under an open row: the newest few files by name and age, and
+   the button that reads them. Indented to the row's name, hung off the
+   row's bottom edge. */
+.fpeek {
+  margin: calc(-1 * var(--sp-1)) 0 var(--sp-1)
+    calc(var(--sp-2) + var(--depth, 0) * 1.25rem + 22px + var(--sp-2));
+  padding: var(--sp-2) var(--sp-3) var(--sp-3);
+  background: var(--app-bg);
+  border: 1px solid var(--app-line);
+  border-top: 0;
+  border-radius: 0 0 var(--radius-sm) var(--radius-sm);
+}
+.fpeek-head {
+  margin-bottom: var(--sp-1);
+  color: var(--ink-faint);
+  font-size: var(--fs-min);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.fpeek-list { display: grid; gap: 2px; margin: 0; padding: 0; list-style: none; }
+.fpeek-row {
+  display: flex;
+  align-items: baseline;
+  gap: var(--sp-3);
+  font-size: var(--fs-min);
+  font-variant-numeric: tabular-nums;
+}
+.fpeek-name { flex: 1 1 auto; min-width: 0; color: var(--ink-2); font-weight: 600; overflow-wrap: anywhere; }
+.fpeek-when { flex: none; color: var(--ink-dim); white-space: nowrap; }
+.fpeek-row.is-short .fpeek-name { color: var(--ink-faint); font-weight: 500; }
+.fpeek-tag { flex: none; color: var(--ink-faint); }
+.fpeek-wait { color: var(--ink-faint); font-size: var(--fs-min); }
+.fpeek-act { margin-top: var(--sp-2); }
+
+/* The step marks from the first-run screen, on the Settings panels they
+   correspond to, so a person who set something up there finds it here by
+   the same picture. */
+.panel-mark {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  margin-right: var(--sp-2);
+  vertical-align: -6px;
+  color: var(--dom-gold);
+}
+.panel-mark svg { width: 20px; height: 20px; fill: currentColor; display: block; }
+.panel-mark.ladder-mark .online-dot {
+  right: -4px;
+  bottom: -3px;
+  width: 12px;
+  height: 12px;
+  border-width: 1px;
+}
+.panel-mark.ladder-mark .online-dot svg { width: 8px; height: 8px; }

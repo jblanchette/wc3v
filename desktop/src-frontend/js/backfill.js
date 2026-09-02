@@ -243,10 +243,11 @@
       deps.onIdleChange(false);
     };
 
-    // opts: { limit, onQueue(files), onProgress(file, phase, key) }
+    // opts: { limit, only(replay), onQueue(files), onProgress(file, phase, key) }
     //
     // `limit` takes the newest N and stops, which is the first-boot catch-up.
-    // Without it this is the full backfill and behaves exactly as before.
+    // `only` keeps just the replays it answers true for, before the limit.
+    // Without either this is the full backfill and behaves exactly as before.
     const start = async (opts) => {
       if (st.running) return;
       const o = opts || {};
@@ -269,6 +270,14 @@
       // in the queue. Parsing it would double-count that game in the profile.
       st.queue = replays.filter(r =>
         r.interesting && !/^lastreplay\.w3g$/i.test(r.file_name));
+      // `only` narrows the queue before the limit is taken: "the newest five
+      // in THIS folder" from the tree row, rather than the newest five
+      // anywhere. A filter that throws is treated as matching nothing.
+      if (typeof o.only === 'function') {
+        st.queue = st.queue.filter(r => {
+          try { return !!o.only(r); } catch (e) { return false; }
+        });
+      }
       // Newest first is already the scan's order, so a limit is a slice.
       if (o.limit) st.queue = st.queue.slice(0, o.limit);
       st.claimed = new Set();

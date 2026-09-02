@@ -67,6 +67,26 @@
     // Hero kills: a blade through a ring. What came out of the fights.
     heroKills: 'M17.4 2.2 21 3.4 14.8 12l-2.4-2.6zM8.4 12.4a5.4 5.4 0 1 0 3.5 3.4l-1.8 2a3.5 3.5 0 1 1-1.6-1.6zM13.6 13l2.4 2.6-3 4.2-2.2-2.4z',
 
+    // ── The first-run screen's section marks, at 36px beside each step's
+    //    heading and at 20px on the step rail. The same marks head the
+    //    matching Settings panels, so the two screens read as one.
+
+    // Folders: a map scroll, rolled at both ends. Where the replays live.
+    scroll: 'M5 4h13a3 3 0 0 1 3 3v1h-2V7a1 1 0 0 0-2 0v10a3 3 0 0 1-3 3H5a3 3 0 0 1-3-3v-1h2v1a1 1 0 0 0 2 0V7a3 3 0 0 1-1-3zm3 4h6v2H8zm0 4h6v2H8z',
+
+    // Privacy: a shield with a keyhole. What stays on this machine.
+    shield: 'M12 1.5 21 5v6c0 5.4-3.8 9.8-9 11.5C6.8 20.8 3 16.4 3 11V5zm0 6a2.4 2.4 0 0 0-1.2 4.5V15h2.4v-3a2.4 2.4 0 0 0-1.2-4.5z',
+
+    // History: an hourglass. The games already on disk.
+    hourglass: 'M5 2h14v2.2h-1.4v2.1c0 2.2-1.3 4.1-3.2 5.1v1.2c1.9 1 3.2 2.9 3.2 5.1v2.1H19V22H5v-2.2h1.4v-2.1c0-2.2 1.3-4.1 3.2-5.1v-1.2C7.7 10.4 6.4 8.5 6.4 6.3V4.2H5zm3.6 2.2v2.1c0 1.6 1 3 2.4 3.5h2c1.4-.5 2.4-1.9 2.4-3.5V4.2zm4.4 12.2h-2c-1.4.5-2.4 1.9-2.4 3.5v.4h6.8v-.4c0-1.6-1-3-2.4-3.5z',
+
+    // A tick, for the list of things that stay on this machine.
+    check: 'M9.5 16.6 4.9 12l-1.6 1.6 6.2 6.2L21.2 8.1l-1.6-1.6z',
+
+    // Online: a signal arc over a dot. Rides beside a ladder mark to say
+    // this one talks to a server.
+    online: 'M12 16.2a2.4 2.4 0 1 1 0 4.8 2.4 2.4 0 0 1 0-4.8zM7.2 13.6a6.8 6.8 0 0 1 9.6 0l-1.6 1.6a4.5 4.5 0 0 0-6.4 0zM3.8 10.2a11.6 11.6 0 0 1 16.4 0l-1.6 1.6a9.3 9.3 0 0 0-13.2 0z',
+
     // ── Small chrome used by section heads elsewhere in the app.
     build: 'M4 20V9.5L12 3l8 6.5V20h-6v-5.5h-4V20zm8-14.4L6.4 10.2h11.2z',
     time: 'M12 2.5A9.5 9.5 0 1 0 12 21.5 9.5 9.5 0 0 0 12 2.5zm.9 3.9v5.3l3.9 2.3-.9 1.6-4.8-2.8V6.4z',
@@ -122,6 +142,23 @@
     },
 
     forMoment,
-    has: (name) => !!PATHS[name]
+    has: (name) => !!PATHS[name],
+
+    // Markup that names its glyph: `<span data-glyph="scroll"></span>`. Filled
+    // once at boot, so a section mark can be written in index.html beside its
+    // heading instead of being built in a view.
+    fill (root) {
+      (root || document).querySelectorAll('[data-glyph]').forEach((n) => {
+        const html = markup(n.dataset.glyph);
+        if (!html) return;
+        // Keep any element already inside (the online dot rides on the
+        // ladder mark); the glyph goes first.
+        const keep = [...n.children];
+        n.innerHTML = html;   // our own constant, never replay text
+        for (const k of keep) n.appendChild(k);
+        n.classList.add('glyph');
+        if (!n.hasAttribute('aria-label')) n.setAttribute('aria-hidden', 'true');
+      });
+    }
   };
 })();
