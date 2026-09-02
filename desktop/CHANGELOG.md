@@ -1,6 +1,6 @@
 # WC3V Desktop: changelog
 
-## 1.0.10
+## 1.0.10 — 2 Sep 2026
 
 ### Setup again, with the pieces that were missing
 
