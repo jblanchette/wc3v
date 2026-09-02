@@ -19,7 +19,29 @@
 (function () {
   'use strict';
 
-  const { node, raceMark } = window.UIBits;
+  const { node, raceMark, buildIcon } = window.UIBits;
+
+  // The race as the game draws it: the town hall of each race off the icon
+  // CDN, the way the build cards draw units. Random and unknown have no
+  // building and keep the heraldic mark.
+  const RACE_ICON = { H: 'htow', O: 'ogre', E: 'etol', U: 'unpl' };
+  const raceIcon = (race, big) => {
+    const id = RACE_ICON[race];
+    if (!id) {
+      const m = raceMark(race || 'N', big);
+      m.classList.add('who-icon');
+      return m;
+    }
+    const img = buildIcon(id);
+    img.classList.add('who-icon');
+    if (big) img.classList.add('is-big');
+    img.title = ({ H: 'Human', O: 'Orc', E: 'Night Elf', U: 'Undead' })[race];
+    return img;
+  };
+
+  // In at least this share of the recent games, and clear of whoever is
+  // second: the leader gets the big card and everyone else the small ones.
+  const STRONG_SHARE = 0.8;
 
   const norm = (s) => String(s || '').toLowerCase().trim();
   const baseOf = (s) => norm(s).replace(/#\d+$/, '');
@@ -73,7 +95,8 @@
 
   window.createIdentityPicker = (deps) => {
     // deps: recentSeats() -> Promise<seat[]>, knownNames() -> string[],
-    //       onPick(name), current() -> name|null, log
+    //       onPick(name), current() -> name|null, log,
+    //       onSuggest(name) [optional; a strong leader with nothing set yet]
     let host = null;
     let opts = {};
     let summary = null;     // { total, rows } once the headers are read
@@ -100,24 +123,30 @@
       draw();
     };
 
-    const card = (row, total, isTop) => {
+    const card = (row, total, kind) => {
+      // kind: 'hero' (the one big card), 'small' (the others under it), or
+      // '' (the even grid when nobody leads).
       const active = norm(row.name) === norm(deps.current());
-      const b = node('button', 'who-card' + (active ? ' is-active' : ''));
+      const b = node('button', 'who-card' + (active ? ' is-active' : '') +
+        (kind === 'hero' ? ' is-hero' : kind === 'small' ? ' is-small' : ''));
       b.type = 'button';
       if (row.races.length === 1) b.dataset.race = row.races[0];
-      const head = node('div', 'who-head');
-      head.appendChild(node('span', 'who-name', row.name));
-      const marks = node('span', 'who-races');
-      for (const r of row.races) marks.appendChild(raceMark(r));
-      head.appendChild(marks);
-      b.appendChild(head);
+
+      const icons = node('span', 'who-races');
+      for (const r of row.races.slice(0, 3)) icons.appendChild(raceIcon(r, kind === 'hero'));
+      b.appendChild(icons);
+
+      const text = node('div', 'who-text');
+      text.appendChild(node('span', 'who-name', row.name));
       const meta = node('div', 'who-meta');
       meta.appendChild(node('span', null,
         `${row.games} of ${total} recent game${total === 1 ? '' : 's'}`));
-      if (row.lastAt) meta.appendChild(node('span', 'who-when', `last ${fmtWhen(row.lastAt)}`));
-      b.appendChild(meta);
-      if (active) b.appendChild(node('span', 'who-tag is-you', 'You'));
-      else if (isTop) b.appendChild(node('span', 'who-tag', 'Most likely'));
+      if (row.lastAt && kind !== 'small') meta.appendChild(node('span', 'who-when', `last ${fmtWhen(row.lastAt)}`));
+      text.appendChild(meta);
+      b.appendChild(text);
+
+      if (active) b.appendChild(node('span', 'who-tag is-you', kind === 'hero' ? 'This is you' : 'You'));
+      else if (kind === 'hero') b.appendChild(node('span', 'who-tag', 'Most likely you'));
       b.setAttribute('aria-pressed', active ? 'true' : 'false');
       b.addEventListener('click', () => pick(row.name));
       return b;
@@ -195,15 +224,22 @@
       wrap.appendChild(status);
 
       if (summary && summary.rows.length) {
-        const grid = node('div', 'who-grid');
-        const rows = summary.rows.slice(0, opts.compact ? 4 : 8);
-        // "Most likely" only when the lead is real: in most of the games and
-        // clear of whoever is second.
-        const top = rows[0];
-        const clear = rows.length === 1 || top.games > rows[1].games;
-        const likely = clear && top.games / summary.total >= 0.6;
-        rows.forEach((r, i) => grid.appendChild(card(r, summary.total, likely && i === 0)));
-        wrap.appendChild(grid);
+        const rows = summary.rows.slice(0, opts.compact ? 5 : 9);
+        if (strongLeader(summary)) {
+          // One big card for the person this almost certainly is, and the
+          // rest small under a heading, so the obvious click is the big one.
+          wrap.appendChild(card(rows[0], summary.total, 'hero'));
+          if (rows.length > 1) {
+            wrap.appendChild(node('p', 'who-others', 'Other names in these games'));
+            const grid = node('div', 'who-grid is-small');
+            for (const r of rows.slice(1)) grid.appendChild(card(r, summary.total, 'small'));
+            wrap.appendChild(grid);
+          }
+        } else {
+          const grid = node('div', 'who-grid');
+          for (const r of rows) grid.appendChild(card(r, summary.total, ''));
+          wrap.appendChild(grid);
+        }
       }
 
       // With nothing to list (still reading, or nothing on disk) the search
@@ -225,6 +261,12 @@
       host.appendChild(wrap);
     };
 
+    const strongLeader = (sum) => {
+      if (!sum || !sum.rows.length || !sum.total) return false;
+      const [top, second] = sum.rows;
+      return (!second || top.games > second.games) && top.games / sum.total >= STRONG_SHARE;
+    };
+
     const refresh = async () => {
       reading = true;
       draw();
@@ -236,6 +278,12 @@
       }
       summary = summarise(seats);
       reading = false;
+      // A strong leader with nothing chosen yet is put in place as a guess,
+      // so the big card already reads "This is you" and Start needs no
+      // click here. It stays a guess (not confirmed) until a card is clicked.
+      if (deps.onSuggest && strongLeader(summary) && !deps.current()) {
+        deps.onSuggest(summary.rows[0].name);
+      }
       draw();
       return summary;
     };

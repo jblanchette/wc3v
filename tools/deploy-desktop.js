@@ -20,6 +20,20 @@
  *     target; a long TTL would mean users sit on a stale version for hours
  *     after a release.
  *
+ * Release policy, two optional manifest fields the app reads at boot
+ * (desktop/src-frontend/js/release-policy.js) and the updater ignores:
+ *
+ *   minimum        --require-update sets it to THIS version: every build below
+ *                  it shows an update screen and nothing else until it updates.
+ *                  --minimum=x.y.z sets it to another version.
+ *   onboard_from   --reonboard sets it to THIS version: everyone set up before
+ *                  it goes through the first-run screen again on next launch.
+ *                  --onboard-from=x.y.z sets it to another version.
+ *
+ * Without a flag each field is carried forward from the manifest already
+ * published, so a release that says nothing keeps the last policy. Builds
+ * older than 1.0.10 never read either field and cannot be forced.
+ *
  * Refuses to publish a build with no minisign updater signature, a version that
  * is not newer than what is already live, a binary older than the source it
  * was built from, or a version that does not agree across tauri.conf.json,
@@ -35,6 +49,8 @@
  *
  * Usage:
  *   node tools/deploy-desktop.js --notes="What changed, in a sentence."
+ *   node tools/deploy-desktop.js --notes="..." --require-update
+ *   node tools/deploy-desktop.js --notes="..." --reonboard
  *   node tools/deploy-desktop.js --notes="..." --dry-run   - preview, no upload
  *   node tools/deploy-desktop.js --notes="..." --skip-verify
  *   node tools/deploy-desktop.js --notes="..." --installer=path\to\signed.exe
@@ -396,9 +412,19 @@ async function main () {
   // A manifest whose version is not strictly greater than what is already
   // published is a no-op at best and a downgrade prompt at worst.
   const existing = await get(`${PUBLIC}/latest.json`);
+  // The policy fields as currently published, carried forward unless a flag
+  // says otherwise. Missing or unreadable means none.
+  let carried = { minimum: null, onboard_from: null };
   if (existing && existing.status === 200) {
     let published = null;
-    try { published = JSON.parse(existing.body).version; } catch (_) { /* malformed; treat as none */ }
+    try {
+      const body = JSON.parse(existing.body);
+      published = body.version;
+      carried = {
+        minimum: typeof body.minimum === 'string' ? body.minimum : null,
+        onboard_from: typeof body.onboard_from === 'string' ? body.onboard_from : null
+      };
+    } catch (_) { /* malformed; treat as none */ }
     if (published) {
       if (cmpVersion(version, published) <= 0) {
         die(`${PUBLIC}/latest.json already publishes ${published}.\n` +
@@ -419,10 +445,26 @@ async function main () {
   // a human can check by hand. sha256 is: something download.html can show
   // and a user can verify with `certutil -hashfile` / `shasum` themselves.
   const sha256 = crypto.createHash('sha256').update(fs.readFileSync(exePath)).digest('hex');
+  const policyArg = (flag, explicit) => {
+    if (typeof args[explicit] === 'string') {
+      if (!/^\d+(\.\d+)*$/.test(args[explicit])) die(`--${explicit} must be a version like 1.0.10`);
+      return args[explicit];
+    }
+    return args[flag] ? version : null;
+  };
+  const minimum = policyArg('require-update', 'minimum') || carried.minimum;
+  const onboardFrom = policyArg('reonboard', 'onboard-from') || carried.onboard_from;
+  if (minimum && cmpVersion(minimum, version) > 0) {
+    die(`--minimum ${minimum} is newer than ${version}: every install would be told to update to nothing.`);
+  }
+
   const manifest = {
     version,
     notes,
     pub_date: new Date().toISOString(),
+    // Read by the app at boot, ignored by the updater. See the header.
+    minimum,
+    onboard_from: onboardFrom,
     platforms: {
       'windows-x86_64': {
         signature,
@@ -438,6 +480,10 @@ async function main () {
 
   const sizeMb = (fs.statSync(exePath).size / (1024 * 1024)).toFixed(1);
   console.log(`  installer: ${exeName} (${sizeMb} MB)`);
+  console.log(`  policy:    minimum ${minimum || 'none'}` +
+    `${minimum && minimum === version && args['require-update'] ? ' (NEW: every older build must update)' : ''}` +
+    `, onboard from ${onboardFrom || 'none'}` +
+    `${onboardFrom && onboardFrom === version && args.reonboard ? ' (NEW: everyone set up before this goes through setup again)' : ''}`);
   console.log(`  signature: ${signature.slice(0, 24)}… (${signature.length} chars)`);
   console.log(`  sha256:    ${sha256}`);
   if (isDryRun) console.log('\n(dry run — no upload)');

@@ -157,56 +157,76 @@
 /* A hint riding beside a button instead of under a heading. */
 .hint-inline { margin: 0; }
 
-/* The chevron that opens a row into its newest replays. A spacer on a row
-   with nothing directly inside, so names stay aligned. */
-.frow-open {
-  flex: none;
-  width: 22px;
-  height: var(--ico-sm);
-  padding: 0;
-  background: transparent;
-  border: 0;
-  color: var(--ink-dim);
-  font: inherit;
-  cursor: pointer;
+/* Mixed: some of the folder's parts on, some off. A dash where the tick
+   goes, in the same ink. */
+.check input:indeterminate {
+  background: linear-gradient(180deg, var(--app-panel-2), var(--app-panel));
+  border-color: var(--app-edge);
 }
-.frow-open:hover { color: var(--ink); }
-.frow-open[disabled] { cursor: default; }
+.check input:indeterminate::after {
+  width: 8px;
+  height: 0;
+  border-width: 0 0 2px 0;
+  border-color: var(--ink-2);
+  transform: none;
+  opacity: 1;
+}
 
-/* The panel under an open row: the newest few files by name and age, and
-   the button that reads them. Indented to the row's name, hung off the
-   row's bottom edge. */
+/* "Look inside" on a root and "Newest 5" on a part: the two ways a row
+   opens. Plain text, because a chevron read as decoration. */
+.frow-look { flex: none; white-space: nowrap; }
+.frow-look[aria-expanded="true"] { box-shadow: var(--cut-in); color: var(--dom-gold); }
+
+/* An open root's parts: its own loose files as one row, then each subfolder,
+   flat. Set in from the root by the width of its checkbox, grouped by one
+   carved edge on the left of the whole block rather than per row. */
+.finside {
+  display: grid;
+  gap: var(--sp-1);
+  margin: calc(-1 * var(--sp-1)) 0 var(--sp-2) calc(var(--sp-2) + 20px);
+  padding: var(--sp-1) 0 0 var(--sp-2);
+  border-left: 1px solid var(--app-line);
+}
+.frow.is-part { background: var(--app-bg); }
+.frow.is-part .frow-name { font-weight: 600; }
+.frow-name.is-own { color: var(--ink-2); font-style: italic; }
+
+/* The newest-replays table under a part: one game a row, read off the
+   header. Players, map, length, when. */
 .fpeek {
-  margin: calc(-1 * var(--sp-1)) 0 var(--sp-1)
-    calc(var(--sp-2) + var(--depth, 0) * 1.25rem + 22px + var(--sp-2));
+  margin: calc(-1 * var(--sp-1)) 0 var(--sp-1) calc(var(--sp-2) + 20px);
   padding: var(--sp-2) var(--sp-3) var(--sp-3);
-  background: var(--app-bg);
+  background: var(--app-well);
   border: 1px solid var(--app-line);
   border-top: 0;
   border-radius: 0 0 var(--radius-sm) var(--radius-sm);
+  box-shadow: var(--cut-in);
 }
-.fpeek-head {
-  margin-bottom: var(--sp-1);
+.fpeek-table { display: grid; grid-template-columns: minmax(0, 1fr) auto auto auto; column-gap: var(--sp-4); }
+.fpeek-row { display: contents; font-size: var(--fs-min); font-variant-numeric: tabular-nums; }
+.fpeek-row > * { min-height: 26px; display: flex; align-items: center; border-bottom: 1px solid var(--app-line); }
+.fpeek-row.is-head > * {
+  min-height: 20px;
   color: var(--ink-faint);
-  font-size: var(--fs-min);
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
-.fpeek-list { display: grid; gap: 2px; margin: 0; padding: 0; list-style: none; }
-.fpeek-row {
-  display: flex;
-  align-items: baseline;
-  gap: var(--sp-3);
-  font-size: var(--fs-min);
-  font-variant-numeric: tabular-nums;
-}
-.fpeek-name { flex: 1 1 auto; min-width: 0; color: var(--ink-2); font-weight: 600; overflow-wrap: anywhere; }
-.fpeek-when { flex: none; color: var(--ink-dim); white-space: nowrap; }
-.fpeek-row.is-short .fpeek-name { color: var(--ink-faint); font-weight: 500; }
-.fpeek-tag { flex: none; color: var(--ink-faint); }
-.fpeek-wait { color: var(--ink-faint); font-size: var(--fs-min); }
-.fpeek-act { margin-top: var(--sp-2); }
+.fpeek-row:last-child > * { border-bottom: 0; }
+.fpeek-game { gap: var(--sp-2); min-width: 0; flex-wrap: wrap; }
+.fpeek-seat { display: inline-flex; align-items: center; gap: var(--sp-1); min-width: 0; }
+.fpeek-seat .race-mark { min-width: 20px; min-height: 20px; }
+.fpeek-seat .race-mark svg { width: 14px; height: 14px; }
+.fpeek-pname { color: var(--ink); font-weight: 600; overflow-wrap: anywhere; }
+.fpeek-vs { color: var(--ink-faint); font-style: normal; }
+.fpeek-more, .fpeek-file { color: var(--ink-2); font-weight: 600; overflow-wrap: anywhere; }
+.fpeek-map { color: var(--ink-2); white-space: nowrap; }
+.fpeek-len { color: var(--ink-dim); white-space: nowrap; }
+.fpeek-when { color: var(--ink-dim); white-space: nowrap; }
+.fpeek-row.is-short > * { color: var(--ink-faint); }
+.fpeek-row.is-short .fpeek-pname, .fpeek-row.is-short .fpeek-map { color: var(--ink-faint); font-weight: 500; }
+.fpeek-wait { grid-column: 1 / -1; padding: var(--sp-2) 0; color: var(--ink-faint); font-size: var(--fs-min); }
+.fpeek-act { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-3); margin-top: var(--sp-3); }
 
 /* The step marks from the first-run screen, on the Settings panels they
    correspond to, so a person who set something up there finds it here by

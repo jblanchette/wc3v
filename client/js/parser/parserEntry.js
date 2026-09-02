@@ -128,6 +128,9 @@ const Wc3vParser = {
     return {
       players,
       mapName: (info.metadata.map && info.metadata.map.mapName) || null,
+      // The game's length, off the subheader, so a list of files can say
+      // "0:41" beside a game somebody left at once without parsing it.
+      durationMs: (info.subheader && info.subheader.replayLengthMS) || 0,
       gameMode: utils.computeGameMode(slotPlayers),
       playerCount: Object.keys(slotPlayers).length,
       teamCount: teamIds.size

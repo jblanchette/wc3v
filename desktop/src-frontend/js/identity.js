@@ -138,6 +138,13 @@
         close();
         deps.log(`you are ${name}`, 'ok');
       },
+      // The picker's strong leader, as a guess. Never over a confirmed name,
+      // and never over a name already in place.
+      suggest (name) {
+        if (confirmed() || deps.overlayState.userName) return;
+        set(name, { confirmed: false });
+        deps.log(`you look like ${name}, in nearly all of your recent games. Click a card to change it.`, 'ok');
+      },
       async resolve () {
         // A guess never overrides an explicit choice.
         if (confirmed()) { render(); return; }

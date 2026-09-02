@@ -49,7 +49,7 @@
 
   window.createFirstRun = (deps) => {
     // deps: invoke, log, errText, folders, picker, startBackfill(),
-    //       onW3cChange(on), onOnly1v1Set(), onDone()
+    //       onW3cChange(on), onOnly1v1Set(), onDone(), hasHistory()
 
     const sheet = () => el('setup-sheet');
     let step = 0;
@@ -224,22 +224,35 @@
     wire();
 
     return {
-      // Shown only when the marker is absent. Anything that goes wrong reading
-      // it counts as "already set up": a broken check must not put a setup
-      // screen in front of an existing user.
-      async maybeShow () {
+      // Shown when the marker is absent, or when `force` says the release
+      // policy wants everyone set up before this version to go through it
+      // again. Anything that goes wrong reading the marker counts as "already
+      // set up": a broken check must not put a setup screen in front of an
+      // existing user.
+      async maybeShow (force) {
+        if (!sheet().hidden) return true;
         let done = true;
         try {
           done = await deps.invoke('setup_done');
         } catch (e) {
           deps.log(`could not check setup state: ${deps.errText(e)}`, 'warn');
         }
-        if (done) return false;
+        if (done && !force) return false;
         // The tree and the picker mount here rather than at boot, so a machine
         // that is already set up never builds a screen nobody will see.
         deps.folders.mount(el('setup-folders'), { compact: true });
         deps.picker.mount(el('setup-who'));
         renderRoots();
+        if (done) {
+          // A second run on a machine already in use: the boxes show what is
+          // set now rather than the first-run defaults, so Start changes
+          // nothing the person did not touch. The history choice defaults to
+          // "only new" when games are already parsed; the full read stays a
+          // click away and the backfill skips what is stored anyway.
+          try { el('setup-w3c').checked = !!(await deps.invoke('w3c_enabled')); } catch (e) { /* keep the default */ }
+          if (deps.hasHistory && deps.hasHistory()) el('setup-history-new').checked = true;
+          deps.log('this version asks everyone to go through setup again', 'ok');
+        }
         show(0);
         sheet().hidden = false;
         el('setup-accept').focus();

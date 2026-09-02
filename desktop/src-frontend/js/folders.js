@@ -32,7 +32,7 @@
 (function () {
   'use strict';
 
-  const { node } = window.UIBits;
+  const { node, raceMark } = window.UIBits;
 
   const SEP = /[\\/]/;
   const parentOf = (path) => {
@@ -63,7 +63,8 @@
   };
 
   window.createFolders = (deps) => {
-    // deps: invoke, log, errText, onChange(), readRecent(folder, files) [optional]
+    // deps: invoke, log, errText, onChange(), readRecent(folder, files) [optional],
+    //       peekOn(path) -> Promise<header> [optional; the newest-files table]
     //
     // onChange fires after every mutation that changes what the scanner
     // reads, so app.js can rescan and restart the watcher.
@@ -76,7 +77,8 @@
     let pending = [];          // sources not yet written
     let flushTimer = 0;
     const hosts = new Set();   // mounted trees, redrawn on every change
-    const open = new Set();    // paths whose row is expanded
+    const open = new Set();     // roots opened with Look inside
+    const peekOpen = new Set(); // parts whose newest files are listed
     const recent = new Map();  // path -> newest files, or a promise of them
 
     const apply = (tree) => {
@@ -84,6 +86,7 @@
       // The tree changed under the previews, so they are re-read on the
       // next open rather than shown stale.
       recent.clear();
+      peeked.clear();
       for (const h of hosts) draw(h.host, h.opts);
     };
 
@@ -202,99 +205,99 @@
     };
 
     // ── The tree ──────────────────────────────────────────────────────────
+    //
+    // What a person sees by default is one row per ROOT (an account's
+    // Replays folder, or a folder they added by hand) with the total number
+    // of replays under it. That is the level people think at: "my replays,
+    // yes". "Look inside" opens the root into its parts, and the parts are
+    // listed FLAT, one row each, with the files sitting directly in the root
+    // as a row of their own beside the subfolders. So "skip the loose files
+    // but keep Autosaved › Multiplayer" is two switches next to each other,
+    // and nothing cascades: each row's switch is that row's files only. The
+    // root's own switch is the sum of them (indeterminate when mixed) and
+    // flips all of them at once.
+    //
+    // Subfolder labels inside the panel are the path BELOW the root, so a
+    // nested duplicate tree reads as "Autosaved › Multiplayer › Replays ›
+    // Autosaved › Multiplayer" instead of five rows all called Multiplayer.
+    // Nothing above the root is ever shown.
 
     const fmt = (n) => Number(n || 0).toLocaleString();
+    const JOIN = ' › ';
+
+    const roots = () => list.filter(f => f.depth === 0);
+
+    // Every folder under `root`, by path prefix, in path order (the list is
+    // sorted that way already).
+    const under = (root) => {
+      const prefix = root.path.replace(/[\\/]+$/, '');
+      return list.filter(o => o !== root && o.path.startsWith(prefix) && SEP.test(o.path.charAt(prefix.length)));
+    };
+    const subtree = (root) => [root, ...under(root)];
+    const onCount = (fs) => fs.reduce((n, f) => n + (f.enabled ? (f.direct_count || 0) : 0), 0);
+    const allCount = (fs) => fs.reduce((n, f) => n + (f.direct_count || 0), 0);
+
+    const relLabel = (f, root) => {
+      if (f.custom_label) return f.label;
+      const base = root.path.replace(/[\\/]+$/, '').length;
+      const rel = f.path.slice(base).replace(/^[\\/]+/, '');
+      return rel.split(SEP).filter(Boolean).join(JOIN) || f.label;
+    };
 
     const summary = () => {
-      let on = 0;
-      let replays = 0;
-      for (const f of list) {
-        if (!f.enabled) continue;
-        on++;
-        replays += f.direct_count || 0;
-      }
       if (!list.length) return 'No replay folder found. Add the one Warcraft III saves to.';
-      const folders = `${on} of ${list.length} folder${list.length === 1 ? '' : 's'} on`;
-      return replays
-        ? `${folders}, ${fmt(replays)} replays`
-        : `${folders}, no replays in them yet`;
+      const r = roots().length;
+      const on = onCount(list);
+      const total = allCount(list);
+      const head = `${r} replay folder${r === 1 ? '' : 's'}`;
+      if (!total) return `${head}, no replays in them yet`;
+      if (on === total) return `${head}, ${fmt(total)} replays`;
+      return `${head}, ${fmt(on)} replays on, ${fmt(total - on)} skipped`;
     };
 
-    // Every folder under `f`, by path prefix. Used to cascade a switch: turning
-    // a root off and leaving its children on would be a surprise in the other
-    // direction.
-    const descendants = (f) => {
-      const prefix = f.path.replace(/[\\/]+$/, '');
-      return list.filter(o => o !== f && o.path.startsWith(prefix) && SEP.test(o.path.charAt(prefix.length)));
+    // Switch several folders at once with ONE watcher restart at the end.
+    // `folders` is a snapshot; only its paths are used after the first write,
+    // since every write replaces `list`.
+    const setMany = async (folders, on) => {
+      let ok = true;
+      for (const f of folders) {
+        if (f.enabled === on) continue;
+        try {
+          apply(await deps.invoke('set_folder_enabled', { path: f.path, enabled: on }));
+        } catch (e) {
+          deps.log(`could not change that folder: ${deps.errText(e)}`, 'err');
+          ok = false;
+          break;
+        }
+      }
+      if (deps.onChange) deps.onChange();
+      return ok;
     };
 
-    const row = (f, i, opts) => {
-      const r = node('div', 'frow');
-      r.style.setProperty('--depth', String(f.depth));
-      if (!f.enabled) r.classList.add('is-off');
-      if (f.depth === 0) r.classList.add('is-root');
-
-      const check = node('label', 'check frow-check');
+    const checkbox = (label, checked, mixed, onToggle) => {
+      const wrap = node('label', 'check frow-check');
       const box = document.createElement('input');
       box.type = 'checkbox';
-      box.checked = !!f.enabled;
-      box.setAttribute('aria-label', `Read ${f.label}`);
-      box.title = f.enabled ? 'On. Untick to skip this folder' : 'Off. Tick to read this folder';
+      box.checked = !!checked;
+      box.indeterminate = !!mixed;
+      box.setAttribute('aria-label', label);
+      box.title = mixed ? 'Partly on. Tick to read all of it' : (checked ? 'On. Untick to skip' : 'Off. Tick to read');
       box.addEventListener('change', async () => {
-        const on = box.checked;
         box.disabled = true;
-        const self = list[i];
-        const kids = descendants(self);
-        // Cascade DOWN only. Switching a child on does not drag its parent.
-        let ok = await mutate('set_folder_enabled', { path: self.path, enabled: on }, 'change that folder');
-        for (const k of kids) {
-          if (!ok) break;
-          if (k.enabled === on) continue;
-          ok = await mutate('set_folder_enabled', { path: k.path, enabled: on }, 'change that folder');
-        }
-        if (!ok) box.checked = !on;
+        const want = box.checked;
+        const ok = await onToggle(want);
+        if (!ok) box.checked = !want;
         box.disabled = false;
       });
-      check.appendChild(box);
+      wrap.appendChild(box);
+      return wrap;
+    };
 
-      // Opens the row into its newest replays. A folder with nothing directly
-      // inside has nothing to show, so its chevron is a spacer that keeps the
-      // names aligned.
-      const chev = node('button', 'frow-open');
-      chev.type = 'button';
-      const isOpen = open.has(f.path);
-      chev.textContent = isOpen ? '▾' : '▸';
-      chev.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
-      chev.setAttribute('aria-label', isOpen ? `Close ${f.label}` : `Look inside ${f.label}`);
-      chev.title = isOpen ? 'Close' : 'Look inside';
-      if (!f.direct_count) {
-        chev.disabled = true;
-        chev.textContent = '';
-        chev.title = '';
-      }
-      chev.addEventListener('click', () => {
-        if (open.has(f.path)) open.delete(f.path); else open.add(f.path);
-        for (const h of hosts) draw(h.host, h.opts);
-      });
-      r.appendChild(chev);
-      r.appendChild(check);
-
-      const name = node('span', 'frow-name', f.label);
-      if (f.custom_label) name.title = `Folder: ${f.name}`;
-      r.appendChild(name);
-
-      // Direct count is the honest number for a row; a root that holds only
-      // subfolders says so rather than showing a zero next to thousands.
-      const meta = node('span', 'frow-meta');
-      if (f.direct_count) meta.textContent = fmt(f.direct_count);
-      else if (f.total_count) meta.textContent = `${fmt(f.total_count)} in subfolders`;
-      else meta.textContent = 'empty';
-      meta.title = f.direct_count ? 'replays in this folder' : '';
-      r.appendChild(meta);
-
-      const rename = node('button', 'btn btn-sm frow-act', 'Rename');
+    const renameButton = (f, name, compact) => {
+      const rename = node('button', 'btn btn-sm frow-act', compact ? '✎' : 'Rename');
       rename.type = 'button';
       rename.title = 'Change the name shown here. The folder on disk keeps its name.';
+      if (compact) rename.setAttribute('aria-label', 'Rename');
       rename.addEventListener('click', () => {
         const field = document.createElement('input');
         field.type = 'text';
@@ -323,69 +326,180 @@
         field.focus();
         field.select();
       });
-      r.appendChild(rename);
+      return rename;
+    };
 
-      const remove = node('button', 'btn btn-sm frow-act', 'Remove');
+    const removeButton = (f, compact) => {
+      const remove = node('button', 'btn btn-sm frow-act', compact ? '×' : 'Remove');
       remove.type = 'button';
       remove.title = 'Stop reading this folder. Nothing on disk is deleted.';
+      if (compact) remove.setAttribute('aria-label', 'Remove');
       remove.addEventListener('click', async () => {
         remove.disabled = true;
-        await mutate('remove_folder', { path: list[i].path }, 'remove that folder');
+        await mutate('remove_folder', { path: f.path }, 'remove that folder');
       });
-      r.appendChild(remove);
+      return remove;
+    };
 
-      if (opts && opts.compact) {
-        rename.textContent = '✎';
-        rename.setAttribute('aria-label', 'Rename');
-        remove.textContent = '×';
-        remove.setAttribute('aria-label', 'Remove');
+    // A root: the whole account's replays as one row.
+    const rootRow = (root, opts) => {
+      const kids = subtree(root);
+      const on = onCount(kids);
+      const total = allCount(kids);
+      const allOn = kids.every(f => f.enabled);
+      const anyOn = kids.some(f => f.enabled);
+      const compact = !!(opts && opts.compact);
+
+      const r = node('div', 'frow is-root');
+      if (!anyOn) r.classList.add('is-off');
+      r.appendChild(checkbox(`Read ${root.label}`, allOn, anyOn && !allOn, (want) => setMany(kids, want)));
+
+      const name = node('span', 'frow-name', root.label);
+      if (root.custom_label) name.title = `Folder: ${root.name}`;
+      r.appendChild(name);
+
+      const meta = node('span', 'frow-meta');
+      if (!total) meta.textContent = 'empty';
+      else if (on === total) meta.textContent = `${fmt(total)} replays`;
+      else meta.textContent = `${fmt(on)} of ${fmt(total)} on`;
+      r.appendChild(meta);
+
+      const isOpen = open.has(root.path);
+      const look = node('button', 'btn btn-sm frow-look', isOpen ? 'Close' : 'Look inside');
+      look.type = 'button';
+      look.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+      look.title = isOpen ? 'Close' : 'Subfolders, and the newest replays in each';
+      look.addEventListener('click', () => {
+        if (open.has(root.path)) open.delete(root.path); else open.add(root.path);
+        for (const h of hosts) draw(h.host, h.opts);
+      });
+      r.appendChild(look);
+
+      r.appendChild(renameButton(root, name, compact));
+      r.appendChild(removeButton(root, compact));
+      return r;
+    };
+
+    // One part of an open root: its own loose files, or one subfolder.
+    const partRow = (f, root, own, opts) => {
+      const compact = !!(opts && opts.compact);
+      const r = node('div', 'frow is-part');
+      if (!f.enabled) r.classList.add('is-off');
+      const label = own ? `In ${root.label} itself` : relLabel(f, root);
+      r.appendChild(checkbox(`Read ${label}`, f.enabled, false,
+        (want) => mutate('set_folder_enabled', { path: f.path, enabled: want }, 'change that folder')));
+
+      const name = node('span', 'frow-name', label);
+      if (own) name.classList.add('is-own');
+      r.appendChild(name);
+
+      const meta = node('span', 'frow-meta');
+      meta.textContent = f.direct_count ? fmt(f.direct_count) : 'empty';
+      r.appendChild(meta);
+
+      if (f.direct_count) {
+        const isOpen = peekOpen.has(f.path);
+        const n = Math.min(PEEK, f.direct_count);
+        const btn = node('button', 'btn btn-sm frow-look', isOpen ? 'Hide' : `Newest ${n}`);
+        btn.type = 'button';
+        btn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+        btn.title = isOpen ? 'Hide the list' : 'The newest replays here, and a button to read them now';
+        btn.addEventListener('click', () => {
+          if (peekOpen.has(f.path)) peekOpen.delete(f.path); else peekOpen.add(f.path);
+          for (const h of hosts) draw(h.host, h.opts);
+        });
+        r.appendChild(btn);
+      }
+      if (!own) {
+        r.appendChild(renameButton(f, name, compact));
+        r.appendChild(removeButton(f, compact));
       }
       return r;
     };
 
-    // The panel under an open row: the newest few replays by name and age,
-    // and a button to read them now. File names are the game's own
-    // (`Replay_2026_09_02_1410.w3g`) or whatever the person saved one as,
-    // never a path.
+    // ── The newest replays in one folder ────────────────────────────────
+    //
+    // A table, one game a row, read off each file's header (~50 ms): who
+    // played, on what map, how long, when. The file name is what a person
+    // sees only when the header cannot be read.
+
+    const fmtLen = (ms) => {
+      const total = Math.round((ms || 0) / 1000);
+      return `${Math.floor(total / 60)}:${String(total % 60).padStart(2, '0')}`;
+    };
+
+    // Header info per file, cached per path with the listing.
+    const peeked = new Map();
+    const peekFile = (file) => {
+      if (!deps.peekOn) return Promise.resolve(null);
+      if (!peeked.has(file.path)) {
+        peeked.set(file.path, deps.peekOn(file.path).catch(() => null));
+      }
+      return peeked.get(file.path);
+    };
+
+    const seatCell = (peek, file) => {
+      const cell = node('div', 'fpeek-game');
+      if (!peek || !peek.players || !peek.players.length) {
+        cell.appendChild(node('span', 'fpeek-file', file.file_name.replace(/\.w3g$/i, '')));
+        return cell;
+      }
+      const seat = (p) => {
+        const sp = node('span', 'fpeek-seat');
+        sp.appendChild(raceMark(p.race || 'N'));
+        sp.appendChild(node('span', 'fpeek-pname', p.name));
+        return sp;
+      };
+      const ps = peek.players;
+      cell.appendChild(seat(ps[0]));
+      if (ps.length === 2) {
+        cell.appendChild(node('i', 'fpeek-vs', 'vs'));
+        cell.appendChild(seat(ps[1]));
+      } else if (ps.length > 2) {
+        cell.appendChild(node('span', 'fpeek-more', `+${ps.length - 1} · ${peek.gameMode || 'team'}`));
+      }
+      return cell;
+    };
+
     const peekPanel = (f) => {
       const panel = node('div', 'fpeek');
-      panel.style.setProperty('--depth', String(f.depth));
-      const head = node('div', 'fpeek-head');
-      head.appendChild(node('span', 'fpeek-title',
-        f.direct_count > PEEK ? `Newest ${PEEK} of ${fmt(f.direct_count)}` : `All ${fmt(f.direct_count)}`));
-      panel.appendChild(head);
-      const ul = node('ul', 'fpeek-list');
-      ul.appendChild(node('li', 'fpeek-wait', 'Looking…'));
-      panel.appendChild(ul);
+      const table = node('div', 'fpeek-table');
+      const head = node('div', 'fpeek-row is-head');
+      for (const t of ['Game', 'Map', 'Length', 'When']) head.appendChild(node('span', null, t));
+      table.appendChild(head);
+      const wait = node('div', 'fpeek-wait', 'Looking…');
+      table.appendChild(wait);
+      panel.appendChild(table);
 
-      recentIn(f.path).then((files) => {
-        ul.innerHTML = '';
+      recentIn(f.path).then(async (files) => {
+        wait.remove();
         if (!files.length) {
-          ul.appendChild(node('li', 'fpeek-wait', 'Nothing readable here.'));
+          table.appendChild(node('div', 'fpeek-wait', 'Nothing readable here.'));
           return;
         }
         for (const file of files) {
-          const li = node('li', 'fpeek-row');
-          const nm = node('span', 'fpeek-name', file.file_name.replace(/\.w3g$/i, ''));
-          li.appendChild(nm);
-          const when = node('span', 'fpeek-when', fmtWhen(file.modified_ms));
-          li.appendChild(when);
-          if (!file.interesting) {
-            li.classList.add('is-short');
-            li.appendChild(node('span', 'fpeek-tag', 'too short'));
-          }
-          ul.appendChild(li);
+          const row = node('div', 'fpeek-row');
+          if (!file.interesting) row.classList.add('is-short');
+          row.title = file.interesting ? '' : 'Ended within seconds of starting. Not read.';
+          const peek = await peekFile(file);
+          row.appendChild(seatCell(peek, file));
+          const mapName = peek && peek.mapName && window.SummaryExtract
+            ? window.SummaryExtract.cleanMapName(peek.mapName) : '';
+          row.appendChild(node('span', 'fpeek-map', mapName || '—'));
+          row.appendChild(node('span', 'fpeek-len', peek && peek.durationMs ? fmtLen(peek.durationMs) : '—'));
+          row.appendChild(node('span', 'fpeek-when', fmtWhen(file.modified_ms)));
+          table.appendChild(row);
         }
         const playable = files.filter(x => x.interesting);
+        const act = node('div', 'fpeek-act');
         if (deps.readRecent && playable.length) {
-          const act = node('div', 'fpeek-act');
           if (!f.enabled) {
-            act.appendChild(node('span', 'hint hint-inline', 'Switched off. Tick the folder to read it.'));
+            act.appendChild(node('span', 'hint hint-inline', 'This folder is off. Tick it to read these.'));
           } else {
             const btn = node('button', 'btn btn-sm',
               `Read ${playable.length === 1 ? 'this game' : `these ${playable.length} games`} now`);
             btn.type = 'button';
-            btn.title = 'Parse the newest games in this folder. The rest wait for Parse all replays.';
+            btn.title = 'Parse the newest games here. The rest wait for Parse all replays.';
             btn.addEventListener('click', async () => {
               btn.disabled = true;
               const ok = await deps.readRecent(f, playable);
@@ -393,8 +507,12 @@
             });
             act.appendChild(btn);
           }
-          panel.appendChild(act);
         }
+        if (playable.length < files.length) {
+          act.appendChild(node('span', 'hint hint-inline',
+            `${files.length - playable.length} ended within seconds and ${files.length - playable.length === 1 ? 'is' : 'are'} not read.`));
+        }
+        if (act.childNodes.length) panel.appendChild(act);
       });
       return panel;
     };
@@ -405,10 +523,18 @@
         host.appendChild(node('div', 'empty', 'No replay folders found.'));
         return;
       }
-      list.forEach((f, i) => {
-        host.appendChild(row(f, i, opts));
-        if (open.has(f.path) && f.direct_count) host.appendChild(peekPanel(f));
-      });
+      for (const root of roots()) {
+        host.appendChild(rootRow(root, opts));
+        if (!open.has(root.path)) continue;
+        const inside = node('div', 'finside');
+        const parts = [{ f: root, own: true }, ...under(root).map(f => ({ f, own: false }))];
+        for (const part of parts) {
+          if (part.own && !root.direct_count && parts.length > 1) continue;
+          inside.appendChild(partRow(part.f, root, part.own, opts));
+          if (peekOpen.has(part.f.path) && part.f.direct_count) inside.appendChild(peekPanel(part.f));
+        }
+        host.appendChild(inside);
+      }
     };
 
     // Fill a filter <select> with the folders, indented by depth, each with

@@ -287,6 +287,18 @@ const seatsFromCorpus = (corpus) => {
   return seats;
 };
 
+// A peek that never answers (a worker that failed to load, a file locked by
+// the game) must not leave "Reading your most recent games…" on screen for
+// good. Past this the file is skipped and the rest still answer.
+const PEEK_TIMEOUT_MS = 4000;
+const peekWithTimeout = (worker, path) => new Promise((resolve, reject) => {
+  const t = setTimeout(() => reject(new Error('header read timed out')), PEEK_TIMEOUT_MS);
+  peekPlayers(worker, path).then(
+    (v) => { clearTimeout(t); resolve(v); },
+    (e) => { clearTimeout(t); reject(e); }
+  );
+});
+
 const readRecentSeats = async () => {
   const { replays } = await invoke('scan_all');
   const pool = replays
@@ -297,7 +309,7 @@ const readRecentSeats = async () => {
   try {
     for (const r of pool) {
       try {
-        const { players } = await peekPlayers(worker, r.path);
+        const { players } = await peekWithTimeout(worker, r.path);
         for (const p of players) {
           if (p && p.name) seats.push({ name: p.name, race: p.race || null, fileName: r.file_name, playedAt: r.modified_ms || 0 });
         }
@@ -327,6 +339,7 @@ const pickerDeps = {
   recentSeats,
   knownNames: () => window.ProfileAggregate.knownNames(store.corpus || []).map(n => n.name),
   onPick: (name) => identity.confirm(name),
+  onSuggest: (name) => identity.suggest(name),
   current: () => identity.name,
   log
 };
@@ -400,6 +413,9 @@ const folders = window.createFolders({
   // folder, through the same engine as the first-boot catch-up, with the
   // same parse chips in the quick nav. One run at a time; a run already
   // going keeps the button pressed and says so.
+  // The newest-replays table reads each file's header on the interactive
+  // worker: ~50 ms a file, five files a click.
+  peekOn: (path) => peekWithTimeout(ensureWorker(), path),
   readRecent: async (folder, files) => {
     if (backfill.running) {
       log('a parse is already running; that folder joins it when it finishes', 'warn');
@@ -601,8 +617,76 @@ const firstRun = window.createFirstRun({
   },
   // Settings synced its checkbox at boot, before this write existed.
   onOnly1v1Set: () => settingsView.syncOnly1v1(),
-  onDone: () => identity.render()
+  onDone: () => identity.render(),
+  hasHistory: () => store.size > 0
 });
+
+// ── The release policy ──────────────────────────────────────────────────────
+//
+// Fetched at boot from the update manifest. Below `minimum` the update sheet
+// goes over everything and stays; set up before `onboard_from`, the first-run
+// screen comes back. Offline is no policy. See js/release-policy.js.
+const releasePolicy = window.createReleasePolicy({ invoke, log, errText });
+
+const showUpdateRequired = (policy) => {
+  const sheet = el('update-sheet');
+  if (!sheet.hidden) return;
+  el('setup-sheet').hidden = true;
+  el('update-sub').textContent = policy.version
+    ? `WC3V ${policy.version} is out. Versions before ${policy.minimum} have been retired.`
+    : `Versions before ${policy.minimum} have been retired.`;
+  sheet.hidden = false;
+  el('update-sheet-go').focus();
+};
+
+el('update-sheet-go').addEventListener('click', async () => {
+  const go = el('update-sheet-go');
+  const status = el('update-sheet-status');
+  go.disabled = true;
+  status.textContent = 'downloading…';
+  try {
+    const r = await invoke('check_for_update', { install: true });
+    if (r.status === 'installed') {
+      status.textContent = `${r.version} is installed. Restart to use it.`;
+      go.hidden = true;
+      el('update-sheet-restart').hidden = false;
+      el('update-sheet-restart').focus();
+      return;
+    }
+    // "current" here means the manifest's minimum is ahead of what the
+    // updater will hand out, which is a publishing mistake, not the user's.
+    status.textContent = r.status === 'current'
+      ? 'The updater found nothing newer. Reinstall from wc3v.com/download.'
+      : `update: ${r.status}`;
+  } catch (e) {
+    status.textContent = `update failed: ${errText(e)}. Reinstall from wc3v.com/download.`;
+  }
+  go.disabled = false;
+});
+el('update-sheet-restart').addEventListener('click', () => {
+  invoke('relaunch').catch(e => log(`could not restart: ${errText(e)}`, 'err'));
+});
+
+// Apply a policy that arrived. Called once with whatever came in the boot
+// window, and again if the fetch finished later.
+const applyPolicy = async (policy) => {
+  if (!policy) return false;
+  const RP = window.ReleasePolicy;
+  let version = null;
+  try { version = await invoke('app_version'); } catch (e) { /* unversioned: never forced */ }
+  if (RP.mustUpdate(policy, version)) {
+    log(`this version (${version}) is below the minimum (${policy.minimum}); update required`, 'warn');
+    showUpdateRequired(policy);
+    return true;
+  }
+  let setupVersion = null;
+  try { setupVersion = await invoke('setup_version'); } catch (e) { /* treated as never set up */ }
+  if (RP.mustOnboard(policy, setupVersion)) {
+    await firstRun.maybeShow(true);
+    return true;
+  }
+  return false;
+};
 
 // ── Bringing somebody else's replay in ──────────────────────────────────────
 //
@@ -1121,6 +1205,9 @@ const loadMapBounds = async () => {
 const boot = async () => {
   // Section marks written in the markup as `data-glyph`, filled once.
   window.Glyphs.fill(document);
+  // The release policy, in flight from the first moment so it is usually
+  // back by the time the first-run decision is made below.
+  releasePolicy.start();
   await loadMapBounds();
   const info = await invoke('init');
   state.roots = info.roots;
@@ -1220,7 +1307,17 @@ const boot = async () => {
   // OVER the loading feed rather than instead of it, so discovery, scanning and
   // the corpus read all carry on behind it and the app is ready by the time
   // somebody clicks Start.
-  firstRun.maybeShow();
+  //
+  // The release policy first, if it is back: a retired build shows the update
+  // sheet instead, and a version that asks for setup again shows setup. A
+  // slow fetch is not waited on past a few seconds; if it lands later it is
+  // applied then.
+  const early = await releasePolicy.within(3500);
+  const forced = await applyPolicy(early);
+  if (!forced) {
+    firstRun.maybeShow();
+    if (!early) releasePolicy.start().then(applyPolicy);
+  }
 
   store.loadCorpus().then((corpus) => {
     gamesView.render(corpus);

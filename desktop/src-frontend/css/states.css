@@ -273,7 +273,7 @@ main :focus-visible,
 .who-status { margin: 0 0 var(--sp-3); color: var(--ink-dim); font-size: var(--fs-min); }
 .who-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
   gap: var(--sp-3) var(--sp-2);
   padding-top: var(--sp-2);
   margin-bottom: var(--sp-3);
@@ -281,8 +281,9 @@ main :focus-visible,
 .who.is-compact .who-grid { grid-template-columns: minmax(0, 1fr); }
 .who-card {
   position: relative;
-  display: grid;
-  gap: var(--sp-1);
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
   padding: var(--sp-3);
   background: linear-gradient(180deg, var(--rc-head-a), var(--rc-head-b));
   border: var(--outline);
@@ -295,9 +296,41 @@ main :focus-visible,
 }
 .who-card:hover { box-shadow: var(--cut), inset 0 0 0 1px var(--app-edge); }
 .who-card.is-active { box-shadow: var(--cut-in), inset 0 0 0 2px var(--dom-green); }
-.who-head { display: flex; align-items: center; gap: var(--sp-2); min-width: 0; }
-.who-name { flex: 1 1 auto; min-width: 0; font-size: var(--fs-base); font-weight: 700; overflow-wrap: anywhere; }
-.who-races { display: flex; flex: none; gap: 2px; }
+.who-text { display: grid; gap: var(--sp-1); min-width: 0; flex: 1 1 auto; }
+.who-name { min-width: 0; font-size: var(--fs-base); font-weight: 700; overflow-wrap: break-word; }
+.who-races { display: flex; flex: none; gap: var(--sp-1); }
+/* The race as the game draws it, off the icon CDN, framed like a build icon. */
+.who-icon {
+  width: var(--ico-sm);
+  height: var(--ico-sm);
+  border: var(--outline);
+  border-radius: var(--radius-xs);
+  box-shadow: var(--cut);
+  object-fit: cover;
+}
+.who-icon.is-big { width: var(--ico-lg); height: var(--ico-lg); }
+.who-icon.is-blank { background: var(--app-well); }
+/* The one big card for a strong leader. */
+.who-card.is-hero {
+  width: 100%;
+  padding: var(--sp-4);
+  margin-bottom: var(--sp-3);
+  box-shadow: var(--cut), inset 0 0 0 1px var(--rc-rim), 0 6px 16px rgba(0, 0, 0, 0.35);
+}
+.who-card.is-hero .who-name { font-size: var(--fs-h3); }
+.who-card.is-hero.is-active { box-shadow: var(--cut-in), inset 0 0 0 2px var(--dom-green); }
+.who-others {
+  margin: 0 0 var(--sp-2);
+  color: var(--ink-faint);
+  font-size: var(--fs-min);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.who-grid.is-small { grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr)); padding-top: 0; }
+.who-card.is-small { padding: var(--sp-2); gap: var(--sp-2); }
+.who-card.is-small .who-name { font-size: var(--fs-sm); }
+.who.is-compact .who-grid.is-small { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .who-meta { display: flex; flex-wrap: wrap; gap: var(--sp-2); color: var(--ink-dim); font-size: var(--fs-min); }
 .who-tag {
   position: absolute;
@@ -367,6 +400,12 @@ main :focus-visible,
 
 .setup-row { padding: var(--sp-3) 0 0; }
 .setup-row .hint { margin: var(--sp-1) 0 0; }
+
+/* The update-required sheet: the setup panel's chrome, one paragraph, one
+   button, and the dim behind it cannot be clicked through. */
+.must-update { width: min(32rem, 94vw); }
+.must-update #update-why { margin: 0 0 var(--sp-3); font-size: var(--fs-base); }
+.must-update .update-notes { margin: 0 0 var(--sp-3); white-space: pre-wrap; }
 
 .sheet-foot {
   display: flex;

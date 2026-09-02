@@ -105,12 +105,17 @@ next to whatever the person made. Each row can be switched off, renamed or
 removed, on the first-run screen and again in Settings. `js/folders.js` draws
 both; `src-tauri/src/folders.rs` owns the config and discovery.
 
-A row opens on its chevron into the newest five files directly inside it,
-by name and age (`folder_recent`, a plain directory listing with no hash),
-with a "Read these games now" button that runs the catch-up engine over
-just those files (`backfill.start({ limit, only })`), parse chips and all.
-It is how a person tells a folder by what is in it before deciding to keep
-it on.
+What a person sees by default is one row per root with the total under it.
+"Look inside" opens the root into its parts, listed flat: the files sitting
+directly in the root as a row of their own ("In Replays itself") beside each
+subfolder, labelled by its path below the root. Every row's switch is that
+row's own files and nothing cascades; the root's switch is the sum
+(indeterminate when mixed) and flips all of them. That is what makes "skip
+the loose files, keep Autosaved › Multiplayer" two switches side by side.
+"Newest 5" on a part lists its newest files as a table read off each
+header (`folder_recent` for the listing, `peekPlayers` for players, map and
+length), with a "Read these games now" button that runs the catch-up engine
+over just those files (`backfill.start({ limit, only })`).
 
 Nothing here touches the disk. A label is a label, off means the scanner
 skips the files directly inside (subfolders keep their own switch, and the UI
@@ -228,9 +233,10 @@ screen in front of somebody who has used the app for months.
 
 Step 3 is `js/identity-picker.js`: the newest ten replays on disk are read
 header-only (`peekPlayers`, which now carries each seat's race) and every
-name in them is a card with its races and how many of those games it was in.
-The account owner is in nearly all of them, so the right card is the first
-one and is tagged "Most likely" when it leads clearly. "None of these are
+name in them is a card with its races (the town hall icons off the CDN) and
+how many of those games it was in. A name in 80% or more of them and clear
+of the second gets one big card, "Most likely you", put in place as an
+unconfirmed guess, with the other names small under it. "None of these are
 me" opens a search over every name the app has seen, where "jeef" finds
 "Jeef#1496" (`IdentityPicker.matchNames`: exact, then the part before the
 tag, then prefix, then anywhere). The same component sits in the "You"
@@ -374,6 +380,30 @@ the manifest, fetches both back, and runs `version-check.js --release`, which
 also reads the version out of the compiled binary. Everything lands in
 `r2:wc3v-cdn/desktop/`, public at `https://cdn.wc3v.com/desktop/`, and
 `latest.json` there is the release channel. Installers are never committed.
+
+### Retiring a version, and asking for setup again
+
+`latest.json` carries two optional fields the updater ignores and the app
+reads at boot (`js/release-policy.js`, `release_policy` in `main.rs`):
+`minimum`, the oldest version allowed to run, and `onboard_from`, the
+version everyone set up before must redo setup on. `deploy-desktop.js
+--require-update` sets `minimum` to the version being published and
+`--reonboard` sets `onboard_from` to it; `--minimum=x.y.z` and
+`--onboard-from=x.y.z` set either explicitly; with no flag both are carried
+forward from the manifest already published, so an ordinary release keeps
+the last policy.
+
+Below `minimum` the app shows `#update-sheet` over everything: one button
+that installs through the updater, then one that restarts. Set up before
+`onboard_from` (the marker written by `mark_setup_done` carries the version
+since 1.0.10; the old "1" reads as older than anything) and the first-run
+screen comes back with the current settings in its boxes. Offline is no
+policy: the fetch has a six-second timeout and a failure blocks nothing,
+because a switch that bricked the app on a bad connection would be the wrong
+kind. Builds before 1.0.10 never read the fields and cannot be forced; they
+get the ordinary update offer. `tools/test-release-policy.js` pins the two
+rules. `--must-update` and `--reonboard` on the preview harness show both
+screens.
 
 ### There is no code signing
 

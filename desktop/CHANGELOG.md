@@ -1,5 +1,33 @@
 # WC3V Desktop: changelog
 
+## 1.0.10
+
+### Setup again, with the pieces that were missing
+
+The folder step and the "which player are you" step were rebuilt after the
+first round of feedback on 1.0.9, and this version asks everyone to go
+through setup once more to see them.
+
+The folder tree shows one row per replay folder with the total under it.
+"Look inside" opens it into its parts, flat: the files in the folder itself
+as a row of their own, then each subfolder. Each switch is that row's own
+files, so you can skip the loose downloads and keep Autosaved › Multiplayer.
+"Newest 5" on any part lists its newest games as a table (players with their
+race, map, length, when) read off each file's header, with a button to read
+those games right away. Same in Settings.
+
+The player you are gets one big card when you are in most of your recent
+games, already picked, with the town hall of the races you played on it and
+the other names small underneath.
+
+### A release can retire the versions before it
+
+The update manifest can now name a minimum version and a version to redo
+setup from. Below the minimum the app shows an update screen and nothing
+else until it updates; set up before the other, it shows setup again. Neither
+happens offline. Versions before this one never read the manifest that way
+and get the ordinary update offer instead.
+
 ## 1.0.9 — 2 Sep 2026
 
 ### Your replay folders, as you sorted them
@@ -24,10 +52,6 @@ Two things that were quietly broken are fixed with it. A folder added by hand
 was forgotten on the next restart and, while it lasted, was scanned once and
 never watched: a game saved into it did not appear until Parse all replays.
 Both now persist, and any folder change restarts the watcher on the spot.
-
-Every folder row now opens on its chevron into the newest five replays inside
-it, by name and age, with a button to read those games right away. Same in
-Settings.
 
 ### A first run that looks like one
 

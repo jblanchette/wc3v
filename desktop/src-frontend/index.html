@@ -341,7 +341,7 @@
             <div class="ftree scroll" id="setup-folders"></div>
             <div class="row">
               <button id="setup-folder" class="btn" type="button">Add a folder…</button>
-              <span class="hint hint-inline">Untick a folder to skip it. Open one to see what is inside. Removing one deletes nothing.</span>
+              <span class="hint hint-inline">Untick a folder to skip it. Look inside to pick subfolders or see the newest games. Removing one deletes nothing.</span>
             </div>
           </section>
 
@@ -417,6 +417,40 @@
         </footer>
       </aside>
 
+      <!-- ── Update required ──────────────────────────────────────────────
+           Over everything, with no way past, when the release policy says
+           this build is below the minimum (js/release-policy.js). One
+           button. Nothing else in the app is reachable until the update is
+           installed and the app restarted. -->
+      <aside class="sheet setup must-update" id="update-sheet" role="dialog" aria-modal="true"
+             aria-labelledby="update-title" hidden>
+        <header class="setup-head">
+          <div class="wiz-lockup" aria-hidden="true">
+            <svg class="wiz-shield" viewBox="0 0 48 56">
+              <path class="wiz-shield-bg" d="M24 2 45 9v17c0 12.6-8.9 22.7-21 27C11.9 48.7 3 38.6 3 26V9z"/>
+              <path class="wiz-shield-rim" fill="none" d="M24 5.2 42 11.2v14.8c0 10.8-7.6 19.6-18 23.4C13.6 45.6 6 36.8 6 26V11.2z"/>
+              <path class="wiz-shield-mark" d="M24 12l3.4 8.2 8.6.7-6.5 5.6 2 8.4L24 30.5l-7.5 4.4 2-8.4-6.5-5.6 8.6-.7z"/>
+            </svg>
+            <div class="wiz-word">WC<span>3</span>V</div>
+          </div>
+          <div class="wiz-text">
+            <h2 id="update-title">Update required</h2>
+            <p class="wiz-sub" id="update-sub">This version has been retired.</p>
+          </div>
+        </header>
+        <div class="sheet-body scroll">
+          <section class="setup-step">
+            <p id="update-why">A newer WC3V is out and this one can no longer run. The update takes under a minute and keeps everything you have.</p>
+            <p class="hint update-notes" id="update-sheet-notes" hidden></p>
+            <p class="hint" id="update-sheet-status"></p>
+          </section>
+        </div>
+        <footer class="sheet-foot">
+          <button id="update-sheet-go" class="btn btn-primary" type="button">Update now</button>
+          <button id="update-sheet-restart" class="btn btn-primary" type="button" hidden>Restart WC3V</button>
+        </footer>
+      </aside>
+
       <!-- ── Settings ─────────────────────────────────────────────────────
            A sheet over whatever screen you are on, not a view of its own.
            Inlining six panels onto Home would cost 300px of a 507px budget
@@ -461,8 +495,9 @@
               <button id="folders-restore" class="btn" type="button"
                       title="Bring back removed folders and look for new ones">Look again</button>
             </div>
-            <p class="hint">Untick a folder to skip it. Removing one deletes
-              nothing; replays never leave this machine.</p>
+            <p class="hint">Untick a folder to skip it. Look inside to pick
+              subfolders or see the newest games. Removing one deletes nothing;
+              replays never leave this machine.</p>
           </section>
 
           <section class="panel">
@@ -633,6 +668,9 @@
   <script src="./js/stream-view.js"></script>
   <script src="./js/settings-view.js"></script>
   <script src="./js/first-run.js"></script>
+  <!-- What this build may do, off the update manifest: below the minimum it
+       must update; set up before onboard_from it runs setup again. -->
+  <script src="./js/release-policy.js"></script>
   <script src="./js/backfill.js"></script>
   <script src="./js/overlay-state.js"></script>
   <script src="./js/app.js"></script>

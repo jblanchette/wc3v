@@ -759,7 +759,69 @@ fn mark_setup_done(app: tauri::AppHandle) -> Result<(), String> {
     if let Some(parent) = marker.parent() {
         std::fs::create_dir_all(parent).map_err(|e| e.to_string())?;
     }
-    std::fs::write(&marker, b"1").map_err(|e| e.to_string())
+    // The version that completed setup, so a release can ask everyone set up
+    // before it to go through again (see `release_policy`). Markers written
+    // before this said "1", which reads as older than any version.
+    let version = app.package_info().version.to_string();
+    std::fs::write(&marker, version).map_err(|e| e.to_string())
+}
+
+/// The version that completed setup, or None on a machine never set up.
+#[tauri::command]
+fn setup_version(app: tauri::AppHandle) -> Option<String> {
+    std::fs::read_to_string(setup_marker(&app))
+        .ok()
+        .map(|s| s.trim().to_string())
+}
+
+/// The release policy, off the same manifest the updater polls. Two fields
+/// beyond what the updater reads, both optional and both set by
+/// tools/deploy-desktop.js:
+///
+///   minimum       the oldest version allowed to run. Below it the app shows
+///                 an update screen and nothing else until it updates.
+///   onboard_from  versions set up before this one go through the first-run
+///                 screen again on their next launch.
+///
+/// Unreachable (offline, CDN down) is None, and the frontend treats None as
+/// "no policy": a switch that bricked the app on a bad connection would be
+/// the wrong kind of dead-man switch.
+#[derive(Debug, Clone, Serialize, serde::Deserialize)]
+struct ReleasePolicy {
+    version: Option<String>,
+    #[serde(default)]
+    minimum: Option<String>,
+    #[serde(default)]
+    onboard_from: Option<String>,
+}
+
+const RELEASE_MANIFEST: &str = "https://cdn.wc3v.com/desktop/latest.json";
+
+#[tauri::command]
+async fn release_policy() -> Option<ReleasePolicy> {
+    let client = reqwest::Client::builder()
+        .timeout(std::time::Duration::from_secs(6))
+        .redirect(reqwest::redirect::Policy::none())
+        .build()
+        .ok()?;
+    let res = client
+        .get(RELEASE_MANIFEST)
+        .header("accept", "application/json")
+        .send()
+        .await
+        .ok()?;
+    if !res.status().is_success() {
+        return None;
+    }
+    let text = res.text().await.ok()?;
+    serde_json::from_str::<ReleasePolicy>(&text).ok()
+}
+
+/// Restart the app, after an update was installed. The updater leaves the
+/// new binary in place and the running one stale.
+#[tauri::command]
+fn relaunch(app: tauri::AppHandle) {
+    app.restart();
 }
 
 /// Which policy text the person accepted on the first-run screen, as the
@@ -1240,6 +1302,9 @@ fn main() {
             write_tags,
             setup_done,
             mark_setup_done,
+            setup_version,
+            release_policy,
+            relaunch,
             terms_accepted,
             accept_terms,
             open_site_page,
