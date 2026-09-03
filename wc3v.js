@@ -157,6 +157,24 @@ const doParsing = async (input, options = {}) => {
     playerManager.setMetaData(info.metadata, options);
   });
 
+  // Set by the first simulator exception. After it, the block loop keeps
+  // running but stops feeding the simulator.
+  //
+  // Why: a throw out of playerManager used to escape the w3gjs emit and end
+  // parser.parse() outright, so everything after the failing action was simply
+  // not read — including the LeaveGameBlocks, which sit at the END of the file
+  // and are the only evidence of who won. Measured over the 975-game reference
+  // corpus, 144 games (14.8%) aborted this way and every one of them lost its
+  // winner, its true duration, and (because the mode used to be read off the
+  // simulator's player set) its game mode.
+  //
+  // Stopping the simulator but continuing to CONSUME the stream costs nothing
+  // and is not a behaviour change for any stat: the numbers come out of the
+  // simulator, which sees exactly the same actions it saw before. What changes
+  // is that the metadata at the tail of the file now arrives. The abort is
+  // still recorded in replay.parseTruncated and still says so loudly.
+  let simAborted = null;
+
   parser.on("gamedatablock", (block) => {
     if (block.id === 0x17) {
       leaveEvents.push({
@@ -172,7 +190,7 @@ const doParsing = async (input, options = {}) => {
 
     if (block.timeIncrement) {
       globalTime += block.timeIncrement;
-      playerManager.processTick(globalTime);
+      if (!simAborted) playerManager.processTick(globalTime);
       // 10..85% allocated to the gamedatablock pass. Map global game-time
       // progress within that range. Falls back to 50% if duration unknown.
       if (durationMs > 0) {
@@ -183,24 +201,34 @@ const doParsing = async (input, options = {}) => {
       }
     }
 
-    commandBlocks.forEach((actionBlock) => {
-      // check each block to see if we've found a new playerId
-      playerManager.checkCreatePlayer(actionBlock);
+    if (simAborted) return;
 
-      // handle each action in the block
-      const actions = actionBlock.actions || [];
-      actions.forEach(action => {
-        actionCount++;
+    try {
+      commandBlocks.forEach((actionBlock) => {
+        // check each block to see if we've found a new playerId
+        playerManager.checkCreatePlayer(actionBlock);
 
-        // normalize w3gjs v3 action format to v2 field names
-        action = utils.normalizeAction(action);
-        // all action itemIds must be fixed due to parser bug
-        action = utils.fixBrokenActionFormat(action);
+        // handle each action in the block
+        const actions = actionBlock.actions || [];
+        actions.forEach(action => {
+          actionCount++;
 
-        playerManager.handleAction(actionBlock, action);
+          // normalize w3gjs v3 action format to v2 field names
+          action = utils.normalizeAction(action);
+          // all action itemIds must be fixed due to parser bug
+          action = utils.fixBrokenActionFormat(action);
+
+          playerManager.handleAction(actionBlock, action);
+        });
+
       });
-
-    });
+    } catch (e) {
+      // The simulator is done for this replay. Everything already accumulated
+      // stands; nothing further is fed to it.
+      simAborted = { message: e.message, atGameTimeMs: globalTime, stack: e.stack };
+      console.error(`simulator stopped at ${globalTime}ms: ${e.message}`);
+      console.error(e.stack);
+    }
   });
 
   let replay;
@@ -228,19 +256,28 @@ const doParsing = async (input, options = {}) => {
   // simply missing — but every downstream stat (build order, APM, dominance,
   // winner) still computes happily over the truncated stream and the validator
   // reported full confidence. Record it on the replay and say so loudly.
-  const stoppedEarlyBy = durationMs > 0 ? (durationMs - globalTime) : 0;
-  if (parseAborted || stoppedEarlyBy > 30000) {
+  //
+  // `simAborted` is the same failure caught one level in, so the block loop
+  // could keep collecting the leave records: globalTime now reaches the end of
+  // the file, and the honest "how much of this game was actually simulated"
+  // number is the time the simulator stopped at, not where the reader stopped.
+  const simStoppedAt = simAborted ? simAborted.atGameTimeMs : globalTime;
+  const stoppedEarlyBy = durationMs > 0 ? (durationMs - simStoppedAt) : 0;
+  if (parseAborted || simAborted || stoppedEarlyBy > 30000) {
     replay.parseTruncated = {
-      lastActionGameTimeMs: globalTime,
+      lastActionGameTimeMs: simStoppedAt,
       replayLengthMs: durationMs,
       missingMs: Math.max(0, stoppedEarlyBy),
-      reason: parseAborted ? parseAborted.message : 'action stream ended early'
+      reason: (parseAborted && parseAborted.message) ||
+        (simAborted && simAborted.message) || 'action stream ended early'
     };
     const fmtMs = (ms) => `${Math.floor(ms / 60000)}:${String(Math.floor((ms % 60000) / 1000)).padStart(2, '0')}`;
     console.error('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
-    console.error(`!! PARSE TRUNCATED — actions stop at ${fmtMs(globalTime)} of ${fmtMs(durationMs)} ` +
+    console.error(`!! PARSE TRUNCATED — actions stop at ${fmtMs(simStoppedAt)} of ${fmtMs(durationMs)} ` +
       `(${fmtMs(Math.max(0, stoppedEarlyBy))} missing)`);
-    if (parseAborted) console.error(`!! cause: ${parseAborted.message}`);
+    if (parseAborted || simAborted) {
+      console.error(`!! cause: ${(parseAborted || simAborted).message}`);
+    }
     console.error('!! Every stat below is computed over a PARTIAL game.');
     console.error('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
   }
@@ -580,7 +617,10 @@ const doParsing = async (input, options = {}) => {
       player._baseSnapshots.push({
         label: 'Final',
         tier: player.tier,
-        gameTime: globalTime,
+        // When this base was last current, which after a simulator abort is
+        // where the simulator stopped and NOT where the file reader did. The
+        // two used to be the same number because a throw ended both at once.
+        gameTime: simStoppedAt,
         buildings: buildings
       });
     }

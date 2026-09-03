@@ -108,12 +108,20 @@
 .ftree {
   display: grid;
   gap: var(--sp-1);
-  max-height: 15rem;
+  /* Deep enough for a real tree. People sort replays into folders — fifteen
+     under `Replays` is an ordinary number — and at 15rem an open root showed
+     about four of them. */
+  max-height: 24rem;
   margin-bottom: var(--sp-3);
 }
 .frow {
   display: flex;
   align-items: center;
+  /* Wraps rather than squeezing. A root row is a checkbox, a name, a count and
+     three buttons in a 430px sheet, and with everything on one line the name is
+     the only flexible thing left: "Replays" was being broken across two lines as
+     "Replay / s". The actions drop to a second line instead. */
+  flex-wrap: wrap;
   gap: var(--sp-2);
   min-height: var(--hit-min);
   padding: var(--sp-1) var(--sp-2) var(--sp-1) calc(var(--sp-2) + var(--depth, 0) * 1.25rem);
@@ -123,10 +131,30 @@
   box-shadow: var(--cut-in);
 }
 .frow.is-root { background: var(--app-panel); }
+/* The whole-tree switch. Sits above the roots and reads as a header rather
+   than as another folder, so nobody looks for "Every folder" on disk. */
+.frow.is-all {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--app-bg);
+  border-style: dashed;
+  box-shadow: none;
+}
+.frow.is-all .frow-name {
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-size: var(--fs-min);
+  color: var(--ink-dim);
+}
 .frow-check { min-height: 0; padding: 0; }
 .frow-check input { margin: 0; }
 .frow-name {
-  flex: 1 1 auto;
+  /* A floor of 8rem, so a folder name never shrinks below a readable width and
+     the actions wrap to the next line instead. `anywhere` still applies above
+     that, for the person whose folder is called something enormous. */
+  flex: 1 1 8rem;
   min-width: 0;
   font-weight: 600;
   overflow-wrap: anywhere;

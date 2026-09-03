@@ -62,7 +62,26 @@
   //
   // ~160 bytes gzipped per game. The bump exists so games already on disk get
   // re-read; nothing else about them changes.
-  const SCHEMA_VERSION = 7;
+  //
+  // v8 is the second bump that adds no field, and the most important one so
+  // far, because everything it changes is WRONG in a stored v7 summary rather
+  // than missing from it:
+  //
+  //   • `gameMode` came off the players the simulator emitted, so a game whose
+  //     parse aborted was labelled 'custom' and lost its result with it.
+  //     It comes off the slot records now, which are always readable.
+  //   • `winner` came from a port of w3gjs's rule, which treated "this client
+  //     wrote the file" as "this client won" and otherwise handed the game to
+  //     whoever left last. In a replay saved by the person who LOST, both of
+  //     those name the loser. It is now read from each seat's own result code
+  //     and published only when the seats agree.
+  //   • `winner` is computed for every mode now, not only 1v1, so team games,
+  //     FFAs and melee games played in a custom lobby have a result at all.
+  //
+  // Nobody can look at a stored summary and see that its verdict came from the
+  // old rule, so staleness is the only thing that can reach the games already
+  // on disk. See helpers/utils.js computeWinner and tools/winloss-audit.js.
+  const SCHEMA_VERSION = 8;
 
   // Resolved per call rather than once at load: in the browser these are plain
   // scripts, and a wrong tag order would otherwise bake nulls in here at parse

@@ -140,9 +140,32 @@ fn sources_path(app: &tauri::AppHandle) -> PathBuf {
 /// derived sets (readable roots, excluded folders) into `AppState`. Every
 /// command that changes the config ends by calling this, so the state can
 /// never lag the file.
-fn refresh_folders(app: &tauri::AppHandle, state: &AppState) -> Vec<folders::Folder> {
-    let config = folders::FolderConfig::load(&folders_config_path(app));
-    let tree = folders::build_tree(&config);
+///
+/// Off the main thread, always.
+///
+/// `build_tree` walks every root on disk: `discover_in` visits every directory
+/// under it and stats every `.w3g` in it. Tauri runs a SYNC command on the main
+/// thread, so on a 7,000-replay library every one of these commands froze the
+/// window for the length of a full disk walk — at boot, and again on every
+/// folder the person ticked. A frozen window at boot is indistinguishable from
+/// an app that will not start.
+///
+/// The lock is taken after the await and released within the statement, so no
+/// guard is ever held across a suspension point.
+async fn refresh_folders_async(app: &tauri::AppHandle, state: &AppState) -> Vec<folders::Folder> {
+    let path = folders_config_path(app);
+    let built = tauri::async_runtime::spawn_blocking(move || {
+        let config = folders::FolderConfig::load(&path);
+        let tree = folders::build_tree(&config);
+        (config, tree)
+    })
+    .await;
+    let (config, tree) = match built {
+        Ok(v) => v,
+        // The pool refusing the job is not a reason to publish an empty tree
+        // over a good one: that would drop every root out of the readable set.
+        Err(_) => return Vec::new(),
+    };
     *state.roots.lock().unwrap() = folders::roots_of(&tree);
     *state.excluded.lock().unwrap() = folders::excluded_of(&config, &tree);
     tree
@@ -161,15 +184,18 @@ fn roots_payload(tree: &[folders::Folder]) -> Vec<replays::ReplayRoot> {
 }
 
 #[tauri::command]
-fn list_folders(app: tauri::AppHandle, state: State<'_, AppState>) -> Vec<folders::Folder> {
-    refresh_folders(&app, &state)
+async fn list_folders(
+    app: tauri::AppHandle,
+    state: State<'_, AppState>,
+) -> Result<Vec<folders::Folder>, String> {
+    Ok(refresh_folders_async(&app, &state).await)
 }
 
 /// Register a folder the user picked by hand, and remember it. Needed on
 /// Linux/SteamOS, where the game lives inside a Wine/Proton prefix we may
 /// not guess, and for anyone keeping replays outside the game's own tree.
 #[tauri::command]
-fn add_root(
+async fn add_root(
     path: String,
     app: tauri::AppHandle,
     state: State<'_, AppState>,
@@ -199,7 +225,7 @@ fn add_root(
         folders::add_manual_root(&mut config, &path);
     }
     config.save(&cfg)?;
-    let tree = refresh_folders(&app, &state);
+    let tree = refresh_folders_async(&app, &state).await;
     let total = tree
         .iter()
         .find(|f| f.path == path)
@@ -215,7 +241,7 @@ fn add_root(
 /// A label typed by the person. Empty or blank goes back to the default.
 /// Nothing on disk is renamed.
 #[tauri::command]
-fn set_folder_label(
+async fn set_folder_label(
     path: String,
     label: Option<String>,
     app: tauri::AppHandle,
@@ -225,11 +251,11 @@ fn set_folder_label(
     let mut config = folders::FolderConfig::load(&cfg);
     folders::set_label(&mut config, &path, label.as_deref());
     config.save(&cfg)?;
-    Ok(refresh_folders(&app, &state))
+    Ok(refresh_folders_async(&app, &state).await)
 }
 
 #[tauri::command]
-fn set_folder_enabled(
+async fn set_folder_enabled(
     path: String,
     enabled: bool,
     app: tauri::AppHandle,
@@ -239,13 +265,37 @@ fn set_folder_enabled(
     let mut config = folders::FolderConfig::load(&cfg);
     folders::set_enabled(&mut config, &path, enabled);
     config.save(&cfg)?;
-    Ok(refresh_folders(&app, &state))
+    Ok(refresh_folders_async(&app, &state).await)
+}
+
+/// Switch several folders at once: one config write, one tree rebuild.
+///
+/// The tree used to be flipped a row at a time, and every one of those calls
+/// saves `folders.json` and then re-walks the whole root to rebuild the tree.
+/// Somebody with fifteen subfolders under `Replays` and thousands of files in
+/// them paid fifteen full disk walks to untick a root — which looks exactly
+/// like the app having frozen, and is why the tree needs an "everything"
+/// switch at all. `paths` is the rows to change; nothing else is touched.
+#[tauri::command]
+async fn set_folders_enabled(
+    paths: Vec<String>,
+    enabled: bool,
+    app: tauri::AppHandle,
+    state: State<'_, AppState>,
+) -> Result<Vec<folders::Folder>, String> {
+    let cfg = folders_config_path(&app);
+    let mut config = folders::FolderConfig::load(&cfg);
+    for path in &paths {
+        folders::set_enabled(&mut config, path, enabled);
+    }
+    config.save(&cfg)?;
+    Ok(refresh_folders_async(&app, &state).await)
 }
 
 /// Stop looking in a folder. Never deletes, moves or renames anything: the
 /// directory and every replay in it stay exactly where they are.
 #[tauri::command]
-fn remove_folder(
+async fn remove_folder(
     path: String,
     app: tauri::AppHandle,
     state: State<'_, AppState>,
@@ -254,12 +304,12 @@ fn remove_folder(
     let mut config = folders::FolderConfig::load(&cfg);
     folders::remove(&mut config, &path);
     config.save(&cfg)?;
-    Ok(refresh_folders(&app, &state))
+    Ok(refresh_folders_async(&app, &state).await)
 }
 
 /// Bring back every removed folder. The way out of "I removed the wrong one".
 #[tauri::command]
-fn restore_folders(
+async fn restore_folders(
     app: tauri::AppHandle,
     state: State<'_, AppState>,
 ) -> Result<Vec<folders::Folder>, String> {
@@ -267,7 +317,7 @@ fn restore_folders(
     let mut config = folders::FolderConfig::load(&cfg);
     folders::restore_removed(&mut config);
     config.save(&cfg)?;
-    Ok(refresh_folders(&app, &state))
+    Ok(refresh_folders_async(&app, &state).await)
 }
 
 // ── Sources: which file a stored game came from ────────────────
@@ -637,6 +687,33 @@ async fn list_parse_failures(app: tauri::AppHandle) -> Result<Vec<String>, Strin
         .map_err(|e| format!("list failed: {e}"))?
 }
 
+/// The failures WITH their reasons, tallied by code.
+///
+/// "3 games could not be read" is a dead end; "3 games are on a map WC3V has
+/// no data for" says what happened and whether anything can be done about it.
+/// Returns `{ code: count }`, which is all a summary line needs and carries no
+/// path, no player name and nothing else out of somebody's library.
+#[tauri::command]
+async fn parse_failure_reasons(
+    app: tauri::AppHandle,
+) -> Result<std::collections::HashMap<String, usize>, String> {
+    let dir = parse_store_dir(&app);
+    tauri::async_runtime::spawn_blocking(move || {
+        let mut out: std::collections::HashMap<String, usize> = std::collections::HashMap::new();
+        for key in store_keys_with_ext(&dir, FAILED_EXT) {
+            let code = std::fs::read_to_string(dir.join(format!("{key}{FAILED_EXT}")))
+                .ok()
+                .and_then(|s| serde_json::from_str::<serde_json::Value>(&s).ok())
+                .and_then(|v| v.get("code").and_then(|c| c.as_str()).map(String::from))
+                .unwrap_or_else(|| "unknown".into());
+            *out.entry(code).or_insert(0) += 1;
+        }
+        Ok(out)
+    })
+    .await
+    .map_err(|e| format!("list failed: {e}"))?
+}
+
 /// Forget every recorded failure so those replays get retried. This is the
 /// recovery path after seeding more map data. Returns how many were cleared.
 #[tauri::command]
@@ -932,6 +1009,44 @@ async fn read_parse(key: String, app: tauri::AppHandle) -> Result<tauri::ipc::Re
     .map_err(|e| format!("read failed: {e}"))?
 }
 
+/// Read MANY stored summaries in one call.
+///
+/// The corpus load is one `read_parse` per stored game. At a few hundred games
+/// nobody notices; at seven thousand the round trips alone are most of a
+/// minute of the window sitting on its loading placeholder, which reads —
+/// accurately — as the app having stopped. This is the same read, batched.
+///
+/// The reply is a single buffer, each entry framed as a little-endian u32
+/// length followed by that many gzip bytes. A key that is missing or
+/// unreadable frames as length 0 rather than failing the batch, so one
+/// corrupt summary cannot cost somebody the other 6,999.
+#[tauri::command]
+async fn read_parses(
+    keys: Vec<String>,
+    app: tauri::AppHandle,
+) -> Result<tauri::ipc::Response, String> {
+    // A bound, so a bad caller cannot ask for an unbounded allocation.
+    if keys.len() > 512 {
+        return Err("too many keys in one batch".into());
+    }
+    let dir = parse_store_dir(&app);
+    tauri::async_runtime::spawn_blocking(move || {
+        let mut out: Vec<u8> = Vec::new();
+        for key in keys {
+            let bytes = if valid_store_key(&key) {
+                std::fs::read(dir.join(format!("{key}{SUMMARY_EXT}"))).unwrap_or_default()
+            } else {
+                Vec::new()
+            };
+            out.extend_from_slice(&(bytes.len() as u32).to_le_bytes());
+            out.extend_from_slice(&bytes);
+        }
+        Ok(tauri::ipc::Response::new(out))
+    })
+    .await
+    .map_err(|e| format!("read failed: {e}"))?
+}
+
 // ── Overlay ────────────────────────────────────────────────────
 
 /// The webview pushes fresh overlay state here; the loopback server relays it
@@ -1146,19 +1261,19 @@ async fn check_for_update(app: tauri::AppHandle, install: bool) -> Result<serde_
 }
 
 #[tauri::command]
-fn init(app: tauri::AppHandle, state: State<'_, AppState>) -> InitPayload {
-    let roots = roots_payload(&refresh_folders(&app, &state));
+async fn init(app: tauri::AppHandle, state: State<'_, AppState>) -> Result<InitPayload, String> {
+    let roots = roots_payload(&refresh_folders_async(&app, &state).await);
     let data_dir = app
         .path()
         .app_data_dir()
         .unwrap_or_else(|_| PathBuf::from("."));
     let _ = std::fs::create_dir_all(map_cache_dir(&app));
     let _ = std::fs::create_dir_all(data_dir.join("replays"));
-    InitPayload {
+    Ok(InitPayload {
         roots,
         map_cache_dir: map_cache_dir(&app).to_string_lossy().to_string(),
         data_dir: data_dir.to_string_lossy().to_string(),
-    }
+    })
 }
 
 #[tauri::command]
@@ -1282,6 +1397,7 @@ fn main() {
             add_root,
             set_folder_label,
             set_folder_enabled,
+            set_folders_enabled,
             remove_folder,
             restore_folders,
             record_sources,
@@ -1295,8 +1411,10 @@ fn main() {
             save_parse,
             list_parses,
             read_parse,
+            read_parses,
             save_parse_failure,
             list_parse_failures,
+            parse_failure_reasons,
             clear_parse_failures,
             read_tags,
             write_tags,

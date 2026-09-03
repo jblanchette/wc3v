@@ -160,6 +160,40 @@
 }
 .pop-lead { margin: 0 0 var(--sp-3); color: var(--ink-2); font-size: var(--fs-min); }
 
+/* Other accounts, under the "which one are you" cards. A second section
+   rather than more cards: picking your seat and listing your other logins
+   are different questions, and mixing them makes both ambiguous. */
+.alt-accounts {
+  margin-top: var(--sp-4);
+  padding-top: var(--sp-3);
+  border-top: 1px solid var(--app-line);
+}
+.alt-accounts .pop-lead { margin-bottom: var(--sp-2); }
+.alt-list { display: grid; gap: var(--sp-1); margin-bottom: var(--sp-2); }
+.alt-row {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  min-height: var(--hit-min);
+  padding: var(--sp-1) var(--sp-2);
+  background: var(--app-well);
+  border: 1px solid var(--app-line);
+  border-radius: var(--radius-sm);
+}
+.alt-name { flex: 1 1 auto; min-width: 0; font-weight: 600; overflow-wrap: anywhere; }
+.alt-add { display: flex; gap: var(--sp-2); }
+.alt-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: var(--hit-min);
+  padding: 0 var(--sp-2);
+  color: var(--ink-1);
+  background: var(--app-bg);
+  border: 1px solid var(--app-line);
+  border-radius: var(--radius-sm);
+  font: inherit;
+}
+
 .session {
   display: flex;
   align-items: baseline;

@@ -159,16 +159,25 @@
 
     const buildBook = (opp, myRace, mapName) => {
       const corpus = deps.store.corpus;
-      const me = deps.identityName();
-      if (!corpus || !corpus.length || !me) return null;
+      // Every account that is you: an opponent's record against you spans all
+      // of them, and so does your own matchup history.
+      const meNames = (deps.identityNames && deps.identityNames().length)
+        ? deps.identityNames() : [deps.identityName()].filter(Boolean);
+      if (!corpus || !corpus.length || !meNames.length) return null;
 
       let p = PA().buildProfile(corpus, opp.tag);
       if (!p.games) p = PA().buildProfile(corpus, opp.name);
       if (!p.games) return null;
 
-      const meKey = PA().normName(me);
+      const meKeys = PA().identityKeys(meNames);
       const oppKey = PA().normName(p.name);
-      const seen = p.opponents.find(o => PA().normName(o.name) === meKey);
+      // Their opponents list is keyed by whichever of my accounts they met.
+      // Fold every one of mine into a single record.
+      const seen = p.opponents
+        .filter(o => meKeys.indexOf(PA().normName(o.name)) !== -1)
+        .reduce((acc, o) => acc
+          ? { name: acc.name, games: acc.games + o.games, wins: acc.wins + o.wins, losses: acc.losses + o.losses }
+          : { ...o }, null);
       // Their record against me, read back from my side.
       const h2h = seen ? { games: seen.games, wins: seen.losses, losses: seen.wins } : null;
 
@@ -183,7 +192,7 @@
         const v = t.winMedian !== null && t.winMedian !== undefined ? t.winMedian : t.lossMedian;
         return v === undefined ? null : v;
       };
-      const mine = PA().buildProfile(corpus, me);
+      const mine = PA().buildProfile(corpus, meNames);
       const myMu = myRace && opp.race
         ? mine.matchups.find(m => m.matchup === `${myRace}v${opp.race}`)
         : null;
@@ -191,7 +200,7 @@
       // Every game the two of us have played, newest first, for the list.
       const shared = corpus.filter((g) => {
         const names = Object.values(g.players || {}).map(x => PA().normName(x.name));
-        return names.indexOf(meKey) !== -1 && names.indexOf(oppKey) !== -1;
+        return meKeys.some(k => names.indexOf(k) !== -1) && names.indexOf(oppKey) !== -1;
       });
 
       return {

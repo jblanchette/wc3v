@@ -12,7 +12,8 @@
  *
  * What this pins down:
  *   • a limited run takes the NEWEST N and nothing more
- *   • LastReplay.w3g never enters the queue, at any limit
+ *   • LastReplay.w3g is dropped when its autosave twin is beside it in time,
+ *     and READ when nothing is — it is the only copy of that game then
  *   • already-stored games are skipped rather than re-parsed
  *   • a known-bad key is skipped without being retried
  *   • onQueue/onProgress report every file exactly once
@@ -29,16 +30,24 @@ const vm = require('node:vm');
 
 // The module is a browser IIFE hanging itself off `window`.
 const SRC = path.join(__dirname, '..', 'desktop', 'src-frontend', 'js', 'backfill.js');
-const sandbox = { window: {}, performance: { now: () => Date.now() } };
+// setTimeout/clearTimeout because the engine races every worker call
+// against a clock; without them every parse would reject here.
+const sandbox = { window: {}, performance: { now: () => Date.now() },
+  setTimeout, clearTimeout };
 vm.createContext(sandbox);
 vm.runInContext(fs.readFileSync(SRC, 'utf8'), sandbox, { filename: SRC });
 const createBackfill = sandbox.window.createBackfill;
 assert.ok(createBackfill, 'backfill.js should publish window.createBackfill');
 
 // Newest first, which is the order the real scan returns.
+// Newest first, an hour apart, which is the scan's own order and far enough
+// apart that no two games look like each other's autosave twin.
+const T0 = 1700000000000;
+const HOUR = 3600 * 1000;
 const scanOf = (n) => ({
   replays: Array.from({ length: n }, (_, i) => ({
-    path: `C:\\r\\game${i}.w3g`, file_name: `game${i}.w3g`, interesting: true
+    path: `C:\\r\\game${i}.w3g`, file_name: `game${i}.w3g`, interesting: true,
+    modified_ms: T0 - i * HOUR
   }))
 });
 
@@ -111,10 +120,12 @@ const runToIdle = async (bf) => {
       'no file reports done twice');
   }
 
-  // ── LastReplay.w3g is never queued ─────────────────────────────────────
+  // ── LastReplay.w3g, when its autosave twin is there ────────────────────
   {
     const scan = scanOf(4);
-    scan.replays.unshift({ path: 'C:\\r\\LastReplay.w3g', file_name: 'LastReplay.w3g', interesting: true });
+    // Written seconds after game0: the same match, a second encoding of it.
+    scan.replays.unshift({ path: 'C:\\r\\LastReplay.w3g', file_name: 'LastReplay.w3g',
+      interesting: true, modified_ms: T0 + 4000 });
     const h = harness({ scan });
     const bf = createBackfill(h.deps);
     await bf.catchUp(3, h.hooks);
@@ -123,6 +134,25 @@ const runToIdle = async (bf) => {
     assert.ok(!h.queued.some(f => /lastreplay/i.test(f)),
       'LastReplay is filtered BEFORE the limit, not counted against it');
     assert.deepStrictEqual(h.queued, ['game0.w3g', 'game1.w3g', 'game2.w3g']);
+  }
+
+  // ── LastReplay.w3g, when it is the only copy of that game ──────────────
+  //
+  // Autosaves off, or the Autosaved folder switched off in the tree: the match
+  // somebody just played exists only as LastReplay.w3g. Dropping the name
+  // outright meant that game never appeared, which is what "it cannot find
+  // LastReplay.w3g" looks like from the outside.
+  {
+    const scan = scanOf(4);
+    scan.replays.unshift({ path: 'C:\\r\\LastReplay.w3g', file_name: 'LastReplay.w3g',
+      interesting: true, modified_ms: T0 + 6 * HOUR });
+    const h = harness({ scan });
+    const bf = createBackfill(h.deps);
+    await bf.catchUp(3, h.hooks);
+    await runToIdle(bf);
+
+    assert.deepStrictEqual(h.queued, ['LastReplay.w3g', 'game0.w3g', 'game1.w3g'],
+      'with no twin near it in time, LastReplay is the game and gets read');
   }
 
   // ── Already stored, and known bad, are both skipped ────────────────────

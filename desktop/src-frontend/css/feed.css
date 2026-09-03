@@ -183,7 +183,11 @@
   grid-column: 1;
   z-index: 20;
   display: grid;
-  grid-template-rows: auto minmax(0, 1fr);
+  /* Filter, the unread line, the feed. The unread line is `auto` so it takes
+     no room when it is down, and the feed keeps the only flexible row — with
+     two rows declared and three children the third landed in an implicit row
+     of its own and the middle one was squeezed to nothing. */
+  grid-template-rows: auto auto minmax(0, 1fr);
   min-height: 0;
   background: var(--app-bg);
   border-bottom: 1px solid var(--app-line);
@@ -197,6 +201,27 @@
 /* ── Feed filter ─────────────────────────────────────────────────────── */
 
 .feed-filter { padding: var(--sp-2) var(--sp-3); display: grid; gap: var(--sp-2); }
+
+/* What is on disk but not in the list. A quiet line, not a warning: on a
+   library that has never been fully read this is the normal state, and the
+   point is that it is stated rather than left to be inferred from a game
+   missing. */
+.unread {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-2) var(--sp-3);
+  border-top: 1px solid var(--app-line);
+  border-bottom: 1px solid var(--app-line);
+  background: var(--app-well);
+}
+.unread-text {
+  flex: 1 1 auto;
+  min-width: 0;
+  color: var(--ink-2);
+  font-size: var(--fs-min);
+  overflow-wrap: anywhere;
+}
 
 /* One row now that the drawer is the full width of the window. It was three
    stacked bands in a 22rem rail. */

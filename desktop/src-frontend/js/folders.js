@@ -255,23 +255,25 @@
       return `${head}, ${fmt(on)} replays on, ${fmt(total - on)} skipped`;
     };
 
-    // Switch several folders at once with ONE watcher restart at the end.
-    // `folders` is a snapshot; only its paths are used after the first write,
-    // since every write replaces `list`.
+    // Switch several folders at once: ONE config write, ONE tree rebuild, ONE
+    // watcher restart.
+    //
+    // This used to be a loop of `set_folder_enabled`, and each of those saves
+    // the config and then re-walks the whole root to rebuild the tree. With
+    // fifteen subfolders under Replays and thousands of files in them, ticking
+    // the root's box meant fifteen full disk walks with the checkbox disabled
+    // throughout, which reads as the app having locked up.
     const setMany = async (folders, on) => {
-      let ok = true;
-      for (const f of folders) {
-        if (f.enabled === on) continue;
-        try {
-          apply(await deps.invoke('set_folder_enabled', { path: f.path, enabled: on }));
-        } catch (e) {
-          deps.log(`could not change that folder: ${deps.errText(e)}`, 'err');
-          ok = false;
-          break;
-        }
+      const paths = folders.filter(f => f.enabled !== on).map(f => f.path);
+      if (!paths.length) return true;
+      try {
+        apply(await deps.invoke('set_folders_enabled', { paths, enabled: on }));
+      } catch (e) {
+        deps.log(`could not change those folders: ${deps.errText(e)}`, 'err');
+        return false;
       }
       if (deps.onChange) deps.onChange();
-      return ok;
+      return true;
     };
 
     const checkbox = (label, checked, mixed, onToggle) => {
@@ -358,10 +360,15 @@
       if (root.custom_label) name.title = `Folder: ${root.name}`;
       r.appendChild(name);
 
+      // Short on purpose: this sits between the folder's name and three
+      // controls in a 430px sheet, and every character it spends is one the
+      // name gives up. The checkbox already says whether the folder is on, so
+      // the count does not have to repeat it.
       const meta = node('span', 'frow-meta');
       if (!total) meta.textContent = 'empty';
       else if (on === total) meta.textContent = `${fmt(total)} replays`;
-      else meta.textContent = `${fmt(on)} of ${fmt(total)} on`;
+      else meta.textContent = `${fmt(on)} of ${fmt(total)}`;
+      meta.title = `${fmt(on)} of ${fmt(total)} replays here are switched on`;
       r.appendChild(meta);
 
       const isOpen = open.has(root.path);
@@ -517,12 +524,37 @@
       return panel;
     };
 
+    // One switch for the whole tree, above it.
+    //
+    // Each row's box is that row's own files, and the root's box is its
+    // subtree — but somebody with fifteen folders under Replays and a second
+    // account beside it still has no way to say "none of it" in one move, and
+    // that is the shape of the ask: untick everything, then tick back the two
+    // folders that matter. Indeterminate whenever the tree is mixed, so it
+    // also reads as a summary of where the tree currently stands.
+    const allRow = () => {
+      const on = list.filter(f => f.enabled).length;
+      const r = node('div', 'frow is-all');
+      if (!on) r.classList.add('is-off');
+      r.appendChild(checkbox('Read every folder', on === list.length,
+        on > 0 && on < list.length, (want) => setMany(list, want)));
+      r.appendChild(node('span', 'frow-name', 'Every folder'));
+      const meta = node('span', 'frow-meta');
+      meta.textContent = on === list.length ? 'all on'
+        : on === 0 ? 'all off'
+        : `${fmt(on)} of ${fmt(list.length)} on`;
+      r.appendChild(meta);
+      return r;
+    };
+
     const draw = (host, opts) => {
       host.innerHTML = '';
       if (!list.length) {
         host.appendChild(node('div', 'empty', 'No replay folders found.'));
         return;
       }
+      // Only worth a row when there is more than one thing to flip.
+      if (list.length > 1) host.appendChild(allRow());
       for (const root of roots()) {
         host.appendChild(rootRow(root, opts));
         if (!open.has(root.path)) continue;

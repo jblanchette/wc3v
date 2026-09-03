@@ -580,13 +580,26 @@ const assignCampOrder = (world, wc3vPlayers) => {
 const OBSERVER_TEAM_MODERN = 24;
 const OBSERVER_TEAM_LEGACY = 12;
 
+// The observer team is a CEILING, not a value to skip.
+//
+// Every replay in the 975-game reference corpus carries a slot record for the
+// Neutral Player, at playerId 1042 on team 1046, and matching that team only
+// against `=== obsTeam` let it through as a third participant on a third team.
+// So `computeGameMode` saw three players on three teams and answered 'ffa' —
+// for 973 of those 975 games, 973 of which are ordinary 1v1 ladder matches.
+//
+// That number is the whole bug behind the desktop's "only parse 1v1 games"
+// switch dropping every game somebody owned: the switch reads this function
+// through the header peek, and this function said no replay was ever a 1v1.
+// Real team ids run 0..obsTeam-1; anything at or above it is the observer team
+// or one of the game's own internal players, and neither is a seat.
 const playersFromSlots = (slotRecords, version) => {
 	const obsTeam = version >= 29 ? OBSERVER_TEAM_MODERN : OBSERVER_TEAM_LEGACY;
 	const map = {};
 
 	(slotRecords || []).forEach((slot) => {
 		if (!slot) return;
-		if (slot.teamId === obsTeam) return;
+		if (slot.teamId == null || slot.teamId >= obsTeam) return;
 		// slotStatus 2 === occupied (0 empty, 1 closed). Computer slots carry
 		// computerFlag and ARE real participants as far as the shape goes.
 		if (slot.slotStatus != null && slot.slotStatus !== 2) return;
@@ -614,50 +627,180 @@ const computeGameMode = (playersMap) => {
   return 'custom';
 };
 
-// Match winner from LeaveGameBlocks (0x17) captured in wc3v.js doParsing.
-// Port of w3gjs W3GReplay.determineWinningTeam (dist/lib/W3GReplay.js:96-116),
-// 1v1 only: walk leave events in order skipping observers; an explicit
-// result '09000000' or reason '0c000000' marks that player's team the winner;
-// otherwise the LAST leaver's team wins (in 1v1 the loser leaves first, the
-// winner's leave closes the file). Returns null when unresolvable — absence
-// of a winner means UNKNOWN, never a loss.
-const computeWinner = (replay, outputPlayers) => {
-  const leaveEvents = replay.leaveEvents || [];
-  if (!leaveEvents.length) return null;
+// ── Match outcome ───────────────────────────────────────────────────────────
+//
+// The only outcome evidence a .w3g carries is its LeaveGameBlocks (0x17), one
+// per seat as it leaves, each with a `reason` and a `result` word. The old
+// reading of them was a port of w3gjs `determineWinningTeam`: 1v1 only, take
+// the first seat whose result is 09 OR whose reason is 0c, and otherwise
+// declare the LAST leaver the winner.
+//
+// Three things were wrong with that, and all three could report a defeat to
+// somebody who won:
+//
+//   1. `reason === '0c'` is not a win. 0x0C is "connection closed by the LOCAL
+//      game", which marks whose client wrote the file, not who won. In a
+//      self-saved replay that is always the person reading it, so the rule
+//      handed them the game whatever happened in it.
+//   2. The last-leaver fallback is the same mistake with extra steps. It is
+//      true that in a ladder 1v1 the loser usually leaves first — in the
+//      WINNER's copy of the replay. In the loser's own copy their leave block
+//      is last, because their client stopped recording when they left.
+//   3. It only ran for 1v1, so a 2v2, an FFA, or a melee game played in a
+//      custom lobby had no result at all.
+//
+// What the corpus actually says. `tools/winloss-audit.js` grades this function
+// against warcraft3.info's own recorded winner over every locally parsed game
+// that came from the crawl, and its `--table` mode derives the table below
+// from those games, one row per seat:
+//
+//     reason=01 result=09   117 won,   0 lost
+//     reason=09 result=09    44 won,   0 lost
+//     reason=01 result=07     2 won, 116 lost
+//     reason=07 result=07     0 won,  44 lost
+//     reason=0c result=01     4 won,   0 lost
+//     reason=01 result=0d     2 won,   6 lost
+//
+// `result` is the whole signal and `reason` adds nothing: 0x09 means that seat
+// won and 0x07 means it did not, whatever reason accompanies them. (The two
+// "won" rows under result=07 and the split on 0x0D come from the site's own
+// detector rather than a human-entered winner, and that detector is a port of
+// the same w3gjs rule this replaces.) Anything else is not a verdict.
+//
+// So: read each seat's own flag, then require the seats to AGREE — one winning
+// team, and no seat on it claiming a loss. Disagreement returns null. A guess
+// dressed as an answer is the failure mode being fixed here, so the
+// last-leaver branch is gone; `null` means unknown and the UI says so.
+const LEAVE_RESULT = {
+  '09000000': 'win',
+  '07000000': 'loss',
+  '08000000': 'loss',
+  '0b000000': 'loss',
+  '01000000': 'left'   // disconnect. Says nothing about the outcome on its own.
+};
 
-  const slotRecords = (replay.metadata && replay.metadata.slotRecords) || [];
-  const version = (replay.subheader && replay.subheader.version) || 0;
-  const observerTeam = version >= 29 ? 24 : 12;
+// Every seat's own claim about itself, from its leave block. Observers and
+// seats with no slot record are dropped; `outcome` is null where the block
+// says nothing either way. Exported for tools/winloss-audit.js.
+const seatOutcomes = (replay) => {
+  const leaveEvents = (replay && replay.leaveEvents) || [];
+  const slotRecords = (replay && replay.metadata && replay.metadata.slotRecords) || [];
+  const version = (replay && replay.subheader && replay.subheader.version) || 0;
+  const observerTeam = version >= 29 ? OBSERVER_TEAM_MODERN : OBSERVER_TEAM_LEGACY;
 
   const teamOf = {};
-  slotRecords.forEach(slot => { teamOf[slot.playerId] = slot.teamId; });
+  slotRecords.forEach(slot => { if (slot) teamOf[slot.playerId] = slot.teamId; });
 
-  let winningTeamId = null;
-  let method = null;
-  let lastLeaverTeam = null;
-
+  const out = [];
   for (const ev of leaveEvents) {
     const teamId = teamOf[ev.playerId];
-    if (teamId == null || teamId === observerTeam) continue;
-    lastLeaverTeam = teamId;
-    if (ev.result === '09000000') { winningTeamId = teamId; method = 'result09'; break; }
-    if (ev.reason === '0c000000') { winningTeamId = teamId; method = 'reason0c'; break; }
+    // Team ids at or above the observer team are not seats at all — the
+    // Neutral Player has one. See playersFromSlots.
+    if (teamId == null || teamId >= observerTeam) continue;
+    out.push({
+      playerId: ev.playerId,
+      teamId,
+      gameTimeMs: ev.gameTimeMs,
+      reason: ev.reason,
+      result: ev.result,
+      outcome: LEAVE_RESULT[ev.result] || null
+    });
   }
-  if (winningTeamId == null && lastLeaverTeam != null) {
-    winningTeamId = lastLeaverTeam;
-    method = 'lastLeaver';
+  return out;
+};
+
+// The participating teams, from the slot records, with how many seats each
+// held. This is the shape of the game whether or not anybody left cleanly.
+const teamShape = (replay) => {
+  const slotRecords = (replay && replay.metadata && replay.metadata.slotRecords) || [];
+  const version = (replay && replay.subheader && replay.subheader.version) || 0;
+  const observerTeam = version >= 29 ? OBSERVER_TEAM_MODERN : OBSERVER_TEAM_LEGACY;
+  const seats = new Map();
+  slotRecords.forEach(slot => {
+    if (!slot || slot.teamId == null || slot.teamId >= observerTeam) return;
+    if (slot.slotStatus != null && slot.slotStatus !== 2) return;
+    seats.set(slot.teamId, (seats.get(slot.teamId) || 0) + 1);
+  });
+  return seats;
+};
+
+// The verdict. Works for every mode, because "which team did the seats that
+// spoke put on top" does not care how many seats there are.
+//
+// Returns { teamId, playerId, playerIds, method, confidence } or null.
+//   'seatFlag'    / high    a seat said it won and nothing contradicted it.
+//   'elimination' / medium  nobody claimed a win, but every team except one is
+//                           wholly accounted for as beaten. That is a 1v1 where
+//                           only the loser's block was written.
+// There is no low-confidence branch. A verdict this cannot support is not
+// published, because a wrong W is worse than no W.
+const computeWinner = (replay, outputPlayers) => {
+  const seats = seatOutcomes(replay);
+  if (!seats.length) return null;
+
+  const teams = new Map();   // teamId -> { won, lost, spoke }
+  for (const s of seats) {
+    if (!teams.has(s.teamId)) teams.set(s.teamId, { won: 0, lost: 0, spoke: 0 });
+    const t = teams.get(s.teamId);
+    t.spoke++;
+    if (s.outcome === 'win') t.won++;
+    else if (s.outcome === 'loss') t.lost++;
   }
+
+  const seatsPerTeam = teamShape(replay);
+  for (const id of teams.keys()) if (!seatsPerTeam.has(id)) seatsPerTeam.set(id, teams.get(id).spoke);
+  const allTeams = [...seatsPerTeam.keys()];
+
+  const claimed = [...teams.entries()].filter(([, t]) => t.won > 0).map(([id]) => id);
+  let winningTeamId = null;
+  let method = null;
+  let confidence = null;
+
+  if (claimed.length > 1) {
+    return null;   // two teams both said they won
+  } else if (claimed.length === 1) {
+    const id = claimed[0];
+    // A seat on the winning team that says it lost is a contradiction, and a
+    // contradiction is not a result.
+    if (teams.get(id).lost > 0) return null;
+    winningTeamId = id;
+    method = 'seatFlag';
+    confidence = 'high';
+  } else if (allTeams.length >= 2) {
+    // Nobody claimed. Elimination is only an answer when every OTHER team is
+    // fully accounted for: a leave block for every seat it held, all of them
+    // saying loss.
+    const beaten = allTeams.filter((id) => {
+      const t = teams.get(id);
+      return !!t && t.lost >= (seatsPerTeam.get(id) || t.spoke);
+    });
+    if (beaten.length === allTeams.length - 1) {
+      winningTeamId = allTeams.find(id => beaten.indexOf(id) === -1);
+      method = 'elimination';
+      confidence = 'medium';
+    }
+  }
+
   if (winningTeamId == null) return null;
 
-  const winnerPid = Object.keys(outputPlayers).find(pid =>
-    outputPlayers[pid] && outputPlayers[pid].teamId === winningTeamId);
-  if (winnerPid == null) return null;
+  // Name a seat on the winning team for callers that want one. Prefer a player
+  // the simulator actually emitted; a truncated parse may have emitted none,
+  // and the team id is still the answer.
+  const players = outputPlayers || {};
+  const winnerPid = Object.keys(players).find(pid =>
+    players[pid] && players[pid].teamId === winningTeamId);
+  const slotRecords = (replay && replay.metadata && replay.metadata.slotRecords) || [];
+  const onTeam = slotRecords
+    .filter(s => s && s.teamId === winningTeamId && (s.slotStatus == null || s.slotStatus === 2))
+    .map(s => s.playerId);
 
   return {
     teamId: winningTeamId,
-    playerId: +winnerPid,
+    playerId: winnerPid != null ? +winnerPid : (onTeam.length ? onTeam[0] : null),
+    // Every seat on the winning team, so a team game can mark all of them.
+    playerIds: onTeam,
     method,
-    confidence: method === 'lastLeaver' ? 'medium' : 'high'
+    confidence
   };
 };
 
@@ -1044,17 +1187,34 @@ const buildOutputObject = (replay, wc3vPlayers, world, validation = null) => {
     })())
   };
 
-  // Categorize the game from the players actually emitted (unit-less players
-  // already dropped above — matches what the viewer renders).
-  output.gameMode = computeGameMode(output.players);
+  // Categorize the game.
+  //
+  // From the SLOT RECORDS, not from the players the simulator emitted. The
+  // header is always readable; the simulator's player set is not. A game whose
+  // parse aborted (a map this install has no data for, an action the parser
+  // chokes on) emits few players or none, and reading the mode off that turned
+  // 95 ordinary 1v1 ladder games in the reference corpus into 'custom' — which
+  // then cost them their winner, since the old outcome code ran for 1v1 only.
+  // A melee game played in a custom lobby was hitting exactly the same path.
+  //
+  // `playersFromSlots` is the same reconstruction the header peek uses, so the
+  // mode the desktop's 1v1 filter reads before a parse and the mode the parse
+  // writes afterwards now come from one place and cannot disagree.
+  const slotMode = computeGameMode(
+    playersFromSlots(
+      (replay.metadata && replay.metadata.slotRecords) || [],
+      (replay.subheader && replay.subheader.version) || 0
+    )
+  );
+  // Falling back to the emitted players covers a replay with no slot records
+  // at all, which is what a hand-built test fixture looks like.
+  output.gameMode = slotMode !== 'custom' ? slotMode : computeGameMode(output.players);
 
-  // Match outcome from leave records — 1v1 only (the heuristic's home turf).
-  // Raw evidence ships as output.replay.leaveEvents (survives automatically);
-  // this is the verdict. Missing on legacy parses = unknown, never a loss.
-  if (output.gameMode === '1v1') {
-    const winner = computeWinner(replay, output.players);
-    if (winner) output.winner = winner;
-  }
+  // Match outcome from the leave records, for EVERY mode. `null` when the
+  // seats did not say enough to be sure — never a loss, and never a guess.
+  // Raw evidence ships as output.replay.leaveEvents.
+  const winner = computeWinner(replay, output.players);
+  if (winner) output.winner = winner;
 
   return output;
 };
@@ -1231,6 +1391,8 @@ module.exports = {
 	buildOutputObject,
 	computeGameMode,
 	playersFromSlots,
+	computeWinner,
+	seatOutcomes,
 
   findIndexFrom,
   StandardStreamSearch,

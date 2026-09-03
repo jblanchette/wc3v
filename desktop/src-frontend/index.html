@@ -88,6 +88,18 @@
         <div class="identity-pop" id="identity-pop" hidden>
           <p class="pop-lead">Wins and losses are scored from this seat.</p>
           <div id="identity-picker"></div>
+          <!-- Other accounts. Plenty of people play on several: a main, a
+               smurf, a race account, a second region. All of them are one
+               history, so every one listed here counts as you. -->
+          <div class="alt-accounts" id="alt-accounts">
+            <p class="pop-lead">Other accounts of yours</p>
+            <div class="alt-list" id="alt-list"></div>
+            <div class="alt-add">
+              <input type="text" id="alt-input" class="alt-input" maxlength="40"
+                     placeholder="Name#1234" aria-label="Another account of yours">
+              <button type="button" class="btn btn-sm" id="alt-add">Add</button>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -212,6 +224,16 @@
                         aria-label="Night Elf" title="Night Elf">NE</button>
               </div>
             </div>
+          </div>
+          <!-- What is on disk but not in the list. "I played two games and
+               only one is here" has to be answerable, and every reason a game
+               is missing is knowable: its folder is off, it was filtered as
+               not-1v1, the read failed, or it simply has not been read yet.
+               Filled by games-view.js `renderUnread`; hidden when the feed
+               holds everything. -->
+          <div class="unread" id="unread" hidden>
+            <span class="unread-text" id="unread-text"></span>
+            <button class="btn btn-sm" id="unread-read" type="button" hidden>Read them now</button>
           </div>
           <div class="feed scroll" id="feed"></div>
         </div>

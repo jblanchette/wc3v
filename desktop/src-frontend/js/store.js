@@ -167,28 +167,80 @@
     const read = async (key) =>
       repairGameMode(await gunzipJson(new Uint8Array(await invoke('read_parse', { key }))));
 
+    // How many summaries come back per IPC call. One call per game was the
+    // whole cost of the corpus load: measured against a 7,000-game library the
+    // round trips alone left the window on its loading placeholder long enough
+    // that people reported the app as having stopped starting. Rust caps the
+    // batch at 512; 200 keeps each reply a few MB.
+    const READ_BATCH = 200;
+
+    // Split the framed reply from `read_parses`: little-endian u32 length, then
+    // that many gzip bytes, per key in order. Length 0 is a summary that could
+    // not be read, which is one game missing rather than a failed batch.
+    const splitFrames = (buf, n) => {
+      const view = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
+      const out = [];
+      let at = 0;
+      for (let i = 0; i < n && at + 4 <= buf.byteLength; i++) {
+        const len = view.getUint32(at, true);
+        at += 4;
+        if (at + len > buf.byteLength) break;
+        out.push(len ? buf.subarray(at, at + len) : null);
+        at += len;
+      }
+      return out;
+    };
+
     // The whole store, loaded once per session and appended to as new games
     // persist.
-    const loadCorpus = async () => {
+    //
+    // `onBatch(loaded, total, partial)` is called as it goes, with the games
+    // read so far. A library of thousands takes real time to read off disk and
+    // a static "loading" panel for a minute is indistinguishable from a hang,
+    // so the feed paints what it has and fills in.
+    const loadCorpus = async (onBatch) => {
       if (corpus) return corpus;
       if (corpusLoading) return corpusLoading;
       corpusLoading = (async () => {
         const keys = await invoke('list_parses');
         const out = [];
-        let i = 0;
-        let done = 0;
-        const reader = async () => {
-          while (i < keys.length) {
-            const k = keys[i++];
+        let next = 0;
+        const takeBatch = () => {
+          if (next >= keys.length) return null;
+          const batch = keys.slice(next, next + READ_BATCH);
+          next += batch.length;
+          return batch;
+        };
+        const readBatch = async (batch) => {
+          // Batched read, with the per-key path as the fallback: an older
+          // binary that has never heard of read_parses must still boot.
+          let frames = null;
+          try {
+            const bytes = new Uint8Array(await invoke('read_parses', { keys: batch }));
+            frames = splitFrames(bytes, batch.length);
+          } catch (e) { frames = null; }
+          for (let i = 0; i < batch.length; i++) {
             try {
+              const raw = frames
+                ? (frames[i] ? await gunzipJson(frames[i]) : null)
+                : await read(batch[i]);
+              if (!raw) continue;
               // Slimmed on the way in, so the full object is garbage the moment
               // this line returns rather than being retained for the session.
-              out.push(slimForCorpus(await read(k)));
+              out.push(slimForCorpus(frames ? repairGameMode(raw) : raw));
             } catch (e) { /* one corrupt entry must not sink the corpus */ }
-            if (++done % 500 === 0) deps.log(`history: ${done}/${keys.length} games loaded`);
           }
         };
-        await Promise.all(Array.from({ length: 8 }, reader));
+        const reader = async () => {
+          let batch;
+          while ((batch = takeBatch())) {
+            await readBatch(batch);
+            if (onBatch) {
+              try { onBatch(out.length, keys.length, out); } catch (e) { /* UI only */ }
+            }
+          }
+        };
+        await Promise.all(Array.from({ length: 4 }, reader));
         // Newest first is the order every view wants.
         out.sort((a, b) => (b.playedAt || 0) - (a.playedAt || 0));
         for (const g of out) if (g && g.key && SB().isStale(g)) staleKeys.add(g.key);
@@ -217,7 +269,10 @@
       const q = searchFold(f && f.text);
       const result = (f && f.result) || 'any';
       const race = (f && f.race) || 'any';
-      const me = f && f.identityName ? PA.normName(f.identityName) : '';
+      // Every account that is you. Falls back to the single name so a caller
+      // that has not been taught about alts still filters correctly.
+      const me = PA.identityKeys(
+        (f && f.identityNames && f.identityNames.length) ? f.identityNames : (f && f.identityName));
       // A folder path plus the function that says which folder a game is in
       // (js/folders.js). The store knows nothing about folders itself: a
       // summary carries no path, and the mapping lives in a sidecar.
@@ -245,12 +300,13 @@
         if (race !== 'any') {
           // The user's own race when the seat is known, and any seat before
           // that, so the filter still does something without an identity.
-          const mine = me ? players.find(p => PA.normName(p.name) === me) : null;
+          const mine = me.length
+            ? players.find(p => me.indexOf(PA.normName(p.name)) !== -1) : null;
           if (mine ? mine.race !== race : !players.some(p => p.race === race)) return false;
         }
 
         if (result !== 'any') {
-          const v = me ? PA.gameView(g, me) : null;
+          const v = me.length ? PA.gameView(g, me) : null;
           const r = v && v.result ? v.result : 'none';
           if (r !== result) return false;
         }

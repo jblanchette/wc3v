@@ -125,8 +125,36 @@
     return h;
   };
 
+  // Which seats won, as slot keys into `summary.players`.
+  //
+  // The stored verdict names a winning TEAM and every seat on it
+  // (helpers/utils.js computeWinner). Older summaries carry only a single
+  // `playerId`, and older ones than that carry a `teamId` alone, so all three
+  // are read here rather than in each view. An empty array means the replay
+  // did not say — never "nobody won".
+  const winnerSlots = (summary) => {
+    const w = summary && summary.winner;
+    const players = (summary && summary.players) || {};
+    if (!w) return [];
+    const slots = Object.keys(players);
+    if (Array.isArray(w.playerIds) && w.playerIds.length) {
+      const ids = w.playerIds.map(String);
+      const hit = slots.filter(s => ids.indexOf(String(s)) !== -1);
+      if (hit.length) return hit;
+    }
+    if (typeof w.teamId === 'number') {
+      const hit = slots.filter(s => players[s] && players[s].teamId === w.teamId);
+      if (hit.length) return hit;
+    }
+    if (typeof w.playerId === 'number' && players[String(w.playerId)]) {
+      return [String(w.playerId)];
+    }
+    return [];
+  };
+
   window.UIBits = {
     RACE,
+    winnerSlots,
     RACE_SHORT,
     node,
     fmtDur,

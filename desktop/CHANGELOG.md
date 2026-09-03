@@ -1,5 +1,63 @@
 # WC3V Desktop: changelog
 
+## 1.0.11 — 2 Sep 2026
+
+### Wins and losses were sometimes backwards
+
+Some games showed a defeat you had won. WC3V read the result the way most
+replay tools do, and that reading has two rules in it that both name the
+*loser* in a replay saved by the person who lost: one treats "this client
+wrote the file" as "this client won", and the other hands the game to
+whoever left last, which is only true in the winner's copy.
+
+Every seat's leave record actually states its own result, so that is what
+gets read now, and only when the seats agree. When they do not, the game
+says "Could not tell who won" instead of guessing. Graded against 220 games
+with a known winner.
+
+Results also work for team games, FFA and melee games played in a custom
+lobby, which had no result at all before.
+
+### Your games were being skipped
+
+"Only parse 1v1 games" was skipping nearly everything. WC3V was counting the
+Neutral Player as a third player on a third team, so almost every game read
+as an FFA and the filter dropped it — including the 1v1s it was supposed to
+keep. If two games against the same opponent showed up as one, this is why.
+
+`LastReplay.w3g` is read now when nothing else recorded that game. It was
+always skipped as a duplicate of the autosave, which is wrong if you have
+autosaves off or the Autosaved folder switched off: it was the only copy of
+the match you had just played.
+
+A game whose parse breaks part-way keeps its result, its length and its
+players instead of losing all three.
+
+### It stops looking like it has stopped
+
+With a few thousand replays the window sat on a loading panel long enough to
+look frozen, and reading a whole history could stall on one bad replay and
+never finish. The feed now fills in as it reads, with a count; a replay that
+takes too long is given up on and the rest carry on; and files too large to
+read are skipped rather than taking the window down with them. Opening the
+app and ticking folders no longer freezes it while it walks your disk.
+
+Under the feed's filters is a line saying what is on disk but not in the
+list, and why: not read yet, folder switched off, the 1v1 filter, or the read
+failed — with the reason and a button to read them.
+
+### Untick everything at once
+
+One switch above the folder tree, on the setup screen and in Settings. Ticking
+or unticking a folder is one operation now instead of one per row.
+
+### More than one account
+
+Add your other Battle.net accounts under "You" and their games count as
+yours: one record, one head-to-head, one Coach. A smurf, a race account or a
+second region no longer splits your history in half.
+
+
 ## 1.0.10 — 2 Sep 2026
 
 ### Setup again, with the pieces that were missing

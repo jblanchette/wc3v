@@ -259,8 +259,25 @@
       });
     };
 
+    // Every name that is you. The first is the primary — what the app bar and
+    // the overlay display — and the rest are the other accounts. Plenty of
+    // people play on several: a main, a smurf, a race account, a second
+    // region. They are one player's history, so a game is theirs if any of the
+    // names is in it.
+    //
+    // Stored as its own key beside the old single-name one, which stays the
+    // source of truth for the primary. An install that has never added a
+    // second account is byte-for-byte where it was.
+    const readAlts = () => {
+      try {
+        const raw = JSON.parse(localStorage.getItem('wc3v-user-alts') || '[]');
+        return Array.isArray(raw) ? raw.map(x => String(x || '').trim()).filter(Boolean) : [];
+      } catch (e) { return []; }
+    };
+
     const st = {
       userName: localStorage.getItem('wc3v-user-name') || null,
+      altNames: readAlts(),
       session: [],    // summaries of live games, in arrival order
       lastGame: null, // summary shown in the game panel (live only, or boot seed)
       scout: null,    // the live opponent, from scout.js, while a match is on
@@ -278,13 +295,26 @@
       cast: readCast()
     };
 
+    // Primary first, then the other accounts. Empty when nobody is set.
+    const allNames = () => {
+      const out = [];
+      if (st.userName) out.push(st.userName);
+      for (const n of st.altNames) if (n) out.push(n);
+      return out;
+    };
+    const saveAlts = () => {
+      try { localStorage.setItem('wc3v-user-alts', JSON.stringify(st.altNames)); }
+      catch (e) { /* storage full or blocked; the names hold for this session */ }
+    };
+
     // Orient a summary from the profile player's seat. When they are not in
     // the game at all, from observing or a smurf name, fall back to the first
     // seat so the overlay still shows it, with an 'unknown' verdict.
     const viewFor = (summary) => {
       if (!summary) return null;
-      if (st.userName) {
-        const v = PA.gameView(summary, PA.normName(st.userName));
+      const mine = allNames();
+      if (mine.length) {
+        const v = PA.gameView(summary, mine);
         if (v) { v.mine = true; return v; }
       }
       const firstSlot = Object.keys(summary.players || {})[0];
@@ -347,14 +377,14 @@
       const corpus = deps.corpus && deps.corpus();
       if (!corpus || !corpus.length) return null;
 
-      const meKey = PA.normName(st.userName);
+      const meKeys = PA.identityKeys(allNames());
       const oppKey = PA.normName(v.opponent.name);
       let wins = 0;
       let losses = 0;
       let games = 0;
       for (const g of corpus) {
         const names = Object.values(g.players || {}).map(p => PA.normName(p.name));
-        if (names.indexOf(meKey) === -1 || names.indexOf(oppKey) === -1) continue;
+        if (!meKeys.some(k => names.indexOf(k) !== -1) || names.indexOf(oppKey) === -1) continue;
         games++;
         const mine = PA.gameView(g, meKey);
         if (mine && mine.result === 'win') wins++;
@@ -435,14 +465,14 @@
 
       const corpus = (deps.corpus && deps.corpus()) || null;
       const mine = (corpus && corpus.length)
-        ? PA.baseline(corpus, st.userName, { matchup: v.matchup, excludeKey: summary.key })
+        ? PA.baseline(corpus, allNames(), { matchup: v.matchup, excludeKey: summary.key })
         : null;
       // The race of the seat being measured, benchmarked against the OTHER
       // players of that race in this corpus. See ProfileAggregate.raceBaseline
       // for why it is the people you played rather than a published average.
       const race = window.RaceBaselines
         ? window.RaceBaselines.resolve(corpus, m.race,
-          { excludeName: st.userName, excludeKey: summary.key })
+          { excludeName: allNames(), excludeKey: summary.key })
         : null;
 
       const pick = (b, key) => {
@@ -668,7 +698,7 @@
     const trendSummary = () => {
       const corpus = deps.corpus && deps.corpus();
       if (!corpus || !corpus.length || !st.userName) return null;
-      const profile = PA.buildProfile(corpus, st.userName);
+      const profile = PA.buildProfile(corpus, allNames());
       if (!profile.games) return null;
 
       const recentForm = profile.recentForm.n >= 6 ? profile.recentForm : null;
@@ -1125,11 +1155,41 @@
         publish();
       },
       setUserName (name) {
-        st.userName = (name || '').trim() || null;
-        if (st.userName) localStorage.setItem('wc3v-user-name', st.userName);
+        const next = (name || '').trim() || null;
+        st.userName = next;
+        if (next) localStorage.setItem('wc3v-user-name', next);
+        // Promoting one of your own accounts to primary must not leave it in
+        // the alt list as well, or every count that walks the names sees it
+        // twice.
+        st.altNames = st.altNames.filter(n => PA.normName(n) !== PA.normName(next));
+        saveAlts();
         publish();
       },
       get userName () { return st.userName; },
+      // Every account that is you, primary first.
+      get userNames () { return allNames(); },
+      get altNames () { return st.altNames.slice(); },
+      // Add or drop a second account. Adding the primary again is a no-op
+      // rather than a duplicate.
+      addAltName (name) {
+        const n = String(name || '').trim();
+        if (!n) return false;
+        const key = PA.normName(n);
+        if (!key || allNames().some(x => PA.normName(x) === key)) return false;
+        st.altNames.push(n);
+        saveAlts();
+        publish();
+        return true;
+      },
+      removeAltName (name) {
+        const key = PA.normName(name);
+        const before = st.altNames.length;
+        st.altNames = st.altNames.filter(n => PA.normName(n) !== key);
+        if (st.altNames.length === before) return false;
+        saveAlts();
+        publish();
+        return true;
+      },
       // Names in the most recent game, for the "which one are you" prompt.
       get lastGameCandidates () { return candidatesIn(st.lastGame); }
     };

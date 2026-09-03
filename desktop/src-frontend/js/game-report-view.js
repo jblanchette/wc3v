@@ -140,6 +140,12 @@
       // measured over the repo corpus and both are dead. Dominance is a share of
       // 100 between two players, so any population average of it is 50 by
       // construction. Effective APM belongs to the bracket, not the race.
+      // Every account that is you, so a game played on a second one still
+      // scores against the same history. `identityNames` is the list;
+      // `identityName` remains the single name for anything that prints one.
+      const mine = () => (o.identityNames && o.identityNames.length)
+        ? o.identityNames : [o.identityName].filter(Boolean);
+
       const benchCell = (baseline, key) => {
         const cell = baseline && baseline[key];
         return (cell && cell.n >= MIN_BENCH_N && cell.median !== null) ? cell.median : null;
@@ -160,14 +166,14 @@
         const m = GM.forSeat(summary, seat);
         if (!m) return null;
 
-        const v = PA().gameView(summary, PA().normName(o.identityName));
-        const mine = corpus
-          ? PA().baseline(corpus, o.identityName,
+        const v = PA().gameView(summary, mine());
+        const base = corpus
+          ? PA().baseline(corpus, mine(),
             { matchup: v && v.matchup, excludeKey: summary.key })
           : null;
         const race = window.RaceBaselines
           ? window.RaceBaselines.resolve(corpus, m.race,
-            { excludeName: o.identityName, excludeKey: summary.key })
+            { excludeName: mine(), excludeKey: summary.key })
           : null;
 
         const rows = [];
@@ -178,7 +184,7 @@
           // absent before v3. An empty row would read as a zero.
           if (value === null || value === undefined) continue;
 
-          const you = benchCell(mine, spec.key);
+          const you = benchCell(base, spec.key);
           const theirs = benchCell(race, spec.key);
 
           const row = node('div', 'gb-row');
@@ -225,20 +231,20 @@
       const h2hData = (v) => {
         if (symmetric || !v || !v.opponent || !corpus) return null;
 
-        const meKey = PA().normName(o.identityName);
+        const meKeys = PA().identityKeys(mine());
         const oppKey = PA().normName(v.opponent.name);
         const shared = corpus.filter(g => {
           const names = Object.values(g.players || {}).map(p => PA().normName(p.name));
-          return names.indexOf(meKey) !== -1 && names.indexOf(oppKey) !== -1;
+          return meKeys.some(k => names.indexOf(k) !== -1) && names.indexOf(oppKey) !== -1;
         });
         if (shared.length < 2) return null;   // one game is not a head-to-head
 
         let wins = 0;
         let losses = 0;
         for (const g of shared) {
-          const mine = PA().gameView(g, meKey);
-          if (mine && mine.result === 'win') wins++;
-          else if (mine && mine.result === 'loss') losses++;
+          const seat = PA().gameView(g, meKeys);
+          if (seat && seat.result === 'win') wins++;
+          else if (seat && seat.result === 'loss') losses++;
         }
         return { games: shared.length, wins, losses };
       };
@@ -327,15 +333,18 @@
         const head = node('div', 'ov-claim');
 
         const slots = Object.keys(summary.players || {});
-        const v = symmetric ? null : PA().gameView(summary, PA().normName(o.identityName));
+        const v = symmetric ? null : PA().gameView(summary, mine());
         const h2h = h2hData(v);
 
         if (symmetric) {
           // Somebody else's game. The result is a fact about two strangers, so
           // it is stated as one beating the other rather than as a Victory,
           // which is a word about the reader.
-          const winSlot = (summary.winner && typeof summary.winner.playerId === 'number')
-            ? String(summary.winner.playerId) : null;
+          // Every seat on the winning team, not just the one the verdict
+          // happened to name first. computeWinner answers with a team now, so
+          // a 2v2 marks both of its winners rather than one of them.
+          const winSlots = U().winnerSlots(summary);
+          const winSlot = winSlots.length === 1 ? winSlots[0] : null;
           const winner = winSlot && summary.players[winSlot];
           // "A beat B" is a two-seat sentence. With six seats, "the loser" is
           // whichever of the other five sorts first, and the line would state
@@ -379,13 +388,24 @@
           // was the loudest thing on a screen it explained nothing about.
           const result = v && v.result ? v.result : 'none';
           let unresolved = null;
-          if (!o.identityName) unresolved = 'Tell WC3V who you are to score this';
-          else if (summary.gameMode === '1v1') unresolved = 'Could not tell who won';
+          if (!mine().length) unresolved = 'Tell WC3V who you are to score this';
+          else if (v) unresolved = 'Could not tell who won';
+
+          // A verdict the replay only half-supports says so. `high` is a seat
+          // that stated it won; `medium` is every other team accounted for as
+          // beaten with nobody claiming. Anything less is not published at all
+          // (helpers/utils.js computeWinner), so there is no third case here.
+          const conf = v && v.resultConfidence;
 
           if (result !== 'none' || unresolved) {
             const word = node('span', 'verdict-word',
               result === 'win' ? 'Victory' : result === 'loss' ? 'Defeat' : unresolved);
             word.dataset.v = result;
+            if (result !== 'none' && conf && conf !== 'high') {
+              word.title = 'Worked out from who left the game, not from a seat ' +
+                'saying it won. The replay does not state this one outright.';
+              word.dataset.conf = conf;
+            }
             head.appendChild(word);
           }
 

@@ -60,11 +60,27 @@
 
   // Everything downstream (profile buckets, overlay, session tracker) shares
   // this one extraction, so "did I win" can never disagree between features.
-  function gameView (summary, nameLower) {
+  // `who` is one normalised name or a list of them. A list is somebody with
+  // more than one Battle.net account: they are one player across all of them,
+  // so a game is theirs if ANY of the names is in it. Every caller that used
+  // to pass normName(x) still can.
+  function identityKeys (who) {
+    const list = Array.isArray(who) ? who : [who];
+    const out = [];
+    for (const n of list) {
+      const k = normName(n);
+      if (k && out.indexOf(k) === -1) out.push(k);
+    }
+    return out;
+  }
+
+  function gameView (summary, who) {
+    const keys = identityKeys(who);
+    if (!keys.length) return null;
     const players = summary.players || {};
     let slot = null;
     for (const k of Object.keys(players)) {
-      if (normName(players[k].name) === nameLower) { slot = k; break; }
+      if (keys.indexOf(normName(players[k].name)) !== -1) { slot = k; break; }
     }
     if (slot === null) return null;
 
@@ -78,11 +94,26 @@
       }
     }
 
-    // winner.playerId is the winning SLOT; only computed for 1v1. A missing
-    // winner on a 1v1 means "couldn't tell", never "draw".
+    // The result, for EVERY mode. It used to be 1v1-only and matched on
+    // winner.playerId alone, so a 2v2 or an FFA had no result and a team game's
+    // other seats would have read as losses if it had.
+    //
+    // Match on the TEAM. helpers/utils.computeWinner names a winning team and
+    // every seat on it; the seat it happens to name first is just a convenience
+    // for callers that want one. A missing winner is "could not tell", never a
+    // loss and never a draw — the verdict is only published when the replay's
+    // own leave records agreed, so there is no guess to be inherited here.
     let result = null;
-    if (is1v1 && summary.winner && typeof summary.winner.playerId === 'number') {
-      result = summary.winner.playerId === +slot ? 'win' : 'loss';
+    const w = summary.winner;
+    if (w) {
+      const myTeam = me && me.teamId;
+      if (Array.isArray(w.playerIds) && w.playerIds.length) {
+        result = w.playerIds.some(pid => String(pid) === String(slot)) ? 'win' : 'loss';
+      } else if (typeof w.teamId === 'number' && myTeam !== undefined && myTeam !== null) {
+        result = w.teamId === myTeam ? 'win' : 'loss';
+      } else if (typeof w.playerId === 'number') {
+        result = w.playerId === +slot ? 'win' : 'loss';
+      }
     }
 
     // Every scalar comes from GameMetrics. Workers at 5:00 was computed inline
@@ -166,10 +197,12 @@
   const winRate = (b) => pct(b.wins, b.wins + b.losses);
 
   function buildProfile (games, name) {
-    const nameLower = normName(name);
+    // One name or a list of them, same as gameView: somebody with several
+    // accounts has one history across all of them.
+    const keys = identityKeys(name);
     const views = [];
     for (const g of games) {
-      const v = gameView(g, nameLower);
+      const v = gameView(g, keys);
       if (v) views.push(v);
     }
     views.sort((a, b) => (a.playedAt || 0) - (b.playedAt || 0));
@@ -183,7 +216,9 @@
     const split = () => ({ win: [], loss: [] });
     const timing = { t2: split(), expansion: split(), firstTower: split(), workersAt5m: split() };
     const expand = { with: bucket(), without: bucket() };
-    let displayName = name;
+    // The name to print. With a list of accounts that is the first one, and
+    // whichever seat the newest game was played on overwrites it below.
+    let displayName = Array.isArray(name) ? (name[0] || '') : name;
 
     for (const v of views) {
       displayName = v.name || displayName;
@@ -443,13 +478,13 @@
 
   function baseline (games, name, opts) {
     const o = opts || {};
-    const nameLower = normName(name);
+    const keys = identityKeys(name);
     const windowSize = o.window || TREND_WINDOW;
 
     const views = [];
     for (const g of games || []) {
       if (o.excludeKey && g.key === o.excludeKey) continue;
-      const v = gameView(g, nameLower);
+      const v = gameView(g, keys);
       if (v) views.push(v);
     }
     views.sort((a, b) => (a.playedAt || 0) - (b.playedAt || 0));
@@ -518,7 +553,9 @@
   function raceBaseline (games, race, opts) {
     if (!race) return null;
     const o = opts || {};
-    const skip = o.excludeName ? normName(o.excludeName) : null;
+    // Every account belonging to the person being measured, so a second one
+    // of theirs is not quietly averaged into "other people of this race".
+    const skip = identityKeys(o.excludeName);
 
     const seats = [];
     for (const g of games || []) {
@@ -530,7 +567,7 @@
       for (const slot of Object.keys(g.players || {})) {
         const p = g.players[slot];
         if (p.race !== race) continue;
-        if (skip && normName(p.name) === skip) continue;
+        if (skip.indexOf(normName(p.name)) !== -1) continue;
         const m = gm().forSeat(g, slot);
         if (m) seats.push(m);
       }
@@ -664,7 +701,7 @@
 
   const api = {
     gameView, buildProfile, baseline, raceBaseline,
-    knownNames, detectPrimaryName, normName, fmtMs,
+    knownNames, detectPrimaryName, normName, identityKeys, fmtMs,
     MIN_RACE_N
   };
 

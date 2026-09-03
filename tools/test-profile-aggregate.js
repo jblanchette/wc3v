@@ -166,3 +166,76 @@ assert.strictEqual(oneWindow.trendDelta, null,
   'trendDelta claimed a change from a single window');
 
 console.log('ProfileAggregate: trend assertions passed');
+
+// ── Several accounts are one player ─────────────────────────────────────────
+//
+// A main, a smurf, a second region. gameView, buildProfile and baseline all
+// take a LIST of names now, and a game is yours if any of them is in it. The
+// arithmetic has to be the same as if every game had been played on one name.
+{
+  const alt = [];
+  for (let i = 0; i < 30; i++) {
+    const g = mkGame(i, { win: i % 3 !== 0, t2: 260000 });
+    // Half the history moves to a second account, seat and result untouched.
+    if (i % 2 === 0) g.players[1].name = 'Me#2222';
+    alt.push(g);
+  }
+
+  const one = PA.buildProfile(alt, 'Me');
+  const both = PA.buildProfile(alt, ['Me', 'Me#2222']);
+  assert.strictEqual(one.games, 15, 'one name sees only its own half');
+  assert.strictEqual(both.games, 30, 'both names see the whole history');
+  assert.strictEqual(both.wins + both.losses, 30, 'every game scored once');
+
+  // A game from either account resolves to the same seat and the same verdict.
+  const onAlt = alt.find(g => g.players[1].name === 'Me#2222');
+  assert.strictEqual(PA.gameView(onAlt, 'me'), null, 'the other name is not this seat');
+  const v = PA.gameView(onAlt, ['Me', 'Me#2222']);
+  assert.ok(v && v.slot === '1', 'the alt account resolves to the same seat');
+
+  // And the race baseline must not count your own second account as
+  // "other people playing this race".
+  const rb = PA.raceBaseline(alt, 'O', { excludeName: ['Me', 'Me#2222'] });
+  assert.ok(!rb || !rb.n, 'a second account of yours leaked into the race baseline');
+
+  console.log('ProfileAggregate: multi-account assertions passed');
+}
+
+// ── A result for every mode, from the winning TEAM ──────────────────────────
+//
+// The verdict used to be 1v1-only and matched on a single playerId, so a 2v2
+// had no result and would have called the winner's team-mate a loser.
+{
+  const team = {
+    key: 'team1',
+    playedAt: 1600000000000,
+    map: 'Turtle Rock',
+    gameMode: '2v2',
+    winner: { teamId: 1, playerId: 3, playerIds: [3, 4], method: 'seatFlag', confidence: 'high' },
+    durationMs: 900000,
+    players: {
+      1: { name: 'A', race: 'O', teamId: 0, economyTrack: [] },
+      2: { name: 'B', race: 'H', teamId: 0, economyTrack: [] },
+      3: { name: 'C', race: 'U', teamId: 1, economyTrack: [] },
+      4: { name: 'D', race: 'E', teamId: 1, economyTrack: [] }
+    }
+  };
+  assert.strictEqual(PA.gameView(team, 'c').result, 'win', 'the named winner won');
+  assert.strictEqual(PA.gameView(team, 'd').result, 'win', "so did the winner's team-mate");
+  assert.strictEqual(PA.gameView(team, 'a').result, 'loss', 'the other team lost');
+  assert.strictEqual(PA.gameView(team, 'b').result, 'loss');
+
+  // A summary written before playerIds existed still resolves, off the team.
+  const legacy = JSON.parse(JSON.stringify(team));
+  delete legacy.winner.playerIds;
+  assert.strictEqual(PA.gameView(legacy, 'd').result, 'win',
+    'an older summary falls back to the winning team id');
+
+  // No verdict is UNKNOWN, never a loss.
+  const unknown = JSON.parse(JSON.stringify(team));
+  unknown.winner = null;
+  assert.strictEqual(PA.gameView(unknown, 'a').result, null,
+    'a game with no verdict must not read as a defeat');
+
+  console.log('ProfileAggregate: team-result assertions passed');
+}

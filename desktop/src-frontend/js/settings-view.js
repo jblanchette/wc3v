@@ -23,7 +23,12 @@
       const line = el('folders-summary');
       if (line) line.textContent = deps.folders.summary();
     };
-    deps.folders.mount(el('folders'));
+    // Compact, like the first-run screen. Word buttons ("Rename", "Remove")
+    // beside a name and a count do not fit one line in a 430px sheet, so every
+    // root row wrapped to two and somebody with fifteen folders could see three
+    // of them at a time. The icons are the same controls with the same labels
+    // on hover and to a screen reader.
+    deps.folders.mount(el('folders'), { compact: true });
     renderRoots();
 
     const syncRetryButton = () => {

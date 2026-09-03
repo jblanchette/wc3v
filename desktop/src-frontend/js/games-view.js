@@ -32,6 +32,16 @@
     return d.toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
   };
 
+  // Parse-failure codes as a person would say them. The codes come from the
+  // parser (client/js/parser/parserEntry.js) and from the backfill's own
+  // watchdog; anything unrecognised prints as itself rather than vanishing.
+  const FAILURE_REASONS = {
+    missing_map: 'on a map WC3V does not know',
+    missing_map_cache: 'on a map whose data could not be downloaded',
+    timeout: 'took too long to read',
+    parse_error: 'unreadable'
+  };
+
   window.createGamesView = (deps) => {
     // deps: log, store, identityName(), onWatch(summary, moment),
     //       onReparse(summary), onGoToSettings(), onOpenProfile(name)
@@ -42,6 +52,13 @@
     let games = [];
     let activeKey = null;
 
+    // Every account that is you. `identityNames` is the multi-account list;
+    // `identityName` is the fallback for a harness that only wires one name.
+    const myNames = () => {
+      const list = deps.identityNames ? deps.identityNames() : null;
+      return (list && list.length) ? list : [deps.identityName()].filter(Boolean);
+    };
+
     // The user's own slot, or null when they were not in the game at all. A
     // downloaded replay, an observed game, a smurf name and an unset identity
     // all land here.
@@ -51,19 +68,18 @@
     // moment list say "Your Tier 2" directly under a header reading "You were
     // not in this game".
     const seatOf = (summary) => {
-      const me = deps.identityName();
-      if (!me) return null;
-      const key = PA().normName(me);
+      const keys = PA().identityKeys(myNames());
+      if (!keys.length) return null;
       for (const slot of Object.keys(summary.players || {})) {
-        if (PA().normName(summary.players[slot].name) === key) return slot;
+        if (keys.indexOf(PA().normName(summary.players[slot].name)) !== -1) return slot;
       }
       return null;
     };
 
     const viewOf = (summary) => {
-      const me = deps.identityName();
-      if (me) {
-        const v = PA().gameView(summary, PA().normName(me));
+      const mine = myNames();
+      if (mine.length) {
+        const v = PA().gameView(summary, mine);
         if (v) return v;
       }
       // Not our game. Show it from the first seat so it still renders, and
@@ -97,6 +113,10 @@
         feed.appendChild(feedRow(summary));
       }
     };
+
+    // Whether the open game is the one somebody clicked, rather than whichever
+    // game a repaint happened to open. Only a click sets it.
+    let pickedByHand = false;
 
     const render = (corpus) => {
       games = corpus || [];
@@ -133,8 +153,14 @@
 
       // Keep the current selection when it survives the filter. Otherwise open
       // the newest game, which is what somebody who just finished one wants.
-      const keep = activeKey && games.some(g => g.key === activeKey);
-      select(keep ? activeKey : games[0].key);
+      //
+      // "Survives" means the person put it there. The corpus now paints in
+      // batches as it loads off disk, and the batches arrive in store order
+      // rather than by date, so the first batch's newest game is very unlikely
+      // to be the newest game — and holding on to it would leave somebody
+      // looking at a game from March instead of the one they just played.
+      const keep = pickedByHand && activeKey && games.some(g => g.key === activeKey);
+      select(keep ? activeKey : games[0].key, { byHand: pickedByHand });
     };
 
     // ── Quick nav ───────────────────────────────────────────────────────────
@@ -211,7 +237,7 @@
 
         chip.title = `${mapName(summary)} · ${fmtDur(summary.durationMs)}${
           summary.playedAt ? ` · ${new Date(summary.playedAt).toLocaleString()}` : ''}`;
-        chip.addEventListener('click', () => select(summary.key));
+        chip.addEventListener('click', () => select(summary.key, { byHand: true }));
         bar.appendChild(chip);
       }
       syncQuickNavFade();
@@ -247,6 +273,7 @@
       render(deps.store.filterCorpus(allGames, {
         ...filters,
         identityName: deps.identityName(),
+        identityNames: myNames(),
         // Which folder a game came from is the folder module's to answer;
         // the store only compares paths it is handed.
         folderOf: deps.folders ? deps.folders.folderOf : null
@@ -399,19 +426,27 @@
         row.title = new Date(summary.playedAt).toLocaleString();
       }
 
-      row.addEventListener('click', () => select(summary.key));
+      row.addEventListener('click', () => select(summary.key, { byHand: true }));
       return row;
     };
 
-    const select = (key) => {
+    // `opts.byHand` is a click. Anything else is a repaint choosing for you,
+    // and the next repaint is free to choose again — see `pickedByHand`.
+    const select = (key, opts) => {
       activeKey = key;
+      if (opts && opts.byHand) pickedByHand = true;
       for (const n of document.querySelectorAll('.game, .qn-chip')) {
         n.classList.toggle('is-active', n.dataset.key === key);
       }
       // Picking a game is the reason the drawer was open, so it closes. A
       // drawer left up over the report you just asked to see would make the
       // click look like it did nothing.
-      if (drawerOpen) setDrawer(false);
+      //
+      // Only a CLICK, though. Every repaint runs through here — a keystroke in
+      // the search box, a folder switched, each batch of the corpus as it
+      // loads — and closing the drawer on those took the search box away from
+      // under the person typing in it.
+      if (drawerOpen && opts && opts.byHand) setDrawer(false);
       renderDetail(games.find(g => g.key === key) || null);
     };
 
@@ -622,7 +657,7 @@
           row.appendChild(main);
           // Opening one is a decision to look at the past, so the column
           // switches back with it.
-          row.addEventListener('click', () => { mode = 'last'; select(g.key); });
+          row.addEventListener('click', () => { mode = 'last'; select(g.key, { byHand: true }); });
           list.appendChild(row);
         }
       }
@@ -723,6 +758,7 @@
       mountedChart = window.GameReportView.render(host, summary, {
         seat: seatOf(summary),
         identityName: deps.identityName(),
+        identityNames: myNames(),
         corpus: deps.store.corpus,
         isStale: (s) => deps.store.isStale(s),
         onWatch: deps.onWatch,
@@ -766,6 +802,50 @@
       },
       select,
       showLoading,
+
+      // ── What is on disk but not in the list ─────────────────────────────
+      //
+      // "I played two games against him and only one is here" has to have an
+      // answer, and it always does: the folder is off, the 1v1 filter passed
+      // it over, the read failed, or nothing has read it yet. Silence made
+      // every one of those look like the app losing games.
+      //
+      // `stats` is { onDisk, parsed, failed, filtered1v1 }. onDisk counts only
+      // the folders that are switched on, because a game in a folder somebody
+      // turned off is not missing.
+      renderUnread (stats, onRead) {
+        const row = el('unread');
+        const text = el('unread-text');
+        const btn = el('unread-read');
+        if (!row || !stats) return;
+        const s = stats;
+        const unread = Math.max(0, (s.onDisk || 0) - (s.parsed || 0) - (s.failed || 0));
+        if (!unread && !s.failed) { row.hidden = true; return; }
+
+        const bits = [];
+        if (unread) {
+          bits.push(`${unread.toLocaleString()} replay${unread === 1 ? '' : 's'} ` +
+            'in your folders have not been read yet');
+        }
+        if (s.failed) {
+          // With the reasons, because "could not be read" is a dead end and
+          // "on a map WC3V has no data for" is not.
+          const why = Object.entries(s.reasons || {})
+            .sort((a, b) => b[1] - a[1])
+            .map(([code, n]) => `${n} ${FAILURE_REASONS[code] || code}`)
+            .join(', ');
+          bits.push(`${s.failed.toLocaleString()} could not be read` + (why ? ` (${why})` : ''));
+        }
+        if (s.filtered1v1) {
+          bits.push('the 1v1 filter is on, so team, FFA and custom games are skipped');
+        }
+        text.textContent = bits.join(' · ') + '.';
+        row.hidden = false;
+
+        btn.hidden = !unread || !onRead;
+        btn.onclick = onRead ? () => { btn.disabled = true; onRead(); } : null;
+        btn.disabled = false;
+      },
 
       // ── First-boot catch-up ─────────────────────────────────────────────
       //

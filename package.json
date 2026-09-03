@@ -23,7 +23,7 @@
 		"gen-fx-units": "node tools/gen-fx-units.js",
 		"desktop": "node tools/build-desktop-client.js --bundle-maps=ladder && cd desktop/src-tauri && cargo tauri dev",
 		"desktop:build": "node tools/version-check.js && node tools/build-desktop-client.js --bundle-maps=ladder && cd desktop/src-tauri && cargo tauri build",
-		"desktop:test": "node tools/version-check.js && node tools/test-profile-aggregate.js && node tools/test-game-metrics.js && node tools/test-backfill-catchup.js && node tools/test-backfill-1v1.js && node tools/test-identity-picker.js && node tools/test-release-policy.js && node tools/test-corpus-slim.js && node tools/lifecycle-sim.js && cargo test --manifest-path desktop/src-tauri/Cargo.toml --release",
+		"desktop:test": "node tools/version-check.js && node tools/test-match-outcome.js && node tools/test-profile-aggregate.js && node tools/test-game-metrics.js && node tools/test-backfill-catchup.js && node tools/test-backfill-1v1.js && node tools/test-identity-picker.js && node tools/test-release-policy.js && node tools/test-corpus-slim.js && node tools/peek-mode-check.js --limit=40 && node tools/lifecycle-sim.js && cargo test --manifest-path desktop/src-tauri/Cargo.toml --release",
 		"gen-item-names": "node tools/gen-item-names.js",
 		"check-item-names": "node tools/gen-item-names.js --check",
 		"check-version": "node tools/version-check.js",

@@ -35,7 +35,10 @@ const path = require('node:path');
 const vm = require('node:vm');
 
 const SRC = path.join(__dirname, '..', 'desktop', 'src-frontend', 'js', 'backfill.js');
-const sandbox = { window: {}, performance: { now: () => Date.now() } };
+// setTimeout/clearTimeout because the engine races every worker call
+// against a clock; without them every parse would reject here.
+const sandbox = { window: {}, performance: { now: () => Date.now() },
+  setTimeout, clearTimeout };
 vm.createContext(sandbox);
 vm.runInContext(fs.readFileSync(SRC, 'utf8'), sandbox, { filename: SRC });
 const createBackfill = sandbox.window.createBackfill;
@@ -196,6 +199,52 @@ const runToIdle = async (bf) => {
       'an engine built without the filter deps reads everything');
   }
 
+  // ── The watchdog: one hung replay must not wedge the queue ─────────────
+  //
+  // A worker that never answers used to leave the loop awaiting a promise
+  // nobody would settle. With both workers there, the history stopped being
+  // read — for that launch and every launch after it, which is what "the
+  // program stops loading" looks like from outside.
+  {
+    const h = harness({ scan: scanOf(['hang.w3g', 'a.w3g', 'c.w3g']) });
+    let terminated = 0;
+    h.deps.makeWorker = () => ({ terminate () { terminated++; } });
+    h.deps.parseOn = async (_w, p) => {
+      if (/hang/.test(p)) return new Promise(() => {});   // never settles
+      h.parsed.push(p);
+      return { fake: true };
+    };
+    h.deps.limits = { parseMs: 30, peekMs: 20 };
+    const bf = createBackfill(h.deps);
+    await bf.start({ onProgress: h.hooks.onProgress });
+    await runToIdle(bf);
+
+    const parsedNames = h.parsed.map(p => p.split(/[\\/]/).pop()).sort();
+    assert.deepStrictEqual(parsedNames, ['a.w3g', 'c.w3g'],
+      'the games after the hung one still get read');
+    assert.ok(h.progress.includes('hang.w3g:failed'), 'the hung game reports failed');
+    assert.deepStrictEqual(h.failuresSaved, ['key:C:\\r\\hang.w3g'],
+      'and is written off, so it is not retried on every restart');
+    assert.ok(terminated > 0, 'the hung worker is killed rather than reused');
+    assert.ok(/timed out/.test(h.status), `the timeout is surfaced (got "${h.status}")`);
+  }
+
+  // ── A replay too big to take into the webview ──────────────────────────
+  {
+    const scan = scanOf(['a.w3g', 'huge.w3g']);
+    scan.replays.find(r => r.file_name === 'huge.w3g').size = 400 * 1024 * 1024;
+    const h = harness({ scan });
+    const bf = createBackfill(h.deps);
+    await bf.start({ onProgress: h.hooks.onProgress });
+    await runToIdle(bf);
+
+    assert.deepStrictEqual(h.parsed.map(p => p.split(/[\\/]/).pop()), ['a.w3g'],
+      'the oversized replay is never read');
+    assert.strictEqual(h.failuresSaved.length, 0,
+      'and is not written off: nothing is wrong with it, so a later run may retry');
+    assert.ok(/too large/.test(h.status), `the size skip is surfaced (got "${h.status}")`);
+  }
+
   console.log('test-backfill-1v1: synthetic assertions passed');
 
   // ── The corpus pass: the same gate over real replays ───────────────────
@@ -252,6 +301,19 @@ const runToIdle = async (bf) => {
   }
   assert.strictEqual(parsedSet.size, kept1v1 + failedOpen,
     'nothing parsed outside the kept sets');
+
+  // The invariants above are all satisfied by a gate that drops EVERYTHING,
+  // and that is exactly what shipped: helpers/utils.playersFromSlots counted
+  // the Neutral Player's slot record (playerId 1042, team 1046) as a third
+  // seat on a third team, so computeGameMode answered 'ffa' for 973 of the 975
+  // games in the reference corpus and the filter removed somebody's entire
+  // history without a word. `replays/` is a corpus of 1v1 pro replays, so a
+  // number is the only thing that catches it.
+  const skipRate = dropped / files.length;
+  assert.ok(skipRate < 0.15,
+    `the 1v1 gate skipped ${(100 * skipRate).toFixed(1)}% of a corpus that is ` +
+    'almost entirely 1v1. The peek is misclassifying games, and every one of ' +
+    'them is a game somebody would never see. Run tools/peek-mode-check.js.');
 
   console.log(`test-backfill-1v1: corpus pass over ${files.length} real replays ` +
     `(${Math.round(peekMs / files.length)}ms per peek)`);

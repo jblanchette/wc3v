@@ -40,6 +40,13 @@
 
     const filters = { text: '', race: 'any', folder: '' };
 
+    // Every account that is you. `identityNames` is the multi-account list;
+    // `identityName` is the fallback for a harness that only wires one name.
+    const myNames = () => {
+      const list = deps.identityNames ? deps.identityNames() : null;
+      return (list && list.length) ? list : [deps.identityName()].filter(Boolean);
+    };
+
     // A game belongs here when no seat is yours. That is the whole rule: it
     // covers a downloaded pro replay, a game you observed, and a friend's
     // replay you were sent, without any of them needing to be marked.
@@ -48,11 +55,10 @@
     // history. That reads as the app losing your games. Empty is the honest
     // answer until the app knows who you are.
     const notMine = (summary) => {
-      const me = deps.identityName();
-      if (!me) return false;
-      const key = PA().normName(me);
+      const keys = PA().identityKeys(myNames());
+      if (!keys.length) return false;
       for (const slot of Object.keys(summary.players || {})) {
-        if (PA().normName(summary.players[slot].name) === key) return false;
+        if (keys.indexOf(PA().normName(summary.players[slot].name)) !== -1) return false;
       }
       return true;
     };
@@ -87,8 +93,8 @@
       btn.dataset.key = summary.key;
 
       const slots = Object.keys(summary.players || {});
-      const winSlot = (summary.winner && typeof summary.winner.playerId === 'number')
-        ? String(summary.winner.playerId) : null;
+      // Every winning seat, so a team game marks its whole side.
+      const winSlots = window.UIBits.winnerSlots(summary);
 
       const names = node('span', 'lib-names');
       slots.slice(0, 2).forEach((s, i) => {
@@ -96,7 +102,7 @@
         if (i) names.appendChild(node('i', null, 'v'));
         const cell = node('span', 'lib-name');
         if (p.race) cell.dataset.race = p.race;
-        if (winSlot && s === winSlot) cell.classList.add('is-winner');
+        if (winSlots.indexOf(String(s)) !== -1) cell.classList.add('is-winner');
         cell.appendChild(raceMark(p.race));
         cell.appendChild(node('b', null, p.name || '?'));
         names.appendChild(cell);
@@ -195,6 +201,7 @@
       mounted = window.GameReportView.render(host, summary, {
         seat: null,
         identityName: deps.identityName(),
+        identityNames: myNames(),
         corpus: deps.store.corpus,
         isStale: (s) => deps.store.isStale(s),
         onWatch: deps.onWatch,

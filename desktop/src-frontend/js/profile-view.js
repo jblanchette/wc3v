@@ -281,16 +281,21 @@
         showMessage('No games parsed yet. Parse your history in Settings.');
         return;
       }
-      const name = (rawName || '').trim() || deps.identityName() ||
-        ((PA().detectPrimaryName(corpus) || {}).name);
-      if (!name) {
+      // A typed name is one player. Your own book, with nothing typed, is
+      // every account you have set — one history rather than five thin ones.
+      const typed = (rawName || '').trim();
+      const mine = (deps.identityNames && deps.identityNames().length)
+        ? deps.identityNames() : [deps.identityName()].filter(Boolean);
+      const name = typed ||
+        (mine.length ? mine : ((PA().detectPrimaryName(corpus) || {}).name || ''));
+      if (!name || (Array.isArray(name) && !name.length)) {
         showMessage('Set your name up top, or type one to look up.');
         return;
       }
       if (mirrorInput) el('profile-name').value = rawName || '';
       const profile = PA().buildProfile(corpus, name);
       if (!profile.games) {
-        showMessage(`No games with "${name}" in your history.`);
+        showMessage(`No games with "${Array.isArray(name) ? name.join('", "') : name}" in your history.`);
         return;
       }
       render(profile);

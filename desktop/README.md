@@ -15,6 +15,39 @@ is any of them rendered for viewers.** One data model, four renderers. The tab
 is called Home because the column also shows the game you are about to play
 when W3Champions says there is one.
 
+## Who won
+
+Everything on every screen hangs off this, so it gets its own section.
+
+The only outcome evidence a `.w3g` carries is its LeaveGameBlocks, one per seat
+as it leaves. Each seat's `result` word is its own claim: `0x09` won, `0x07`
+and its neighbours did not, `0x01` is a disconnect and says nothing.
+`helpers/utils.js` `computeWinner` reads those, requires the seats to AGREE on
+one winning team, and publishes nothing otherwise. `null` means the replay did
+not say, and the report says so in those words.
+
+What it will not do is guess. Two rules shipped that did, both ports of
+w3gjs's `determineWinningTeam`, and both name the LOSER in a replay saved by
+the person who lost:
+
+- `reason === 0x0C` is "connection closed by the local game" — whose client
+  wrote the file, not who won. In a self-saved replay that is always the person
+  reading it.
+- the last leaver. True in the winner's copy of a ladder game, false in the
+  loser's, because their client stopped recording when they left.
+
+`node tools/winloss-audit.js` grades the live function against
+warcraft3.info's own recorded winner over every locally parsed game from the
+crawl (100% on the 69 with a human-entered winner; the two it disagrees with
+under `--detected` are games where the replay states the result outright and
+the site's own detector has it backwards). `tools/test-match-outcome.js` pins
+the cases the corpus does not contain.
+
+It runs for EVERY mode now, not 1v1 only, so a 2v2, an FFA and a melee game
+played in a custom lobby all have a result. The verdict names a winning team
+and every seat on it; `UIBits.winnerSlots` is the one place that turns it into
+slots.
+
 Home and Library mount the same report renderer (`js/game-report-view.js`);
 `seat: null` selects the symmetric presentation with no "you". The numbers are
 one shared module too: `client/js/GameMetrics.js` turns a stored summary and a
@@ -72,6 +105,34 @@ is a projection (`store.slimForCorpus`, an allowlist), which is what keeps a
 4,000-game history at 60 MB instead of 336; `tools/test-corpus-slim.js`
 proves the projection answers every question the feed and Coach ask.
 
+### Reading a library, without looking broken
+
+Two things about a big history are not optional at seven thousand games, and
+both of them looked like the app having stopped:
+
+**Nothing may wedge the queue.** `parseOn` and `peekOn` are promises a Web
+Worker settles, and a worker that hangs settles neither. Both backfill workers
+could end up there, and then the history stopped being read for that launch and
+every launch after it. Every worker call is raced against a clock now
+(`deps.limits`, overridable so the watchdog is testable without waiting four
+minutes); on a timeout the worker is killed, the game is written off so it is
+not retried forever, and the queue moves on. Replays over 64 MB are not taken
+into the webview at all — two long custom games in flight is how the renderer
+runs out of memory and takes the window with it.
+
+**The corpus load has to show its work.** It was one `read_parse` per stored
+game behind a static skeleton; at 7,000 games the round trips alone were most
+of a minute of a window that appeared to be doing nothing. `read_parses` reads
+them 200 at a time as one length-framed buffer, and `loadCorpus(onBatch)` paints
+the feed as it goes with a count under it.
+
+**And what is NOT in the list has to be sayable.** "I played two games and only
+one is here" always has an answer — the folder is off, the 1v1 filter passed it
+over, the read failed and why, or nothing has read it yet — and the feed states
+it above the rows (`gamesView.renderUnread`, `parse_failure_reasons`) with the
+button to fix it. Silence made every one of those look like the app losing
+games.
+
 The shape is `client/js/SummaryBuild.js`, shared with the preview harness.
 Beyond `SummaryExtract`'s per-player block it carries what exists only in a
 full parse: `moments` (ranked, capped at 24), per-player `combat` (the
@@ -116,6 +177,13 @@ the loose files, keep Autosaved › Multiplayer" two switches side by side.
 header (`folder_recent` for the listing, `peekPlayers` for players, map and
 length), with a "Read these games now" button that runs the catch-up engine
 over just those files (`backfill.start({ limit, only })`).
+
+Above the roots is one switch for the whole tree, indeterminate whenever the
+tree is mixed. With fifteen folders under `Replays` beside a second account,
+"none of it, then tick back the two I want" had no first move. Every multi-row
+flip — that switch, and a root's own — goes through `set_folders_enabled`: one
+config write, one tree rebuild, one watcher restart. A row at a time meant one
+full disk walk per row, with the checkbox disabled throughout.
 
 Nothing here touches the disk. A label is a label, off means the scanner
 skips the files directly inside (subfolders keep their own switch, and the UI
@@ -244,6 +312,14 @@ popover in the app bar, so changing your mind later looks exactly like
 choosing the first time. `tools/test-identity-picker.js` pins the folding
 and the matching.
 
+Under the cards is the list of your OTHER accounts. Plenty of people play on
+several — a main, a smurf, a race account, a second region — and they are one
+person's history, so a game counts as yours if any of the names is in it.
+`ProfileAggregate.gameView`, `buildProfile` and `baseline` all take one name
+or a list; `identityKeys` is the fold. The primary is still the one name that
+gets printed, and it is the only one W3Champions is polled for, because that
+API is per-tag and five accounts would be five times the requests.
+
 Step 4 is one choice: only new games from here on, or also read the
 replays on disk in the background. A 500+ replay library adds the 1v1
 filter, pre-checked.
@@ -342,7 +418,10 @@ node tools/report-shots.js --pages=preview-mix.html --audit-only
 ```
 
 `report-shots.js` walks every game, every tab and every chart mode at both
-sizes; a non-empty audit exits 1. Two `.detail-col`s exist since the Library
+sizes; a non-empty audit exits 1. It only ever opens the REPORT, so everything
+around it — Settings, the folder tree, the "You" popover, the unread line — used
+to ship unseen. `node tools/desktop-ui-shots.js` (and `--setup` for the
+first-run screen) opens each of those and shoots it. Two `.detail-col`s exist since the Library
 landed, so anything querying one must skip the hidden one
 (`offsetParent === null`). Audit every game, not one: the frame changes shape
 with whether you were in it, which chart modes have data, and whether the team
@@ -420,14 +499,14 @@ because Render types `.ps1` as octet-stream.
 
 ## Traps that have already bitten this
 
-- **Tauri runs sync commands on the main thread.** Make a slow one `async` and use `spawn_blocking`.
+- **Tauri runs sync commands on the main thread.** Make a slow one `async` and use `spawn_blocking`. Every folder command was sync, and each one rebuilds the tree by walking every root on disk — so on a 7,000-replay library the window froze for a full disk walk at boot and again on every folder ticked. A frozen window at boot is indistinguishable from an app that will not start.
 - **Tauri v2 does not expose `window.__TAURI__`** unless `withGlobalTauri` is true, and plugin commands need explicit capability grants.
 - **Byte-returning commands use `tauri::ipc::Response`**, not `Vec<u8>`.
 - **Editing an `include_str!`'d file while a build runs ships the old one.** `overlay.rs` compiles the handoff and overlay files into the binary.
 - **Rebuild the parser bundle** after any `lib/` or `helpers/` change. `tools/verify-bundle-parity.js --fast` proves option passthrough.
 - **`rclone copyto` to R2 needs `--s3-no-check-bucket`**, or an object-scoped token fails with "AccessDenied: CreateBucket".
 - **Never enable reqwest's `gzip` feature.** The CDN stores `.json.gz` with `Content-Encoding: gzip`; a transparently decompressing client writes plain JSON under a `.gz` name.
-- **`LastReplay.w3g` is not byte-identical to its autosave.** The watcher holds it for a 30 s grace window; the backfill filters it out.
+- **`LastReplay.w3g` is not byte-identical to its autosave**, so no content hash collapses them. The watcher holds it for a 30 s grace window. The backfill drops it only when another replay in the queue was written within five minutes of it: with autosaves off, or `Autosaved` switched off in the tree, it is the ONLY copy of the game somebody just played, and dropping the name outright meant that game never appeared.
 - **`heroBuilds` carries Mirror Image illusions as extra level-1 heroes.** Go through `BuildCard.heroesOf`.
 - **`itemPurchases` has no category.** Kept versus spent comes from `js/item-classes.js`, generated from `helpers/mappings.js` by `tools/build-item-classes.js`.
 - **A grading constant that has not been run over the corpus is a guess.** Every first-pass threshold in the deleted `GameReport.js` was too eager in the same direction.

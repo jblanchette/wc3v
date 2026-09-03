@@ -25,11 +25,63 @@
 
   const WORKERS = 2;
 
+  // ── The queue must never wedge ────────────────────────────────────────────
+  //
+  // `parseOn` and `peekOn` are promises a Web Worker settles. A worker that
+  // hangs — a replay whose action stream sends the simulator into a loop, a
+  // file the game still has open, a parse that eats the tab's memory — settles
+  // neither, and the loop `await`s it forever. Both backfill workers can end up
+  // there, and then the app is reading a history that will never finish: the
+  // status line freezes mid-count and nothing else happens, for the rest of
+  // that launch and every launch after it.
+  //
+  // So every worker call is raced against a clock. On a timeout the worker is
+  // killed (a hung one cannot be reused), the game is written off as a failure
+  // so it is not retried on every restart, and the queue moves on. A bounded
+  // failure for one game beats an unbounded one for the library.
+  //
+  // The parse budget is generous on purpose. Measured end-to-end this engine
+  // runs a few seconds a game in fast profile mode; four minutes is far past
+  // anything normal and still bounded. Both are overridable per instance
+  // (`deps.limits`), so the watchdog is testable without a test that waits
+  // four minutes to find out.
+  const PARSE_TIMEOUT_MS = 4 * 60 * 1000;
+  const PEEK_TIMEOUT_MS = 20 * 1000;
+
+  // A replay is read into the webview whole before it is parsed. Ladder games
+  // are under a megabyte; the sizes that reach hundreds are long custom games
+  // with a dozen players, and two of those in flight at once is how the
+  // renderer runs out of memory and takes the window with it. Above this the
+  // game is reported as unreadable rather than attempted.
+  const MAX_REPLAY_BYTES = 64 * 1024 * 1024;
+
+  const timeoutError = (what, ms) => {
+    const e = new Error(`${what} took longer than ${Math.round(ms / 1000)}s and was stopped`);
+    e.code = 'timeout';
+    return e;
+  };
+
+  // Race `p` against the clock. The caller kills the worker on a rejection with
+  // code 'timeout'; there is no way to cancel a Worker's current task.
+  const withTimeout = (p, ms, what) => {
+    let timer = 0;
+    return Promise.race([
+      p.then((v) => { clearTimeout(timer); return v; },
+        (e) => { clearTimeout(timer); throw e; }),
+      new Promise((_, reject) => { timer = setTimeout(() => reject(timeoutError(what, ms)), ms); })
+    ]);
+  };
+
   window.createBackfill = (deps) => {
     // deps: invoke, log, makeWorker, parseOn(worker, path), persistSummary(out, key),
     //       isCurrent(key), status(text), onIdleChange(running),
     //       progress(done, total) [optional],
-    //       peekOn(worker, path) + only1v1() [optional; the 1v1 filter]
+    //       peekOn(worker, path) + only1v1() [optional; the 1v1 filter],
+    //       limits { parseMs, peekMs, maxBytes } [optional; tests only]
+    const LIMIT = Object.assign(
+      { parseMs: PARSE_TIMEOUT_MS, peekMs: PEEK_TIMEOUT_MS, maxBytes: MAX_REPLAY_BYTES },
+      (deps && deps.limits) || {});
+
     const st = {
       running: false,
       queue: [],
@@ -89,6 +141,8 @@
       if (c.filtered) line += ` · ${c.filtered.toLocaleString()} not 1v1`;
       if (c.failed) line += ` · ${c.failed.toLocaleString()} failed`;
       if (c.unreadable) line += ` · ${c.unreadable.toLocaleString()} unreadable`;
+      if (c.timedOut) line += ` · ${c.timedOut.toLocaleString()} timed out`;
+      if (c.tooBig) line += ` · ${c.tooBig.toLocaleString()} too large`;
       if (st.durations.length >= 5) {
         const per = median(st.durations);
         line += ` · ${(per / 1000).toFixed(1)} s/replay`;
@@ -131,6 +185,18 @@
             update();
             continue;
           }
+          // Too big to take into the webview at all. Counted as unreadable
+          // rather than failed, because nothing about the replay is known to be
+          // wrong — it is this app that will not read it — and unreadable games
+          // are retried on the next run rather than marked off for good.
+          if (item.size > LIMIT.maxBytes) {
+            st.counts.unreadable++;
+            st.counts.tooBig++;
+            report(item.file_name, 'failed');
+            update();
+            continue;
+          }
+
           if (w._dead) w = deps.makeWorker();
 
           // The 1v1 gate. A header peek (~140ms) against a ~21s parse, and it
@@ -145,9 +211,14 @@
           if (st.only1v1) {
             let mode = null;
             try {
-              const peek = await deps.peekOn(w, item.path);
+              const peek = await withTimeout(
+                deps.peekOn(w, item.path), LIMIT.peekMs, 'reading the replay header');
               mode = peek && peek.gameMode;
-            } catch (e) { /* unreadable header; the full parse decides */ }
+            } catch (e) {
+              // Unreadable header; the full parse decides. A worker that timed
+              // out is gone, though — nothing can be sent to it again.
+              if (e && e.code === 'timeout') { w.terminate(); w._dead = true; w = deps.makeWorker(); }
+            }
             if (mode && mode !== '1v1') {
               st.claimed.add(key);
               st.counts.filtered++;
@@ -161,7 +232,8 @@
           report(item.file_name, 'parsing');
           const t0 = performance.now();
           try {
-            const out = await deps.parseOn(w, item.path);
+            const out = await withTimeout(
+              deps.parseOn(w, item.path), LIMIT.parseMs, 'reading this game');
             // The path rides along so the caller can record which folder the
             // game came from; the summary itself never carries one.
             await deps.persistSummary(out, key, playedAt, item.path);
@@ -170,6 +242,14 @@
             if (st.durations.length > 20) st.durations.shift();
             report(item.file_name, 'done', key);
           } catch (err) {
+            // A worker that ran past its budget is still busy with the replay
+            // that beat it. It cannot be handed the next one.
+            if (err && err.code === 'timeout') {
+              w.terminate();
+              w._dead = true;
+              w = deps.makeWorker();
+              st.counts.timedOut++;
+            }
             st.counts.failed++;
             st.failedKeys.add(key);
             report(item.file_name, 'failed');
@@ -234,8 +314,21 @@
             'ok'
           );
         }
+        // Games that went past the watchdog or were too big to take in. Both
+        // are ways for a game to be missing from the feed, so the closing line
+        // names them rather than folding them into "failed".
+        if (c.timedOut || c.tooBig) {
+          deps.log(
+            [c.timedOut ? `${c.timedOut.toLocaleString()} game(s) took too long to read and were stopped` : '',
+              c.tooBig ? `${c.tooBig.toLocaleString()} replay file(s) were too large to read` : '']
+              .filter(Boolean).join('. ') + '.',
+            'warn'
+          );
+        }
         deps.status(`done: ${c.parsed.toLocaleString()} parsed, ` +
           (c.filtered ? `${c.filtered.toLocaleString()} not 1v1, ` : '') +
+          (c.timedOut ? `${c.timedOut.toLocaleString()} timed out, ` : '') +
+          (c.tooBig ? `${c.tooBig.toLocaleString()} too large, ` : '') +
           `${c.failed.toLocaleString()} failed`);
       } else {
         deps.status(`paused at ${processed().toLocaleString()} / ${c.total.toLocaleString()}. Safe to close; it resumes here.`);
@@ -266,10 +359,27 @@
       if (deps.only1v1) {
         try { st.only1v1 = !!(await deps.only1v1()); } catch (e) { /* off */ }
       }
-      // LastReplay.w3g is a second encoding of a game whose autosave is also
-      // in the queue. Parsing it would double-count that game in the profile.
-      st.queue = replays.filter(r =>
-        r.interesting && !/^lastreplay\.w3g$/i.test(r.file_name));
+      // LastReplay.w3g, and when it is the only copy of a game.
+      //
+      // The game writes each match to `Autosaved\Multiplayer\Replay_<stamp>.w3g`
+      // AND to `LastReplay.w3g`, and the two are not byte-identical, so the
+      // content hash can never collapse them. Dropping the name outright was
+      // the fix for double-counting — and it is wrong whenever the twin is not
+      // there to be counted: somebody with autosaves off, or with the Autosaved
+      // folder switched off in the tree, has LastReplay.w3g as the ONLY record
+      // of the game they just played, and the app was refusing to read it.
+      //
+      // The twin lands within seconds of it, so the mtimes are the cheap test:
+      // it is a duplicate when another replay in the queue was written around
+      // the same time, and the only copy when nothing was. The scan already
+      // carries mtimes, so this costs no reads.
+      const LAST_REPLAY_TWIN_MS = 5 * 60 * 1000;
+      const playable = replays.filter(r => r.interesting);
+      const isLastReplay = (r) => /^lastreplay\.w3g$/i.test(r.file_name);
+      const others = playable.filter(r => !isLastReplay(r));
+      const hasTwin = (r) => others.some(o =>
+        Math.abs((o.modified_ms || 0) - (r.modified_ms || 0)) <= LAST_REPLAY_TWIN_MS);
+      st.queue = playable.filter(r => !isLastReplay(r) || !hasTwin(r));
       // `only` narrows the queue before the limit is taken: "the newest five
       // in THIS folder" from the tree row, rather than the newest five
       // anywhere. A filter that throws is treated as matching nothing.
@@ -281,7 +391,8 @@
       // Newest first is already the scan's order, so a limit is a slice.
       if (o.limit) st.queue = st.queue.slice(0, o.limit);
       st.claimed = new Set();
-      st.counts = { total: st.queue.length, parsed: 0, skipped: 0, failed: 0, unreadable: 0, filtered: 0 };
+      st.counts = { total: st.queue.length, parsed: 0, skipped: 0, failed: 0,
+        unreadable: 0, filtered: 0, timedOut: 0, tooBig: 0 };
       st.durations = [];
       st.startedAt = performance.now();
 

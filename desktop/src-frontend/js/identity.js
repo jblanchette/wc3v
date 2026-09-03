@@ -90,12 +90,48 @@
       };
     };
 
+    // The other accounts, under the cards. One row each, with the way out.
+    const renderAlts = () => {
+      const host = el('alt-list');
+      if (!host) return;
+      const alts = deps.overlayState.altNames;
+      host.innerHTML = '';
+      if (!alts.length) {
+        const empty = document.createElement('p');
+        empty.className = 'hint';
+        empty.textContent = 'Add a smurf, a second region or a race account and its games count as yours.';
+        host.appendChild(empty);
+        return;
+      }
+      for (const name of alts) {
+        const row = document.createElement('div');
+        row.className = 'alt-row';
+        const label = document.createElement('span');
+        label.className = 'alt-name';
+        label.textContent = name;
+        row.appendChild(label);
+        const drop = document.createElement('button');
+        drop.type = 'button';
+        drop.className = 'btn btn-sm';
+        drop.textContent = 'Remove';
+        drop.title = 'Stop counting this account as you. Nothing is deleted.';
+        drop.addEventListener('click', () => {
+          deps.overlayState.removeAltName(name);
+          render();
+          if (deps.onChange) deps.onChange(deps.overlayState.userName);
+        });
+        row.appendChild(drop);
+        host.appendChild(row);
+      }
+    };
+
     const render = () => {
       const known = deps.overlayState.userName;
       el('identity-name').textContent = known || 'not set';
       el('identity-btn').dataset.set = known ? '1' : '0';
       // The cards mark whichever name is current, wherever it was set.
       deps.picker.redraw();
+      renderAlts();
     };
 
     let pickerShown = false;
@@ -119,6 +155,27 @@
     el('identity-btn').addEventListener('click', () => {
       if (el('identity-pop').hidden) open(); else close();
     });
+
+    const addTyped = () => {
+      const field = el('alt-input');
+      if (!field) return;
+      const name = field.value.trim();
+      if (!name) return;
+      if (deps.overlayState.addAltName(name)) {
+        field.value = '';
+        render();
+        if (deps.onChange) deps.onChange(deps.overlayState.userName);
+        deps.log(`${name} counts as you now`, 'ok');
+      } else {
+        deps.log(`${name} is already one of your accounts`, 'warn');
+      }
+    };
+    if (el('alt-add')) el('alt-add').addEventListener('click', addTyped);
+    if (el('alt-input')) {
+      el('alt-input').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') { e.preventDefault(); addTyped(); }
+      });
+    }
     document.addEventListener('click', (e) => {
       if (el('identity-pop').hidden) return;
       if (el('identity-pop').contains(e.target) || el('identity-btn').contains(e.target)) return;
@@ -130,6 +187,23 @@
       open,
       close,
       get name () { return deps.overlayState.userName; },
+      // Every account that is you, primary first. What anything asking "is
+      // this game mine" should use — people play on more than one.
+      get names () { return deps.overlayState.userNames; },
+      get alts () { return deps.overlayState.altNames; },
+      addAlt (name) {
+        if (!deps.overlayState.addAltName(name)) return false;
+        render();
+        if (deps.onChange) deps.onChange(deps.overlayState.userName);
+        deps.log(`${name} is also you`, 'ok');
+        return true;
+      },
+      removeAlt (name) {
+        if (!deps.overlayState.removeAltName(name)) return false;
+        render();
+        if (deps.onChange) deps.onChange(deps.overlayState.userName);
+        return true;
+      },
       // Somebody choosing their own name IS the confirmation, whether they
       // clicked a card in the popover or on the first-run screen. Exposed so
       // neither reaches into localStorage to say the same thing.

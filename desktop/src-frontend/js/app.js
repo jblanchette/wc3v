@@ -383,6 +383,9 @@ const scout = window.createScout({
   store,
   log,
   identityName: () => identity.name,
+  // Every account that is you. Anything asking "is this game mine" reads
+  // this; identityName stays the one name that gets printed.
+  identityNames: () => identity.names,
   watched: overlayWatched,
   onMatch: (match, ladder, book) => {
     if (match) matchPhase.setLive(match, ladder, book);
@@ -440,6 +443,8 @@ const folders = window.createFolders({
       gamesView.render(store.corpus);
       if (currentView === 'library') libraryView.render(store.corpus);
     }
+    // Switching a folder on or off changes how much of the disk the feed is.
+    refreshUnread();
   }
 });
 
@@ -447,6 +452,9 @@ const gamesView = window.createGamesView({
   log,
   store,
   identityName: () => identity.name,
+  // Every account that is you. Anything asking "is this game mine" reads
+  // this; identityName stays the one name that gets printed.
+  identityNames: () => identity.names,
   onWatch: (summary, moment) => watchMoment(summary, moment),
   onReparse: (summary) => reparse(summary),
   // Parsing your history lives on the Settings screen, so the first-run card
@@ -460,7 +468,8 @@ const gamesView = window.createGamesView({
 const profileView = window.createProfileView({
   log,
   store,
-  identityName: () => identity.name
+  identityName: () => identity.name,
+  identityNames: () => identity.names
 });
 
 // Everybody else's games. Same corpus, same report renderer, no "you".
@@ -469,6 +478,9 @@ const libraryView = window.createLibraryView({
   store,
   folders,
   identityName: () => identity.name,
+  // Every account that is you. Anything asking "is this game mine" reads
+  // this; identityName stays the one name that gets printed.
+  identityNames: () => identity.names,
   onWatch: (summary, moment) => watchMoment(summary, moment),
   onReparse: (summary) => reparse(summary),
   onOpenProfile: openProfile,
@@ -550,6 +562,8 @@ const backfill = window.createBackfill({
       gamesView.render(store.corpus);
       if (currentView === 'library') libraryView.render(store.corpus);
       if (limited) gamesView.clearParseQueue();
+      // And it has changed what is left unread.
+      refreshUnread();
     }
   }
 });
@@ -581,6 +595,8 @@ const settingsView = window.createSettingsView({
   errText,
   backfill: () => backfill,
   folders,
+  // The primary name only. The one thing Settings does with it is check the
+  // W3Champions tag, and that service is polled for one account.
   identityName: () => identity.name,
   notifyEnabled,
   setNotifyEnabled: (on) => localStorage.setItem(NOTIFY_KEY, on ? '1' : '0'),
@@ -1026,6 +1042,33 @@ const scan = async (root) => {
   setStatus(idleStatus());
 };
 
+// ── What is on disk but not in the feed ─────────────────────────────────────
+//
+// "I played two games against him and only one shows up" was unanswerable from
+// inside the app. Every reason a game is missing is knowable — its folder is
+// off, the 1v1 filter passed it over, the read failed, or nothing has read it
+// yet — so the feed says which, with the way to fix it.
+//
+// `scan_all` already honours the folder switches and collapses duplicates, so
+// its count is exactly "games the app would read".
+const refreshUnread = async () => {
+  if (!gamesView.renderUnread) return;
+  try {
+    const { replays } = await invoke('scan_all');
+    const onDisk = replays.filter(r => r.interesting).length;
+    let filtered1v1 = false;
+    try { filtered1v1 = !!(await invoke('only_1v1_enabled')); } catch (e) { /* off */ }
+    let reasons = {};
+    try { reasons = (await invoke('parse_failure_reasons')) || {}; } catch (e) { /* older binary */ }
+    gamesView.renderUnread(
+      { onDisk, parsed: store.size, failed: backfill.failedCount, filtered1v1, reasons },
+      () => backfill.start({})
+    );
+  } catch (e) {
+    // A scan that fails says nothing about the history; the row stays down.
+  }
+};
+
 // What the status line says at rest. The promise is "finish a game and it
 // shows up", so the resting state says that.
 const idleStatus = () => store.size
@@ -1319,8 +1362,25 @@ const boot = async () => {
     if (!early) releasePolicy.start().then(applyPolicy);
   }
 
-  store.loadCorpus().then((corpus) => {
+  // Paint as it reads. A library of a few thousand games takes real seconds to
+  // come off disk, and a skeleton that sits there for a minute is what somebody
+  // with 7,000 replays reports as "the program stops loading". Every batch that
+  // lands goes on screen, newest first, with a count under it.
+  let painted = 0;
+  const onCorpusBatch = (loaded, total, partial) => {
+    setStatus(`reading your history… ${loaded.toLocaleString()} of ${total.toLocaleString()}`);
+    // Repaint on a coarse step. Sorting and rendering thousands of rows on
+    // every batch would cost more than the read it is reporting on.
+    if (loaded - painted < 400 && loaded < total) return;
+    painted = loaded;
+    gamesView.render([...partial].sort((a, b) => (b.playedAt || 0) - (a.playedAt || 0)));
+  };
+
+  store.loadCorpus(onCorpusBatch).then((corpus) => {
+    setStatus(idleStatus());
     gamesView.render(corpus);
+    // Behind the paint: how much of what is on disk this list actually is.
+    refreshUnread();
     // Which folder each stored game came from. Games parsed before the
     // sidecar existed are matched to their files by size, then hash, in one
     // background pass; the feed repaints once it knows, so the folder filter
