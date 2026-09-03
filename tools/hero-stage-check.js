@@ -12,9 +12,11 @@
  *      on a slot filters the build library, a second press clears it, and
  *      every way the stage can fail leaves those buttons working.
  *
- * No dev server: client/ is served by request interception, the way
- * page-audit.js does it. The CDN goes out for real, because the whole point
- * of check 1 is WHEN three.js is fetched.
+ * By default client/ is served by request interception, the way page-audit.js
+ * does it, so this needs no server. Pass --base to drive a server that is
+ * already up instead, which exercises the real serving path. The CDN goes out
+ * for real either way, because the whole point of check 1 is WHEN three.js is
+ * fetched.
  *
  * Headless Chrome reports no WebGL unless it is asked for software GL, so
  * this launches with the same ANGLE/SwiftShader flags tools/fx-bench.js uses.
@@ -23,6 +25,7 @@
  *
  * Usage:
  *   node tools/hero-stage-check.js
+ *   node tools/hero-stage-check.js --base=http://127.0.0.1:8080
  *   node tools/hero-stage-check.js --shots
  *   node tools/hero-stage-check.js --mode=narrow      # expect off/narrow
  *   node tools/hero-stage-check.js --mode=no-cdn      # expect off/cdn
@@ -58,6 +61,9 @@ const MIME = {
 };
 
 const SHOTS_DIR = path.resolve(ROOT, String(args['shots-dir'] || 'client/review/home'));
+// When a server is already up, drive that instead of intercepting.
+const BASE = args.base ? String(args.base).replace(/\/$/, '') : null;
+const PAGE_URL = (BASE || 'https://wc3v.local') + '/index.html';
 const READY_MS = Number(args.timeout || 40000);
 
 const fails = [];
@@ -85,6 +91,11 @@ function serve (page, opts) {
   const seen = [];
   page.on('request', (r) => {
     const u = new URL(r.url());
+    if (BASE) {
+      seen.push({ url: r.url(), t: Date.now() });
+      if (opts.blockCdn && /jsdelivr|cdnjs|unpkg/.test(u.hostname)) return r.abort();
+      return r.continue();
+    }
     if (u.hostname === 'wc3v.local') {
       const rel = decodeURIComponent(u.pathname).replace(/^\//, '') || 'index.html';
       const file = path.join(CLIENT, rel);
@@ -125,14 +136,17 @@ async function checkReady () {
   await page.setRequestInterception(true);
   const seen = serve(page, {});
 
-  // three.js must not be in the served HTML at all.
-  const html = fs.readFileSync(path.join(CLIENT, 'index.html'), 'utf8');
+  // three.js must not be in the served HTML at all. With a server up, that
+  // means what the SERVER sends, not what is on disk.
+  const html = BASE
+    ? await (await fetch(PAGE_URL)).text()
+    : fs.readFileSync(path.join(CLIENT, 'index.html'), 'utf8');
   const staticThree = /<script[^>]+src="[^"]*three[^"]*"/i.test(html);
   if (staticThree) bad('three.js is a static <script> in index.html');
   else ok('three.js is not in the HTML');
 
   const t0 = Date.now();
-  await page.goto('https://wc3v.local/index.html', { waitUntil: 'domcontentloaded' });
+  await page.goto(PAGE_URL, { waitUntil: 'domcontentloaded' });
 
   let state = null;
   try {
@@ -252,7 +266,7 @@ async function checkOff (label, opts) {
   await page.setRequestInterception(true);
   serve(page, { blockCdn: !!opts.blockCdn });
 
-  await page.goto('https://wc3v.local/index.html', { waitUntil: 'networkidle2' });
+  await page.goto(PAGE_URL, { waitUntil: 'networkidle2' });
   await new Promise(r => setTimeout(r, opts.wait || 4000));
 
   const st = await page.evaluate(() => {

@@ -6,12 +6,15 @@
  * the height of each band above the grid, the top of the first card row, and
  * whether a named element rendered at all.
  *
- * Serves client/ by request interception, same as page-audit.js, so the dev
- * server stays the user's to run. Requests to anything else (cdn.wc3v.com)
- * go out normally.
+ * Two ways to reach the page. By default it serves client/ off disk through
+ * request interception, the way page-audit.js does, so it never needs a
+ * server. Pass --base to point it at one that is already running instead:
+ * that exercises the real serving path, including the redirects and MIME
+ * types interception papers over.
  *
  * Usage:
  *   node tools/home-probe.js
+ *   node tools/home-probe.js --base=http://127.0.0.1:8080
  *   node tools/home-probe.js --width=1920x1080
  *   node tools/home-probe.js --sel=.hp-drop,.hp-stage
  *   node tools/home-probe.js --gl          # software WebGL, for the hero stage
@@ -75,26 +78,34 @@ const DEFAULT_SEL = [
   page.on('pageerror', e => errors.push(e.message));
   page.on('console', m => { if (m.type() === 'error') errors.push('console: ' + m.text()); });
 
-  await page.setRequestInterception(true);
-  page.on('request', (r) => {
-    const u = new URL(r.url());
-    if (u.hostname === 'wc3v.local') {
-      const rel = decodeURIComponent(u.pathname).replace(/^\//, '') || 'index.html';
-      const file = path.join(CLIENT, rel);
-      if (fs.existsSync(file) && fs.statSync(file).isFile()) {
-        return r.respond({
-          status: 200,
-          contentType: MIME[path.extname(file).toLowerCase()] || 'application/octet-stream',
-          body: fs.readFileSync(file)
-        });
+  const base = args.base ? String(args.base).replace(/\/$/, '') : null;
+  if (base) {
+    // A real server is answering, so anything that 404s is a real 404.
+    page.on('response', (r) => { if (r.status() >= 400) missing.push(new URL(r.url()).pathname + ' HTTP ' + r.status()); });
+  } else {
+    await page.setRequestInterception(true);
+    page.on('request', (r) => {
+      const u = new URL(r.url());
+      if (u.hostname === 'wc3v.local') {
+        const rel = decodeURIComponent(u.pathname).replace(/^\//, '') || 'index.html';
+        const file = path.join(CLIENT, rel);
+        if (fs.existsSync(file) && fs.statSync(file).isFile()) {
+          return r.respond({
+            status: 200,
+            contentType: MIME[path.extname(file).toLowerCase()] || 'application/octet-stream',
+            body: fs.readFileSync(file)
+          });
+        }
+        missing.push(rel);
+        return r.respond({ status: 404, body: 'not found' });
       }
-      missing.push(rel);
-      return r.respond({ status: 404, body: 'not found' });
-    }
-    r.continue();
-  });
+      r.continue();
+    });
+  }
 
-  await page.goto('https://wc3v.local/' + String(args.page || 'index.html'), { waitUntil: 'networkidle2' });
+  const url = (base || 'https://wc3v.local') + '/' + String(args.page || 'index.html');
+  console.log('\n  ' + url);
+  await page.goto(url, { waitUntil: 'networkidle2' });
   await new Promise(r => setTimeout(r, Number(args.wait || 1200)));
 
   const rows = await page.evaluate((selectors) => {
