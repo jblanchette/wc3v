@@ -122,7 +122,12 @@
       // Corner readout: rolling frame time, draw calls, projectile counts.
       // Off by default. Exists because there was previously no in-viewer way to
       // measure a render change, only to assert one.
-      showStats: false
+      showStats: false,
+      // The homepage's animated race picker (js/HeroStage.js). A runtime kill
+      // switch: false and the four portrait plates stay the picker, with no
+      // three.js and no models fetched at all. The stage gates itself on
+      // reduced motion, data saver, phone widths and WebGL support anyway.
+      heroStage: true
     },
 
     // User-facing quality presets (Settings → Quality). Only levers that are
@@ -164,7 +169,9 @@
       // Parser + upload pipeline. Also propagated into the parser Web
       // Worker via a `?log=1` URL param, since the worker runs in its own
       // global scope and can't read this object.
-      parser:     isDev
+      parser:     isDev,
+      // Homepage hero stage: which gate stopped it, which model failed.
+      heroStage:  isDev
     }
   };
 

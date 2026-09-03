@@ -10,6 +10,7 @@
 		"gen-seo": "node tools/gen-seo.js",
 		"check-seo": "node tools/gen-seo.js --check",
 		"stamp-seo": "node tools/gen-seo.js --stamp",
+		"test:site": "node tools/test-hero-stage.js",
 		"test:seo": "node tools/test-html-to-md.js && node tools/test-edge-worker.js && node tools/test-stats-worker.js && node tools/test-agent-tools.js && node tools/test-mcp-server.js && node tools/test-build-deps.js",
 		"worker:edge": "wrangler deploy --config workers/edge/wrangler.toml",
 		"worker:edge:dev": "wrangler dev --config workers/edge/wrangler.toml",

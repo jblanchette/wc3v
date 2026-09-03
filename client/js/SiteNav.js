@@ -67,7 +67,8 @@ const SiteNav = {
       // here too would put two identical controls on screen.
       leftHtml = `
         <div class="site-nav-search-wrap">
-          <input type="text" id="build-search" class="site-nav-search"
+          <svg class="site-nav-search-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><line x1="20" y1="20" x2="16.65" y2="16.65"/></svg>
+          <input type="search" id="build-search" class="site-nav-search" aria-label="Search builds"
                  placeholder="Search builds" autocomplete="off" spellcheck="false" />
         </div>`;
     } else if (document.getElementById('app')) {

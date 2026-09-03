@@ -5902,16 +5902,22 @@ body {
   padding: 0;
 }
 
+/* The app bar reads only --nav-* (tokens.css), never --bg / --accent.
+   Those are repainted per page — the homepage is warm stone, the rest
+   are navy — and the bar has to be the same bar on all of them. Its
+   depth is the dominance gauge's: a struck highlight along the top lip
+   and a hard shadow under it. No coloured glow, and nothing keyed to a
+   race colour (DESIGN-SYSTEM §1). */
 #site-nav {
   position: sticky;
   top: 0;
   z-index: 100;
-  background: rgba(22, 25, 40, 0.92);
+  background: var(--nav-bg);
   backdrop-filter: blur(12px);
-  border-bottom: 1px solid var(--site-border);
-  /* No coloured glow: #4488FF is the Human race colour and may never be
-     used as chrome (DESIGN-SYSTEM §1). Plain depth shadow only. */
-  box-shadow: 0 1px 12px rgba(0,0,0,0.4);
+  border-bottom: 1px solid var(--nav-hairline);
+  box-shadow:
+    inset 0 1px 0 var(--nav-strike),
+    0 2px 8px -3px rgba(0,0,0,0.9);
 }
 
 .site-nav-inner {
@@ -5942,10 +5948,10 @@ body {
   font-weight: 900;
   letter-spacing: 0.08em;
   line-height: 1;
-  color: var(--text);
+  color: var(--nav-text);
   white-space: nowrap;
 }
-.site-wordmark > span { color: var(--accent); }
+.site-wordmark > span { color: var(--nav-accent); }
 
 .site-nav-logo-img {
   height: 36px;
@@ -5965,27 +5971,45 @@ body {
   align-items: center;
 }
 
+/* The field is a channel cut into the bar: no radius, a hard edge and
+   the shadow falling inward. The magnifier SiteNav renders sits in the
+   left padding, so the text starts clear of it. */
+.site-nav-search-wrap { position: relative; }
+.site-nav-search-ico {
+  position: absolute;
+  left: 9px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 16px;
+  height: 16px;
+  pointer-events: none;
+  color: var(--nav-text-muted);
+  opacity: 0.75;
+}
+
 .site-nav-search {
   width: 260px;
   min-height: var(--ico-sm);
-  padding: var(--sp-2) var(--sp-3);
-  border: 1px solid var(--border-2);
-  border-radius: var(--radius);
-  background: var(--bg-deep);
-  color: var(--text);
+  padding: var(--sp-2) var(--sp-3) var(--sp-2) 32px;
+  border: 1px solid var(--nav-field-bd);
+  border-radius: 0;
+  background: var(--nav-field-bg);
+  color: var(--nav-text);
   font-size: var(--fs-label);
   font-family: inherit;
   outline: none;
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.65);
   transition: border-color var(--dur), background var(--dur);
 }
 
 .site-nav-search::placeholder {
-  color: var(--text-dim);
+  color: var(--nav-text-muted);
+  opacity: 0.75;
 }
 
 .site-nav-search:focus {
-  border-color: var(--accent);
-  background: var(--surface);
+  border-color: var(--nav-accent);
+  background: #1b1610;
 }
 
 .site-nav-links {
@@ -6045,7 +6069,7 @@ body {
   font-size: var(--fs-label);
   font-weight: 600;
   text-decoration: none;
-  color: var(--text-muted);
+  color: var(--nav-text-muted);
   background: transparent;
   border: 1px solid transparent;
   transition: color var(--dur), background var(--dur), border-color var(--dur);
@@ -6053,9 +6077,37 @@ body {
 
 .site-nav-link:hover,
 .site-nav-link.active {
-  color: var(--text);
-  background: var(--wash);
-  border-color: var(--border-2);
+  color: var(--nav-text);
+  background: var(--nav-wash);
+  border-color: var(--nav-field-bd);
+}
+
+/* The band inside the bar follows the bar, not the page under it: on a
+   navy page --accent is still blue, and a blue pressed state next to a
+   bronze wordmark reads as two designs sharing one strip. Specificity
+   here (#site-nav, 1-1-0) beats the plain .skill-band-card rules. */
+#site-nav .skill-band-card {
+  background: var(--nav-field-bg);
+  border-color: var(--nav-field-bd);
+  border-radius: 0;
+  color: var(--nav-text);
+}
+#site-nav .skill-band-card:hover {
+  background: var(--nav-wash);
+  border-color: var(--nav-accent);
+}
+#site-nav .skill-band-card[aria-pressed="true"],
+#site-nav .skill-band-card.is-active {
+  background: var(--nav-wash);
+  border-color: var(--nav-accent);
+  box-shadow: inset 0 0 0 1px var(--nav-accent);
+}
+#site-nav .site-nav-link:focus-visible,
+#site-nav .site-nav-logo:focus-visible,
+#site-nav .site-nav-search:focus-visible,
+#site-nav .skill-band-card:focus-visible {
+  outline: 2px solid var(--nav-accent);
+  outline-offset: 2px;
 }
 
 /* Narrow viewports (≤ 767px): let the nav wrap and shrink the search input
@@ -6961,7 +7013,7 @@ body {
     0 0 0 1px #201a0d;
 }
 
-/* The sheen — the .hp-newbie recipe at the same 0.09 ceiling, scaled down to
+/* The sheen — a slow highlight crossing the plate at a 0.09 ceiling, scaled down to
    the chip. Meta only: it is the one thing separating the two pro tiers in
    motion, and it says "current". */
 .site-build-card.is-pro-meta .site-card-pro-tag::after {
@@ -13387,19 +13439,9 @@ svg.about-feat-icon {
   gap: var(--sp-2) var(--sp-4);
 }
 .site-pros-topline .site-pros-headline { flex: 0 1 auto; }
-/* 38rem, measured. It is the narrowest width at which all three lines of the
-   bar's copy — the label, the privacy line and the scope line — each sit on
-   one line: 608px renders 75px tall, 544px renders 108, 480px renders 126.
-   Past 38rem the box grows and the text inside it does not, which only moves
-   the "Where are my replays?" button away from the words it belongs to.
-   `margin-left: auto` rather than relying on space-between, so a wrapped
-   headline still pushes it right. */
-.site-pros-topline .hp-dropbar {
-  flex: 1 1 22rem;
-  max-width: 38rem;
-  margin-left: auto;
-  margin-bottom: 0;
-}
+/* The drop bar used to sit at the right end of this row. It is the hero
+   band's bronze plate now (css/home.css), so the topline carries the
+   title, its counts and the icon toolbar. */
 
 /* Heading, intro and build count share one baseline row. Stacking them cost
    ~70px above the fold and read as three separate ideas; they are one. The
@@ -16064,38 +16106,29 @@ fieldset.ub-editor-field input[type="text"] {
     flex-direction: column;
     gap: 8px;
     padding: 10px 12px 8px;
-    background: linear-gradient(180deg, rgba(22,25,40,0.92) 0%, rgba(15,18,28,0.85) 100%);
-    border-bottom: 1px solid var(--site-border);
-  }
-  .mobile-tagline {
-    font-size: 14px;
-    line-height: 1.2;
-    color: var(--site-text);
-    text-align: center;
-    opacity: 0.85;
-    margin: 0 0 2px;
-  }
-  .mobile-tagline em {
-    color: var(--text);
-    font-style: normal;
-    font-weight: 800;
+    /* Tokens, not literals: the homepage repaints --bg / --bg-deep warm and
+       this bar sits directly under its hero band. A hard-coded navy showed
+       as a blue strip across an umber page. */
+    background: linear-gradient(180deg, var(--surface) 0%, var(--bg-deep) 100%);
+    border-bottom: 1px solid var(--border);
   }
   .mobile-build-search {
     width: 100%;
     box-sizing: border-box;
     padding: 12px 14px;
-    border: 1px solid rgba(255,255,255,0.28);
-    border-radius: 10px;
-    background: rgba(255,255,255,0.10);
-    color: var(--site-text);
+    border: 1px solid var(--border-2);
+    border-radius: var(--radius);
+    background: var(--bg-deep);
+    color: var(--text);
     font-size: 16px; /* 16px keeps iOS from auto-zooming */
     font-family: inherit;
     outline: none;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.55);
   }
-  .mobile-build-search::placeholder { color: rgba(255,255,255,0.55); }
+  .mobile-build-search::placeholder { color: var(--text-dim); }
   .mobile-build-search:focus {
-    border-color: rgba(255,255,255,0.6);
-    background: rgba(255,255,255,0.16);
+    border-color: var(--accent);
+    background: var(--bg-deep);
   }
   .mobile-action-buttons {
     display: flex;
@@ -16109,10 +16142,10 @@ fieldset.ub-editor-field input[type="text"] {
     justify-content: center;
     gap: 6px;
     padding: 8px 10px;
-    background: rgba(255,255,255,0.08);
-    color: var(--site-text);
-    border: 1px solid rgba(255,255,255,0.22);
-    border-radius: 8px;
+    background: var(--surface-2);
+    color: var(--text);
+    border: 1px solid var(--border-2);
+    border-radius: var(--radius);
     font: 600 13px/1.2 inherit;
     cursor: pointer;
     -webkit-tap-highlight-color: transparent;
@@ -16157,29 +16190,10 @@ fieldset.ub-editor-field input[type="text"] {
 
   /* ── Collapse "Your replays" + "Filters" by default ─── */
   body:not(.mobile-mine-open) #my-replays-section { display: none; }
-  body:not(.mobile-filters-open) .pro-filter-bar { display: none; }
-  /* The class row collapses with the rest. Six chips plus three buttons is
-     four wrapped rows on a phone, which pushes the first card off the screen —
-     and the default selection is every class, so a collapsed row hides
-     nothing: the grid still shows everything with pro first. */
-  body:not(.mobile-filters-open) .bclass-bar { display: none; }
-  body.mobile-filters-open .bclass-bar {
-    flex-direction: column;
-    align-items: stretch;
-    padding: 8px 10px 0;
-  }
-  body.mobile-filters-open .pro-filter-bar {
-    display: flex;
-    flex-direction: column;
-    align-items: stretch;
-    gap: 8px;
-    padding: 8px 10px;
-  }
-  body.mobile-filters-open .pfb-group { width: 100%; }
-  body.mobile-filters-open .pfb-chips { flex-wrap: wrap; gap: 4px; }
-  body.mobile-filters-open .pfb-more,
-  body.mobile-filters-open .pfb-advanced-btn { width: 100%; }
-  body.mobile-filters-open .pfb-more-pop { position: static; width: 100%; }
+  /* The two filter rows this used to collapse are gone: the library head
+     carries two icon buttons that open the same controls in a panel, on a
+     phone the same as anywhere else, so there is no disclosure left to
+     wire and no rows left to hide. */
 
   /* Tighten the browse layout to a single column */
   .site-browse-layout {

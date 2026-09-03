@@ -196,6 +196,10 @@
   <!-- New design system: tokens + bo-* components + the
        homepage re-skin section. Loaded AFTER main.css so its overrides win. -->
   <link rel="stylesheet" href="css/redesign.css?v=70f867931d">
+  <!-- The homepage's own skin: a scoped token override on body.hp-page
+       plus every .hp-* component. Last, so it wins; index.html only, so
+       no other page changes colour. -->
+  <link rel="stylesheet" href="css/home.css?v=1">
   <style>
     body { margin: 0; }
   </style>
@@ -207,7 +211,7 @@
     /* @wc3v-asset-version-begin */ window.__WC3V_ASSET_VERSION__ = '9cf3291ace'; /* @wc3v-asset-version-end */
   </script>
 </head>
-<body class="site-page">
+<body class="site-page hp-page">
   <!-- Static nav fallback. SiteNav.render() drops any existing #site-nav before
        inserting its own, so this costs nothing at runtime and gives crawlers
        and JS-off visitors a real internal link graph. Keep the hrefs in sync
@@ -256,6 +260,9 @@
   <script src="js/CreepRouteMap.js?v=a7bd5b6b45"></script>
   <script src="js/CompareInline.js?v=efb9e172b3"></script>
   <script src="js/BugReport.js?v=7b19c1a873"></script>
+  <!-- The homepage race picker. Tiny and THREE-free: it injects
+       three.js and GLBLoader itself, after first paint. -->
+  <script src="js/HeroStage.js?v=2"></script>
   <script>
     document.addEventListener('DOMContentLoaded', async () => {
       // BandSwitcher must init before SiteNav so the nav's compact band
@@ -273,20 +280,6 @@
         if (card) location.href = '/learn';
       });
       SiteNav.render('home');
-
-      // New-player banner. Starts `hidden` in the markup so a visitor who
-      // already dismissed it never sees it flash in before this runs.
-      const newbie = document.getElementById('hp-newbie');
-      if (newbie) {
-        let dismissed = false;
-        try { dismissed = localStorage.getItem('wc3v.newbannerDismissed') === '1'; } catch (e) {}
-        newbie.hidden = dismissed;
-        const dismissBtn = document.getElementById('hp-newbie-dismiss');
-        if (dismissBtn) dismissBtn.addEventListener('click', () => {
-          newbie.hidden = true;
-          try { localStorage.setItem('wc3v.newbannerDismissed', '1'); } catch (e) {}
-        });
-      }
 
       // Library scale next to the section heading. Fire-and-forget: the grid
       // does not wait on it, and a failed fetch just leaves the node hidden.
@@ -331,8 +324,9 @@
       // in the Your Builds section above the pro grid; they no longer
       // need a filter pivot here. The chip array is kept so we can still
       // wire the (single) "My games" pill without special-casing.
-      let railFilter = 'games';
-      const filterChips = Array.from(document.querySelectorAll('.mine-filter-chip'));
+      // The rail is uploaded games only. References are surfaced as cards in
+      // the pro grid, so there is nothing here to pivot between.
+      const railFilter = 'games';
 
       const refreshPanel = async () => {
         const sort = (sortSelect && sortSelect.value) || 'newest';
@@ -378,18 +372,6 @@
           refreshPanel();
         });
       }
-
-      filterChips.forEach(chip => {
-        chip.addEventListener('click', () => {
-          railFilter = chip.dataset.filter || 'all';
-          filterChips.forEach(c => {
-            const active = c === chip;
-            c.classList.toggle('mine-filter-chip-active', active);
-            c.setAttribute('aria-selected', active ? 'true' : 'false');
-          });
-          refreshPanel();
-        });
-      });
 
       // ── User-uploaded pro replay editor ──────────────────────────────
       const editor = document.getElementById('user-build-editor');
@@ -941,22 +923,90 @@
     </div>
   </div>
 
-  <!-- Hero strip. Deliberately NOT the old .site-hero-bar: that element
-       bundled the wordmark with four same-weight actions (a gold bug link,
-       a pulsing trust badge, the upload CTA and a help pill) so nothing read
-       as primary. The brand now lives permanently in the app bar; this strip
-       carries just the page's one-line proposition and the band switcher.
+  <!-- Hero band. A patch of Warcraft III ground: the proposition, the
+       page's one primary action, and the four heroes that ARE the race
+       filter. The ground texture and the vignette are pseudo-elements on
+       .hp-hero (home.css); the mood follows the selected race.
+
+       IDs that JS binds to and must not be renamed: hero-dropzone,
+       hero-upload-card, hero-upload-status, hero-find-replays-btn,
+       skill-band-hero, hero-stage. The .hero-tile-dragover class is the
+       drop-zone contract in the bootstrap script.
+
        NOTE: the class .hero-bar-inner is intentionally absent. BugReport.js
        keys its hero injection off that name, so dropping it is what moves
        "Report a bug" cleanly down to the footer with no JS change. -->
-  <div class="hp-hero">
+  <div class="hp-hero" data-race="">
     <div class="hp-hero-inner">
-      <h1 class="hp-hero-tagline">A Warcraft III replay simulator, built for <em>learning the game</em>.</h1>
-      <div class="skill-band skill-band--compact" id="skill-band-hero" role="group"
-           aria-label="Skill level, which sets the builds you see and what your replays are graded against">
-        <button type="button" class="skill-band-card" data-band="new" aria-pressed="false" title="Builds that forgive a slow start"><img class="skill-band-ico" src="/assets/wc3icons/phea.jpg" alt="" aria-hidden="true" loading="lazy" onerror="this.style.display='none'" /><span class="skill-band-label">New to WC3</span></button>
-        <button type="button" class="skill-band-card" data-band="improving" aria-pressed="false" title="Tournament builds you can copy"><img class="skill-band-ico" src="/assets/wc3icons/tkno.jpg" alt="" aria-hidden="true" loading="lazy" onerror="this.style.display='none'" /><span class="skill-band-label">Ladder</span></button>
-        <button type="button" class="skill-band-card" data-band="pro" aria-pressed="false" title="What top players are running now"><img class="skill-band-ico" src="/assets/wc3icons/ckng.jpg" alt="" aria-hidden="true" loading="lazy" onerror="this.style.display='none'" /><span class="skill-band-label">Pro meta</span></button>
+      <div class="hp-hero-copy">
+        <h1 class="hp-hero-tagline">A Warcraft III replay simulator, built for <em>learning the game</em>.</h1>
+        <p class="hp-hero-sub">Browse pro builds, or drop your own replay to see how it compares.</p>
+
+        <!-- The one primary action on the page. The privacy promise and the
+             "where are my files" help are glyphs beside it, not the two
+             lines of standing explanation they used to be. -->
+        <div id="hero-dropzone" class="hp-drop">
+          <button id="hero-upload-card" type="button" class="hp-drop-cta hp-plate hp-plate-bronze"
+                  title="Pick or drop a .w3g file. Parsed in your browser, never uploaded.">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            <span class="hp-drop-label">Drop a .w3g here, or click to upload</span>
+            <span class="hp-drop-status" id="hero-upload-status" aria-live="polite"></span>
+          </button>
+          <span class="hp-drop-shield" role="img" tabindex="0"
+                aria-label="Parsed in your browser. Never uploaded, no server."
+                title="Parsed in your browser. Never uploaded, no server.">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2 L20 5 V11 C20 16 16.5 19.5 12 21 C7.5 19.5 4 16 4 11 V5 Z"/><path d="M9 12 L11 14 L15 10"/></svg>
+          </span>
+          <button id="hero-find-replays-btn" type="button" class="hp-icon-btn hp-plate"
+                  aria-label="Where are my replay files?" title="Where are my replay files?">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          </button>
+        </div>
+
+        <div class="hp-hero-bands">
+          <div class="skill-band skill-band--compact" id="skill-band-hero" role="group"
+               aria-label="Skill level, which sets the builds you see and what your replays are graded against">
+            <button type="button" class="skill-band-card" data-band="new" aria-pressed="false" title="Builds that forgive a slow start"><img class="skill-band-ico" src="/assets/wc3icons/phea.jpg" alt="" aria-hidden="true" loading="lazy" onerror="this.style.display=&apos;none&apos;" /><span class="skill-band-label">New to WC3</span></button>
+            <button type="button" class="skill-band-card" data-band="improving" aria-pressed="false" title="Tournament builds you can copy"><img class="skill-band-ico" src="/assets/wc3icons/tkno.jpg" alt="" aria-hidden="true" loading="lazy" onerror="this.style.display=&apos;none&apos;" /><span class="skill-band-label">Ladder</span></button>
+            <button type="button" class="skill-band-card" data-band="pro" aria-pressed="false" title="What top players are running now"><img class="skill-band-ico" src="/assets/wc3icons/ckng.jpg" alt="" aria-hidden="true" loading="lazy" onerror="this.style.display=&apos;none&apos;" /><span class="skill-band-label">Pro meta</span></button>
+          </div>
+          <!-- The signpost to the Build Finder. It used to be a full-width
+               bordered banner with three sentences in it, which spent a whole
+               fold row on the audience least likely to be reading. -->
+          <a class="hp-new-link" href="/learn">New here? Start with the Build Finder &rarr;</a>
+        </div>
+      </div>
+
+      <!-- Race picker. The four buttons are the hit targets, the screen-reader
+           surface and the fallback; HeroStage.js draws animated models into the
+           canvas behind them and marks each slot .is-loaded as its model
+           lands, at which point that slot's portrait steps aside. With no
+           WebGL, a phone, reduced motion or a blocked CDN, nothing here
+           changes and the portraits stay the picker. -->
+      <div id="hero-stage" class="hp-stage" data-state="fallback" data-selected="">
+        <canvas class="hp-stage-canvas" aria-hidden="true"></canvas>
+        <div class="hp-stage-slots" role="group" aria-label="Filter builds by race">
+          <button type="button" class="hp-stage-slot" data-race="H" data-hero="Hamg" aria-pressed="false" title="Human builds">
+            <span class="hp-stage-plate"><img class="hp-stage-portrait" src="/assets/wc3icons/Hamg.jpg" alt="" aria-hidden="true" width="56" height="56" decoding="async" onerror="this.style.display=&apos;none&apos;" /></span>
+            <span class="hp-stage-slot-label">Human</span>
+            <span class="sr-only">Archmage</span>
+          </button>
+          <button type="button" class="hp-stage-slot" data-race="O" data-hero="Obla" aria-pressed="false" title="Orc builds">
+            <span class="hp-stage-plate"><img class="hp-stage-portrait" src="/assets/wc3icons/Obla.jpg" alt="" aria-hidden="true" width="56" height="56" decoding="async" onerror="this.style.display=&apos;none&apos;" /></span>
+            <span class="hp-stage-slot-label">Orc</span>
+            <span class="sr-only">Blademaster</span>
+          </button>
+          <button type="button" class="hp-stage-slot" data-race="E" data-hero="Edem" aria-pressed="false" title="Night Elf builds">
+            <span class="hp-stage-plate"><img class="hp-stage-portrait" src="/assets/wc3icons/Edem.jpg" alt="" aria-hidden="true" width="56" height="56" decoding="async" onerror="this.style.display=&apos;none&apos;" /></span>
+            <span class="hp-stage-slot-label">Night Elf</span>
+            <span class="sr-only">Demon Hunter</span>
+          </button>
+          <button type="button" class="hp-stage-slot" data-race="U" data-hero="Udea" aria-pressed="false" title="Undead builds">
+            <span class="hp-stage-plate"><img class="hp-stage-portrait" src="/assets/wc3icons/Udea.jpg" alt="" aria-hidden="true" width="56" height="56" decoding="async" onerror="this.style.display=&apos;none&apos;" /></span>
+            <span class="hp-stage-slot-label">Undead</span>
+            <span class="sr-only">Death Knight</span>
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -987,7 +1037,7 @@
             <code class="help-path-code">Documents\Warcraft III\Replays\W3Champions</code>
           </div>
           <p class="help-modal-tip">
-            Drag any <code>.w3g</code> file onto the <strong>Drop or upload a replay</strong> zone, or click it to open a file picker. The replay is parsed entirely on this machine; nothing leaves your browser.
+            Drag any <code>.w3g</code> file onto the drop zone at the top of the page, or click it to open a file picker. The replay is parsed entirely on this machine; nothing leaves your browser. Every game format opens in the simulator, and 1v1 games also get the full graded analysis.
           </p>
         </div>
       </div>
@@ -1033,7 +1083,6 @@
          search input, and the "Your replays" + "Filters" disclosure toggles
          that keep the rest of the page collapsed by default. -->
     <div class="mobile-action-bar" id="mobile-action-bar">
-      <div class="mobile-tagline">A Warcraft III replay simulator, built for <em>learning the game</em>.</div>
       <input type="search" id="mobile-build-search" class="mobile-build-search"
              placeholder="Search builds, heroes, players, maps&hellip;"
              autocomplete="off" spellcheck="false" enterkeyhint="search" />
@@ -1043,36 +1092,8 @@
           <span class="mobile-action-count" id="mobile-mine-count">0</span>
           <span class="mobile-action-caret" aria-hidden="true">&#9656;</span>
         </button>
-        <button type="button" id="mobile-filters-toggle" class="mobile-action-btn" aria-expanded="false">
-          <span class="mobile-action-label">Filters</span>
-          <span class="mobile-action-count" id="mobile-filters-count" hidden>0</span>
-          <span class="mobile-action-caret" aria-hidden="true">&#9656;</span>
-        </button>
       </div>
     </div>
-
-    <!-- New-player banner. The Build Finder at /learn used to be reachable
-         only by noticing that one of three same-weight pills in the hero
-         strip was a different mode rather than a filter, which is not a
-         discoverable entry point for the exact audience least able to guess.
-         This is the signpost: full content width, above the build grid, one
-         sentence and one button.
-
-         Dismissal is remembered (wc3v.newbannerDismissed) so the pro
-         audience pays for it once. The skill-band "New to WC3" card is the
-         permanent way back in, so hiding this closes nothing off. -->
-    <aside class="hp-newbie" id="hp-newbie" hidden aria-labelledby="hp-newbie-title">
-      <img class="hp-newbie-ico" src="/assets/wc3icons/phea.jpg" alt="" aria-hidden="true"
-           loading="lazy" onerror="this.style.display='none'" />
-      <div class="hp-newbie-text">
-        <span class="hp-newbie-eyebrow">New to Warcraft III?</span>
-        <span class="hp-newbie-title" id="hp-newbie-title">Start with the Build Finder</span>
-        <span class="hp-newbie-sub">Pick your race, your hero and the army you like. You get one build to learn and a pro replay that plays it, with a walkthrough that stops at every step.</span>
-      </div>
-      <a class="hp-newbie-cta" href="/learn">Find my first build &rarr;</a>
-      <button class="hp-newbie-dismiss" type="button" id="hp-newbie-dismiss"
-              aria-label="Hide the new player banner" title="Hide this">&times;</button>
-    </aside>
 
     <div class="site-browse-layout">
 
@@ -1091,23 +1112,23 @@
         <div class="site-mine-head">
           <div class="site-mine-head-row">
             <h2 id="mine-title" class="site-mine-title">Your replays</h2>
-            <button id="my-replays-upload" class="site-mine-upload-btn" type="button" title="Upload another .w3g">＋ Upload</button>
+            <button id="my-replays-upload" class="hp-icon-btn hp-plate" type="button"
+                    aria-label="Upload another replay" title="Upload another .w3g">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            </button>
           </div>
-          <div class="mine-toolbar">
-            <label class="mine-toolbar-sort">
-              <span class="mine-toolbar-label">Sort</span>
-              <select id="mine-sort-select" class="mine-sort-select">
-                <option value="newest">Newest</option>
-                <option value="oldest">Oldest</option>
-                <option value="race">Race</option>
-                <option value="map">Map</option>
-              </select>
-            </label>
-            <!-- Rail shows raw user replays only. References live in
-                 the Your Builds section above the pro grid. -->
-            <div class="mine-toolbar-filter" role="tablist" aria-label="Show">
-              <button type="button" class="mine-filter-chip mine-filter-chip-active" data-filter="games" role="tab" aria-selected="true">My games</button>
-            </div>
+          <!-- The rail shows raw user replays only, so the one-chip
+               "My games" tablist that used to sit here was a control with
+               nothing to switch to. Sort keeps its options; the word "Sort"
+               is the glyph beside it. -->
+          <div class="mine-toolbar hp-rail-tools">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="color:var(--text-dim);flex-shrink:0"><path d="M3 6h18M6 12h12M10 18h4"/></svg>
+            <select id="mine-sort-select" class="mine-sort-select" aria-label="Sort your replays">
+              <option value="newest">Newest</option>
+              <option value="oldest">Oldest</option>
+              <option value="race">Race</option>
+              <option value="map">Map</option>
+            </select>
             <span class="mine-toolbar-count" id="mine-count"></span>
           </div>
         </div>
@@ -1123,7 +1144,7 @@
             <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
           </div>
           <div class="site-mine-empty-title">Drop or click to add a replay</div>
-          <div class="site-mine-empty-sub">Battle.net, FLO and W3Champions replays all work. Upload one of your own games to grade against pros, or a pro replay you want to compare your play against.</div>
+          <div class="site-mine-empty-sub">Battle.net, FLO and W3Champions replays all work.</div>
         </div>
       </section>
 
@@ -1139,113 +1160,98 @@
                section, which spent a whole row of the fold on a control that
                is one line of text wide. -->
           <div class="site-pros-topline">
-            <!-- Title and count share one line so the filter rows and the
-                 first card sit as high as possible. -->
+            <!-- Title, counts and the whole filter set on one row. Two full
+                 chip rows used to sit under this ("Show" plus six class
+                 chips and three quick actions, then Race plus four race
+                 chips, matchups, More filters and Advanced search): about
+                 90px of fold spent on controls most visitors never touch.
+                 Race moved to the hero stage; the rest is behind two
+                 buttons, each of which says how many filters are on. -->
             <div class="site-pros-headline">
-              <!-- Static. The grid shows every classification at once now, so
-                   naming one band here would be wrong on most of what's below. -->
-              <h2 id="pros-title" class="site-pros-title">Build library</h2>
-              <!-- Live count. Sits on the headline row, not in the filter bar:
-                   as a flex item there it was the first thing to wrap once the
-                   race chips filled the row, costing a whole extra row above
-                   the fold. applyFilter() finds it by ID, so it can live here. -->
+              <h2 id="pros-title" class="site-pros-title hp-engrave">Build library</h2>
+              <!-- Live count: how many builds survived your filters.
+                   applyFilter() finds it by ID. -->
               <div class="pfb-count" id="pfb-count" aria-live="polite"></div>
-              <!-- Library scale, as opposed to #pfb-count which is how many
-                   builds survived your filters. Fed from data/site-stats.json
-                   (generated by tools/gen-seo.js) so the number cannot drift
-                   from the corpus the way a hardcoded one would. Starts
-                   `hidden` and stays that way if the fetch fails. -->
+              <!-- Library scale, from data/site-stats.json (generated by
+                   tools/gen-seo.js) so the number cannot drift from the
+                   corpus. Starts hidden and stays that way if the fetch
+                   fails. -->
               <div class="pfb-corpus" id="pfb-corpus" hidden></div>
             </div>
 
-            <!-- The drop bar. The four IDs below are the entire JS contract
-                 (wireDropZone, triggerUpload, setStatus, the find-replays
-                 modal) — keep them; nothing depends on where it sits.
-                 The BROWSER-ONLY trust badge is demoted to the subline here:
-                 same message, no box, no pulse animation. -->
-            <div id="hero-dropzone" class="hp-dropbar">
-              <button id="hero-upload-card" type="button" class="hp-dropbar-cta" title="Pick or drop a .w3g file, analyzed locally in your browser">
-                <svg class="hp-dropbar-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                <span class="hp-dropbar-text">
-                  <span class="hp-dropbar-label">Drop a .w3g here, or click to upload</span>
-                  <span class="hp-dropbar-sub">
-                    <svg class="hp-dropbar-shield" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2 L20 5 V11 C20 16 16.5 19.5 12 21 C7.5 19.5 4 16 4 11 V5 Z"/><path d="M9 12 L11 14 L15 10"/></svg>
-                    Parsed in your browser — never uploaded, no server
-                  </span>
-                  <!-- Scope, stated before the upload rather than after it. Team
-                       and custom players used to find out their game could not be
-                       graded only once they had picked a file and waited for the
-                       parse. -->
-                  <span class="hp-dropbar-sub hp-dropbar-scope">
-                    Recommended for 1v1. Supports every game format.
-                  </span>
-                </span>
-                <span class="hp-dropbar-status" id="hero-upload-status" aria-live="polite"></span>
-              </button>
-              <button id="hero-find-replays-btn" type="button" class="hp-dropbar-help" title="Where are my replay files?">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-                <span>Where are my replays?</span>
-              </button>
-            </div>
-          </div>
+            <div class="hp-toolbar" role="toolbar" aria-label="Filter builds">
+              <!-- Matchups. Hidden until a race is picked, because until then
+                   there is no "vs" to pick. buildMatchupButtons() fills it. -->
+              <div id="matchup-section" class="hp-matchups" hidden>
+                <span class="hp-vs">vs</span>
+                <div class="pfb-chips" id="matchup-tags"></div>
+              </div>
 
-          <!-- Classification row. Sits ABOVE #pro-filter-bar rather than inside
-               it: race and matchup narrow WITHIN the library, classification
-               chooses WHICH library. It also inherits the band switcher's old
-               job here — the grid used to be gated to one band, and now shows
-               every class at once with pro sorted to the top. Multi-select, all
-               on by default, and the choice persists; "Pro only" is the
-               one-click path to a pro-first library that sticks. -->
-          <div id="build-class-bar" class="bclass-bar" role="group" aria-label="Filter builds by classification">
-            <span class="pfb-label">Show</span>
-            <div class="bclass-chips" id="bclass-chips"></div>
-            <div class="bclass-actions">
-              <button type="button" class="bclass-quick" data-bclass-quick="all">All</button>
-              <button type="button" class="bclass-quick" data-bclass-quick="pro">Pro only</button>
-              <button type="button" class="bclass-quick" id="toggle-upgrades" aria-pressed="false" title="Show the upgrades each build researched">Upgrades</button>
-            </div>
-          </div>
+              <div class="hp-menu">
+                <button id="show-menu-btn" class="hp-icon-btn hp-plate" type="button"
+                        aria-expanded="false" aria-haspopup="true"
+                        aria-label="Which builds to show" title="Which builds to show">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+                </button>
+                <div id="show-menu-pop" class="hp-pop" hidden>
+                  <div class="hp-pop-row">
+                    <span class="hp-pop-label">Show</span>
+                    <div class="bclass-chips" id="bclass-chips"></div>
+                  </div>
+                  <div class="hp-pop-row">
+                    <div class="bclass-actions">
+                      <button type="button" class="bclass-quick" data-bclass-quick="all">All</button>
+                      <button type="button" class="bclass-quick" data-bclass-quick="pro">Pro only</button>
+                    </div>
+                  </div>
+                  <div class="hp-pop-rule"></div>
+                  <!-- Page-level, not per-card: the grid gives every card one
+                       fixed height and the upgrades well absorbs the slack, so
+                       one card opening its own well would leave a hole in every
+                       other card in the row. -->
+                  <button type="button" id="toggle-upgrades" class="hp-switch hp-plate" role="switch" aria-checked="false"
+                          title="Show the upgrades each build researched">
+                    <span>Show researched upgrades</span>
+                    <span class="hp-switch-track" aria-hidden="true"></span>
+                  </button>
+                </div>
+              </div>
 
-          <div id="pro-filter-bar" class="pro-filter-bar" role="toolbar" aria-label="Filter pro builds">
-            <!-- Race chips (always visible) -->
-            <div class="pfb-group" id="race-filter-host">
-              <span class="pfb-label">Race</span>
-              <div class="pfb-chips" id="race-filter"></div>
-            </div>
-            <!-- Matchup chips (visible when a race is selected) -->
-            <div class="pfb-group" id="matchup-section" style="display:none">
-              <span class="pfb-label">Matchup</span>
-              <div class="pfb-chips" id="matchup-tags"></div>
-            </div>
-            <!-- More filters: opener / game plan / army / tournament collapsed in a popover -->
-            <div class="pfb-more">
-              <button id="pfb-more-btn" class="pfb-more-btn" type="button" aria-expanded="false">+ More filters</button>
-              <div id="pfb-more-pop" class="pfb-more-pop" hidden>
-                <div class="pfb-pop-row" id="opener-section">
-                  <span class="pfb-pop-label">Opener</span>
-                  <div class="pfb-pop-chips" id="opener-tags"></div>
-                </div>
-                <div class="pfb-pop-row" id="gameplan-section">
-                  <span class="pfb-pop-label">Game plan</span>
-                  <div class="pfb-pop-chips" id="gameplan-tags"></div>
-                </div>
-                <div class="pfb-pop-row" id="army-section">
-                  <span class="pfb-pop-label">Army</span>
-                  <div class="pfb-pop-chips" id="army-tags"></div>
-                </div>
-                <div class="pfb-pop-row" id="tournament-section" style="display:none">
-                  <span class="pfb-pop-label">Tournament</span>
-                  <div class="pfb-pop-chips" id="tournament-tags"></div>
+              <div class="hp-menu">
+                <button id="pfb-more-btn" class="hp-icon-btn hp-plate" type="button"
+                        aria-expanded="false" aria-haspopup="true"
+                        aria-label="More filters" title="More filters">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+                  <span class="hp-badge" id="pfb-active-count" hidden>0</span>
+                </button>
+                <div id="pfb-more-pop" class="hp-pop" hidden>
+                  <div class="hp-pop-row" id="opener-section">
+                    <span class="hp-pop-label">Opener</span>
+                    <div class="pfb-pop-chips" id="opener-tags"></div>
+                  </div>
+                  <div class="hp-pop-row" id="gameplan-section">
+                    <span class="hp-pop-label">Game plan</span>
+                    <div class="pfb-pop-chips" id="gameplan-tags"></div>
+                  </div>
+                  <div class="hp-pop-row" id="army-section">
+                    <span class="hp-pop-label">Army</span>
+                    <div class="pfb-pop-chips" id="army-tags"></div>
+                  </div>
+                  <div class="hp-pop-row" id="tournament-section" style="display:none">
+                    <span class="hp-pop-label">Tournament</span>
+                    <div class="pfb-pop-chips" id="tournament-tags"></div>
+                  </div>
+                  <div class="hp-pop-rule"></div>
+                  <!-- The same picker the compare drawer uses, opened in
+                       browse mode with no uploaded replay. -->
+                  <button id="pfb-advanced-search" class="hp-pop-wide hp-plate" type="button"
+                          title="Browse all pro replays with rich filters">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><line x1="20" y1="20" x2="16.65" y2="16.65"/></svg>
+                    <span>Advanced search</span>
+                  </button>
                 </div>
               </div>
             </div>
-            <!-- Browse-mode entry into the Advanced search modal —
-                 same picker the compare drawer uses, just opened
-                 without an uploaded replay. -->
-            <button id="pfb-advanced-search" class="pfb-advanced-btn" type="button" title="Browse all pro replays with rich filters">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><line x1="20" y1="20" x2="16.65" y2="16.65"/></svg>
-              <span>Advanced search</span>
-            </button>
           </div>
         </div>
 
@@ -1269,9 +1275,8 @@
            line. Every tile is a real link — a tile that looks clickable and
            isn't was the single worst finding in that testing, so don't add
            one here. -->
-      <section class="hp-pillars" aria-labelledby="hp-pillars-title">
+      <section class="hp-pillars" aria-label="What WC3V does">
         <div class="hp-pillars-inner">
-          <h2 class="hp-pillars-title" id="hp-pillars-title">What WC3V does</h2>
           <div class="hp-pillars-track">
 
             <a class="hp-pillar hp-pillar-lib" href="#all-builds-grid">
@@ -1365,10 +1370,9 @@
     <div class="site-footer-inner">
       <div class="site-footer-about">
         <div class="site-footer-brand">WC3V</div>
-        <p>Free, open-source replay analysis for Warcraft III. Browse pro builds, drop a .w3g for a full breakdown that parses entirely in your browser, or compare your replay to a pro's for letter-graded feedback.</p>
+        <p>Free, open-source replay analysis for Warcraft III.</p>
       </div>
       <div class="site-footer-links">
-        <a href="/">Home</a>
         <a href="/about">About</a>
         <a href="/download">Download</a>
         <a href="/terms">Terms</a>
@@ -2585,7 +2589,7 @@
       const grid = document.getElementById('all-builds-grid');
       const btn = document.getElementById('toggle-upgrades');
       if (grid) grid.classList.toggle('show-upgrades', !!on);
-      if (btn) btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+      if (btn) btn.setAttribute('aria-checked', on ? 'true' : 'false');
     }
 
     function setupUpgradesToggle() {
@@ -2600,33 +2604,53 @@
       });
     }
 
-    // ─── Build race filter buttons ──────────────────────────
-    function buildRaceFilter() {
-      const container = document.getElementById('race-filter');
-      RACE_KEYS.forEach(key => {
-        const meta = RACE_META[key];
-        const btn = document.createElement('button');
-        btn.className = 'site-race-pick';
-        btn.dataset.race = key;
-        btn.style.setProperty('--race-color', meta.color);
-        btn.innerHTML = `
-          <img class="site-race-pick-icon" src="/assets/wc3icons/${meta.icon}.jpg" alt="" />
-          <span class="site-race-pick-label">${meta.label}</span>
-        `;
+    // ─── Race pick ──────────────────────────────────────────
+    // The race filter is the hero stage: four heroes, click one. The old
+    // chip row is gone, so these buttons are the only race control on the
+    // page and every path that sets a race goes through setRace().
+    //
+    // The clicks are wired HERE, not in HeroStage.js. That subsystem only
+    // draws the models and reflects the pick, so the picker works identically
+    // when it never loads (no WebGL, a phone, a blocked CDN). Binding clicks
+    // in both places gave every slot two handlers that cancelled each other.
+    let heroStage = null;
+
+    // The ONLY place selectedRace changes. Everything downstream of a race
+    // pick lives here: the matchup row is rebuilt (its options depend on the
+    // race), the two zones that take the race's tileset mood are repainted,
+    // and the stage is told which hero to bring forward.
+    function setRace(key) {
+      const next = RACE_META[key] ? key : '';
+      selectedRace = next;
+      selectedMatchup = '';
+      syncRaceUI(next);
+      buildMatchupButtons();
+      applyFilter();
+      if (heroStage) heroStage.setSelected(next);
+    }
+
+    // Paint the pick: the slots' pressed state, and the two zones that take
+    // the race's tileset mood (the hero band's ground and the library head).
+    function syncRaceUI(key) {
+      document.querySelectorAll('#hero-stage .hp-stage-slot').forEach(btn => {
+        const on = btn.dataset.race === key;
+        btn.classList.toggle('is-selected', on);
+        btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+      });
+      const stage = document.getElementById('hero-stage');
+      if (stage) stage.dataset.selected = key || '';
+      const hero = document.querySelector('.hp-hero');
+      if (hero) hero.dataset.race = key || '';
+      const builds = document.getElementById('builds');
+      if (builds) builds.dataset.race = key || '';
+    }
+
+    function wireRacePicker() {
+      document.querySelectorAll('#hero-stage .hp-stage-slot').forEach(btn => {
         btn.addEventListener('click', () => {
-          const wasActive = btn.classList.contains('active');
-          container.querySelectorAll('.site-race-pick').forEach(b => b.classList.remove('active'));
-          if (wasActive) {
-            selectedRace = '';
-          } else {
-            btn.classList.add('active');
-            selectedRace = key;
-          }
-          selectedMatchup = '';
-          buildMatchupButtons();
-          applyFilter();
+          // Clicking the current pick clears it — the same toggle the chips had.
+          setRace(btn.dataset.race === selectedRace ? '' : btn.dataset.race);
         });
-        container.appendChild(btn);
       });
     }
 
@@ -2703,13 +2727,16 @@
     }
 
     // ─── Build matchup filter buttons ──────────────────────
+    // Icon-only: the opponent's own town-hall icon in a race-ringed plate.
+    // "vs HU / vs ORC / vs UD" spent three quarters of each chip restating
+    // the same two letters, and the row only exists once a race is picked.
     function buildMatchupButtons() {
       const section = document.getElementById('matchup-section');
       const container = document.getElementById('matchup-tags');
       container.innerHTML = '';
 
       if (!selectedRace) {
-        section.style.display = 'none';
+        section.hidden = true;
         return;
       }
 
@@ -2723,25 +2750,34 @@
       });
 
       if (opponentRaces.size === 0) {
-        section.style.display = 'none';
+        section.hidden = true;
         return;
       }
 
-      section.style.display = '';
+      section.hidden = false;
       RACE_KEYS.forEach(key => {
         if (!opponentRaces.has(key)) return;
+        const meta = RACE_META[key];
         const btn = document.createElement('button');
-        btn.className = 'site-matchup-btn';
+        btn.className = 'hp-mu hp-plate';
+        btn.type = 'button';
         btn.dataset.opponent = key;
-        btn.style.setProperty('--race-color', raceColor(key));
-        btn.textContent = `vs ${raceAbbr(key)}`;
+        btn.dataset.race = key;
+        btn.setAttribute('aria-pressed', 'false');
+        btn.title = `vs ${meta.label}`;
+        btn.setAttribute('aria-label', `Only builds played against ${meta.label}`);
+        btn.innerHTML = `<img src="/assets/wc3icons/${meta.icon}.jpg" alt="" aria-hidden="true" width="36" height="36" loading="lazy" onerror="this.style.display='none'" />`;
         btn.addEventListener('click', () => {
           const wasActive = btn.classList.contains('active');
-          container.querySelectorAll('.site-matchup-btn').forEach(b => b.classList.remove('active'));
+          container.querySelectorAll('.hp-mu').forEach(b => {
+            b.classList.remove('active');
+            b.setAttribute('aria-pressed', 'false');
+          });
           if (wasActive) {
             selectedMatchup = '';
           } else {
             btn.classList.add('active');
+            btn.setAttribute('aria-pressed', 'true');
             selectedMatchup = `${selectedRace}v${key}`;
           }
           applyFilter();
@@ -2844,11 +2880,14 @@
           : `${visible.length} of ${classTotal}`;
       }
 
-      // Active filter count badge on the mobile "Filters" button.
-      const mobileFiltersCount = document.getElementById('mobile-filters-count');
+      // How many filters are on, on the funnel button. This is the whole
+      // reason the two chip rows could collapse into it: the control has to
+      // say when it is hiding an active choice.
+      const mobileFiltersCount = document.getElementById('pfb-active-count');
       if (mobileFiltersCount) {
         let active = 0;
-        if (selectedRace) active++;
+        // Race is not counted: the hero stage shows the pick on screen, so
+        // the badge would be double-reporting something already visible.
         if (selectedMatchup) active++;
         if (axisFilters.opener) active++;
         if (axisFilters.gamePlan) active++;
@@ -2959,19 +2998,11 @@
       wireSearchInput(navSearch, mobileSearch);
       wireSearchInput(mobileSearch, navSearch);
 
-      // Mobile-only collapse toggles: "Your replays" reveals the rail,
-      // "Filters" reveals the pro filter bar. Both default to closed so the
-      // above-the-fold above-the-fold view stays compact.
-      const mobileFiltersBtn = document.getElementById('mobile-filters-toggle');
+      // Mobile-only collapse toggle: "Your replays" reveals the rail. The
+      // filter controls are three icon buttons in the library head now, so
+      // they cost a phone no height and need no disclosure of their own.
       const mobileMineBtn = document.getElementById('mobile-mine-toggle');
       const setBodyClass = (cls, on) => document.body.classList.toggle(cls, on);
-      if (mobileFiltersBtn) {
-        mobileFiltersBtn.addEventListener('click', () => {
-          const open = mobileFiltersBtn.getAttribute('aria-expanded') === 'true';
-          mobileFiltersBtn.setAttribute('aria-expanded', open ? 'false' : 'true');
-          setBodyClass('mobile-filters-open', !open);
-        });
-      }
       if (mobileMineBtn) {
         mobileMineBtn.addEventListener('click', () => {
           const open = mobileMineBtn.getAttribute('aria-expanded') === 'true';
@@ -2982,7 +3013,7 @@
 
       setupClassFilter();
       setupUpgradesToggle();
-      buildRaceFilter();
+      wireRacePicker();
       buildAxisFilters();
       buildTournamentFilter();
       setupBands();
@@ -3017,30 +3048,52 @@
         });
       }
 
-      // Wire up the "+ More filters" popover toggle.
-      const moreBtn = document.getElementById('pfb-more-btn');
-      const morePop = document.getElementById('pfb-more-pop');
-      if (moreBtn && morePop) {
-        moreBtn.addEventListener('click', () => {
-          const open = moreBtn.getAttribute('aria-expanded') === 'true';
-          moreBtn.setAttribute('aria-expanded', open ? 'false' : 'true');
-          morePop.hidden = open;
+      // Both icon menus in the library head open the same way: the button
+      // carries aria-expanded, the panel carries `hidden`, an outside click
+      // or Escape closes it, and Escape puts focus back on the button that
+      // opened it. Opening one closes the other.
+      const pops = [];
+      const wirePopover = (btnId, popId) => {
+        const btn = document.getElementById(btnId);
+        const pop = document.getElementById(popId);
+        if (!btn || !pop) return;
+        const close = () => { btn.setAttribute('aria-expanded', 'false'); pop.hidden = true; };
+        pops.push({ btn, pop, close });
+        btn.addEventListener('click', () => {
+          const open = btn.getAttribute('aria-expanded') === 'true';
+          pops.forEach(o => { if (o.btn !== btn) o.close(); });
+          btn.setAttribute('aria-expanded', open ? 'false' : 'true');
+          pop.hidden = open;
         });
-        // Close popover on outside click.
         document.addEventListener('click', (e) => {
-          if (moreBtn.getAttribute('aria-expanded') !== 'true') return;
-          if (!moreBtn.contains(e.target) && !morePop.contains(e.target)) {
-            moreBtn.setAttribute('aria-expanded', 'false');
-            morePop.hidden = true;
-          }
+          if (btn.getAttribute('aria-expanded') !== 'true') return;
+          if (!btn.contains(e.target) && !pop.contains(e.target)) close();
         });
-      }
+        document.addEventListener('keydown', (e) => {
+          if (e.key !== 'Escape') return;
+          if (btn.getAttribute('aria-expanded') !== 'true') return;
+          close();
+          btn.focus();
+        });
+      };
+      wirePopover('show-menu-btn', 'show-menu-pop');
+      wirePopover('pfb-more-btn', 'pfb-more-pop');
 
-      // Pre-select race from URL param
-      if (raceParam && RACE_META[raceParam]) {
-        selectedRace = raceParam;
-        const btn = document.querySelector(`#race-filter .site-race-pick[data-race="${raceParam}"]`);
-        if (btn) btn.classList.add('active');
+      // Pre-select race from the URL. Goes through setRace like every other
+      // path, so the stage, the moods and the matchup row all follow.
+      if (raceParam && RACE_META[raceParam]) setRace(raceParam);
+
+      // The animated race picker. Constructed here, before the manifest
+      // fetch resolves, so the buttons filter from the moment the page is
+      // interactive; the models arrive later and never block anything. A
+      // missing HeroStage.js just leaves the portrait plates in place.
+      const stageHost = document.getElementById('hero-stage');
+      if (stageHost && window.HeroStage) {
+        heroStage = new window.HeroStage({
+          host: stageHost,
+          assetVersion: window.__WC3V_ASSET_VERSION__,
+          initialRace: selectedRace
+        });
       }
 
       // Pull user-uploaded pros once before the first render so they
@@ -3085,7 +3138,9 @@
       window.WC3VHome = {
         setFilters (f) {
           f = f || {};
-          if (typeof f.race === 'string') selectedRace = f.race;
+          // Through setRace, so an agent filtering by race visibly moves the
+          // hero picker and the page's mood, not just the grid.
+          if (typeof f.race === 'string') setRace(f.race);
           if (typeof f.matchup === 'string') selectedMatchup = f.matchup;
           if (typeof f.query === 'string') searchQuery = f.query.toLowerCase();
           // `level` only moves the nav band now; `buildClasses` is what
@@ -3105,6 +3160,7 @@
           applyFilter();
           return lastVisibleBuilds.slice();
         },
+        getRace () { return selectedRace; },
         getVisible () { return lastVisibleBuilds.slice(); },
         getAllBuilds () { return allBuilds.slice(); },
         getBuild (id) { return allBuilds.find(b => b.id === id) || null; },

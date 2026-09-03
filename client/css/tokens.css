@@ -156,6 +156,23 @@
   --vc-edge:      #453a25;
   --vc-well:      #0b0805;
 
+  /* ── Site nav chrome, warm register ─────────────────────────
+     The app bar is the one surface every page shares, so it gets its
+     own tokens rather than reading --bg/--accent: the homepage repaints
+     those (client/css/home.css) and the other eight .site-page pages do
+     not. Keying the bar here makes it the same bar everywhere, warm on
+     both bodies, the way the viewer's bronze rails already sit over its
+     blue-grey map. */
+  --nav-bg:         rgba(26,21,15,0.94);
+  --nav-hairline:   #2f2819;   /* == --vc-hairline */
+  --nav-strike:     rgba(163,134,80,0.17);
+  --nav-text:       #f2e7cf;
+  --nav-text-muted: #c0ae8c;
+  --nav-accent:     #C0873A;
+  --nav-wash:       rgba(226,200,146,0.07);
+  --nav-field-bg:   #14100b;
+  --nav-field-bd:   #453a25;   /* == --vc-edge */
+
   /* ── Dominance gauge chassis (viewer) ───────────────────────
      The bar is a flex-shrink:0 sibling in #gameplay-area's column,
      so --dom-bar-h comes straight out of the map. Tokenized because
