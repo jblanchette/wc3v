@@ -279,7 +279,7 @@ body.hp-page {
   z-index: 1;
   max-width: var(--page-max);
   margin: 0 auto;
-  padding: var(--sp-5) var(--page-gutter) calc(var(--sp-5) + 6px);
+  padding: var(--sp-4) var(--page-gutter) calc(var(--sp-4) + 6px);
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(430px, 44%);
   align-items: center;
@@ -290,13 +290,13 @@ body.hp-page {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: var(--sp-3);
+  gap: var(--sp-2);
   min-width: 0;
 }
 
 .hp-hero-tagline {
   margin: 0;
-  font-size: clamp(1.5rem, 2.4vw, 2.1rem);
+  font-size: clamp(1.45rem, 2.2vw, 1.95rem);
   font-weight: 800;
   line-height: 1.2;
   color: var(--text);
@@ -417,7 +417,7 @@ body.hp-page {
 .hp-app-inner {
   max-width: var(--page-max);
   margin: 0 auto;
-  padding: var(--sp-3) var(--page-gutter);
+  padding: var(--sp-2) var(--page-gutter);
   display: grid;
   grid-template-columns: 300px minmax(0, 1fr) minmax(0, 2fr) auto;
   align-items: center;
@@ -428,7 +428,7 @@ body.hp-page {
 .hp-app-media img {
   display: block;
   width: 100%;
-  height: 88px;
+  height: 76px;
   object-fit: cover;
   object-position: 0 50%;
 }
@@ -641,8 +641,14 @@ body.hp-page {
 body.hp-page .site-pros-head {
   border-bottom: 1px solid var(--hp-outline);
   box-shadow: 0 1px 0 var(--hp-strike);
-  padding-bottom: var(--sp-3);
+  padding-bottom: var(--sp-2);
 }
+
+/* The two gaps stacked either side of the library head. 16px above it
+   and 12px under it put the first card row 28px lower for no reason a
+   reader can see. */
+body.hp-page .site-content { padding-top: var(--sp-2); }
+body.hp-page .site-pros { gap: var(--sp-2); }
 
 body.hp-page .site-pros-title,
 body.hp-page .site-mine-title {
@@ -909,13 +915,18 @@ body.hp-page .site-footer {
    RESPONSIVE
    ══════════════════════════════════════════════════════════════ */
 
-/* The desktop band loses its picture first, and it goes early: below
-   1400 the three marks cannot hold a two-line entry each with the
-   picture still taking 300px, and every label wrapped to four lines.
-   A display:none <img> is never fetched, so nothing pays for it. */
+/* Below 1400 the band collapses to a single 60px strip: the name, the
+   three labels and the button, all on one row. The picture, the line
+   under the name and the three notes are what a wide screen adds.
+   Keeping them at 1280 cost 59px of fold and wrapped every label to
+   four lines, and the labels are the message on their own. A
+   display:none <img> is never fetched, so nothing pays for it. */
 @media (max-width: 1400px) {
   .hp-app-media { display: none; }
-  .hp-app-inner { grid-template-columns: minmax(0, 1fr) minmax(0, 2.4fr) auto; }
+  .hp-app-sub { display: none; }
+  .hp-app-point-note { display: none; }
+  .hp-app-inner { grid-template-columns: auto minmax(0, 1fr) auto; }
+  .hp-app-point { grid-template-columns: 36px minmax(0, 1fr); }
 }
 
 @media (max-width: 1024px) {
@@ -957,6 +968,7 @@ body.hp-page .site-footer {
      button. Three stacked marks were 150px of band nobody there can act
      on; /download carries the same three. */
   .hp-app-points { display: none; }
+  .hp-app-sub { display: block; }
   .hp-app-cta { width: 100%; justify-content: center; }
 }
 
