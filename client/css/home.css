@@ -256,30 +256,13 @@ body.hp-page {
     var(--hp-ground) repeat 0 0 / 224px 224px;
 }
 
-/* Bronze rail along the foot of the band. A cast strip, not a stripe:
-   full bleed across the page, a struck highlight on its lip and a hard
-   black line under it. */
-.hp-hero::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 6px;
-  z-index: 1;
-  pointer-events: none;
-  background:
-    var(--hp-grain),
-    linear-gradient(180deg, #7a6640 0, #7a6640 1px, #56472b 1px, #2b2416 62%, #100d09 100%);
-  box-shadow: 0 1px 0 var(--hp-outline);
-}
 
 .hp-hero-inner {
   position: relative;
   z-index: 1;
   max-width: var(--page-max);
   margin: 0 auto;
-  padding: var(--sp-4) var(--page-gutter) calc(var(--sp-4) + 6px);
+  padding: var(--sp-4) var(--page-gutter);
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(430px, 44%);
   align-items: center;
@@ -412,19 +395,27 @@ body.hp-page {
   width: 100%;
   /* body is a flex column: same trap as .hp-hero, never let it shrink. */
   flex: 0 0 auto;
-  /* The strip used the page's own two darkest tokens, so it read as a
-     patch of background with things sitting on it. It is a cast plate
-     now: the .hp-plate recipe at full bleed, two values lighter than
-     the page, hard black at both edges with a struck highlight inside
-     the top one. The hero's bronze rail lands directly above it. */
+  /* COOL, on a warm page, and on purpose. Two earlier tries painted this
+     strip in the page's own browns and then in a copper wash, which put
+     bronze on bronze on brown: the whole fold went one hue and the band
+     had nothing to stand against.
+
+     The slate is not a new colour. It is tokens.css :root, the site
+     chrome the viewer and the other eight pages wear, so warm bronze over
+     cool slate is a relationship this product already has. It is also the
+     one dark hue that cannot be read as data: blue, red, green and purple
+     each name a race, and navy is what the site uses for chrome precisely
+     because it names none of them.
+
+     The values are inlined rather than taken from :root, because :root is
+     repainted warm under body.hp-page. */
   background:
     var(--hp-grain),
-    linear-gradient(180deg, rgba(192,135,58,0.20), rgba(192,135,58,0.09) 55%, rgba(192,135,58,0.02)),
-    linear-gradient(180deg, var(--surface-3), var(--surface-2) 46%, var(--surface) 80%, var(--bg-deep));
+    linear-gradient(180deg, #363c58, #262b41 46%, #1b1f30 80%, #12131f);
   border-top: 1px solid var(--hp-outline);
   border-bottom: 1px solid var(--hp-outline);
   box-shadow:
-    inset 0 1px 0 var(--hp-strike),
+    inset 0 1px 0 rgba(190,205,240,0.20),
     0 1px 0 var(--hp-strike);
 }
 
@@ -992,7 +983,7 @@ body.hp-page .site-footer {
 }
 
 @media (max-width: 720px) {
-  .hp-hero-inner { padding: var(--sp-4) var(--page-gutter) calc(var(--sp-4) + 6px); }
+  .hp-hero-inner { padding: var(--sp-4) var(--page-gutter); }
   .hp-drop { flex-wrap: wrap; }
   .hp-drop-cta { flex: 1 1 100%; }
   .hp-stage-slots { grid-template-columns: repeat(2, 1fr); }
