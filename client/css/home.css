@@ -412,11 +412,20 @@ body.hp-page {
   width: 100%;
   /* body is a flex column: same trap as .hp-hero, never let it shrink. */
   flex: 0 0 auto;
+  /* The strip used the page's own two darkest tokens, so it read as a
+     patch of background with things sitting on it. It is a cast plate
+     now: the .hp-plate recipe at full bleed, two values lighter than
+     the page, hard black at both edges with a struck highlight inside
+     the top one. The hero's bronze rail lands directly above it. */
   background:
     var(--hp-grain),
-    linear-gradient(180deg, var(--bg-deep), var(--bg));
+    linear-gradient(180deg, rgba(192,135,58,0.20), rgba(192,135,58,0.09) 55%, rgba(192,135,58,0.02)),
+    linear-gradient(180deg, var(--surface-3), var(--surface-2) 46%, var(--surface) 80%, var(--bg-deep));
+  border-top: 1px solid var(--hp-outline);
   border-bottom: 1px solid var(--hp-outline);
-  box-shadow: 0 1px 0 var(--hp-strike);
+  box-shadow:
+    inset 0 1px 0 var(--hp-strike),
+    0 1px 0 var(--hp-strike);
 }
 
 .hp-app-inner {
@@ -434,21 +443,37 @@ body.hp-page {
    else, so the two facts that answer "should I" live here. */
 .hp-app-id {
   display: flex;
-  align-items: baseline;
+  /* centre, not baseline: the mark is a 36px box and a baseline row
+     would hang it off the text. */
+  align-items: center;
   flex-wrap: wrap;
   gap: var(--sp-1) var(--sp-2);
   margin: 0;
   min-width: 0;
 }
+/* The mark. Same metal as the button at the other end of the strip,
+   so the two bronze objects bracket the claims between them. */
+.hp-app-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  --hp-chamfer: 6px;
+}
+.hp-app-mark svg { width: 22px; height: 22px; }
+
 .hp-app-name {
   font-size: var(--fs-lg);
   font-weight: 800;
-  color: var(--text);
+  color: var(--accent-strong);
   white-space: nowrap;
 }
 .hp-app-free {
   font-size: var(--fs-label);
-  color: var(--text-dim);
+  /* --text-dim clears only 4.0 on the lighter plate; this is 5.9. */
+  color: var(--text-muted);
   white-space: nowrap;
 }
 
@@ -506,16 +531,16 @@ body.hp-page {
   padding: var(--sp-2) var(--sp-4);
   font-size: var(--fs-base);
   font-weight: 800;
-  color: var(--accent-strong);
+  color: var(--text-on-accent);
   white-space: nowrap;
   text-decoration: none;
 }
-.hp-app-cta:hover { color: #e6b163; text-decoration: none; }
+.hp-app-cta:hover { color: var(--text-on-accent); text-decoration: none; }
 .hp-app-cta svg { width: 22px; height: 22px; flex-shrink: 0; }
 .hp-app-version {
   font-size: var(--fs-label);
-  font-weight: 600;
-  color: var(--text-dim);
+  font-weight: 700;
+  color: rgba(29, 20, 5, 0.66);
 }
 
 
@@ -941,6 +966,9 @@ body.hp-page .site-footer {
    read as a bug rather than a layout. */
 @media (max-width: 1160px) {
   .hp-app-points { flex: 1 1 100%; order: 3; }
+  /* The claims are off this line now, so the terms fit again. They are
+     hidden only in the 1161-1439 band, where the row is tight. */
+  .hp-app-free { display: inline; }
 }
 
 @media (max-width: 1024px) {
