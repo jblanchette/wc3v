@@ -3222,7 +3222,16 @@ body {
   padding: 0.4rem 0.6rem;
   background: rgba(255, 240, 214, 0.035);
   border-radius: 6px;
-  border-left: 3px solid var(--vc-edge, #453a25);
+  /* Full perimeter, never a single edge. This card wore a 3px stripe down
+     its left side, which is the one decoration this project bans outright.
+     Nothing was lost by dropping it: the stripe was --vc-edge, the same
+     neutral bronze on both cards, so it carried no data at all. The player's
+     identity is on the name. What replaces it is the rail's own material: a
+     hard seated line all the way round and one struck highlight along the
+     top lip, the recipe the dominance gauge established. */
+  box-shadow:
+    inset 0 0 0 1px var(--vc-edge, #453a25),
+    inset 0 1px 0 rgba(240, 214, 158, 0.09);
   flex-shrink: 1;
   display: flex;
   flex-direction: column;
