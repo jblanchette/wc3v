@@ -1028,46 +1028,46 @@
     </div>
   </div>
 
-  <!-- The desktop app, in one thin row under the hero: the app itself, its
-       name and one line, the three things it does that the website cannot,
-       and a stone plate into /download. It used to be advertised only by the
-       nav link and the last pillar at the foot of the page, which a visitor
-       who stops at the library never reaches.
+  <!-- The desktop app, as one row under the hero: the name, three claims
+       and the button, every one of them centred on the same 44px line.
 
-       The plate is stone on purpose. Bronze is the hero drop zone's, and the
-       page keeps one primary action. The image link is hidden from the
-       accessibility tree so keyboard users meet one link here, not two.
-       Copy mirrors download.html; the W3Champions line says what the card
-       shows and its title carries the opt-in and ladder-only caveats. -->
+       It carried a screenshot, a line under the name and a note under each
+       claim before. That made three marks of three different heights, so
+       the middle label rode higher than the other two, and the picture was
+       an unreadable smudge at 300x76. One row cannot come out of alignment.
+
+       The glyphs are stroke SVGs, the language every other control on this
+       page uses. Blizzard unit art identifies a game thing (a race, a hero,
+       a unit) and none of these three is one; a flare icon says nothing
+       about streaming.
+
+       The plate is stone. Bronze is the hero drop zone's, and the page
+       keeps one primary action. -->
   <section class="hp-app" aria-labelledby="hp-app-title">
     <div class="hp-app-inner">
-      <a class="hp-app-media hp-plate" href="/download" tabindex="-1" aria-hidden="true">
-        <img src="/assets/hero/desktop-preview.webp" alt="" width="760" height="224" decoding="async">
-      </a>
-      <div class="hp-app-copy">
-        <h2 id="hp-app-title" class="hp-app-title hp-engrave">WC3V Desktop</h2>
-        <p class="hp-app-sub">It reviews your games for you. Free, Windows 10 and 11.</p>
-      </div>
+      <p class="hp-app-id">
+        <span id="hp-app-title" class="hp-app-name">WC3V Desktop</span>
+        <span class="hp-app-free">free for Windows</span>
+      </p>
+
       <ul class="hp-app-points">
         <li class="hp-app-point">
-          <img class="hp-app-ico" src="/assets/wc3icons/tsct.jpg" alt="" width="36" height="36" loading="lazy" onerror="this.style.display=&apos;none&apos;">
-          <span class="hp-app-point-label">Watches your replay folder</span>
-          <span class="hp-app-point-note">Every game graded as it lands.</span>
-        </li>
-        <li class="hp-app-point" title="Opt-in. W3Champions ladder games only.">
-          <img class="hp-app-ico" src="/assets/wc3icons/nowl.jpg" alt="" width="36" height="36" loading="lazy" onerror="this.style.display=&apos;none&apos;">
-          <span class="hp-app-point-label">Scouts your ladder opponent</span>
-          <span class="hp-app-point-note">Rank, MMR and your record, from W3Champions.</span>
+          <svg class="hp-app-glyph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.5 4h5v3h-5z"/><path d="M14.5 5.5H17a2 2 0 0 1 2 2V18a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V7.5a2 2 0 0 1 2-2h2.5"/><polyline points="9 13.5 11 15.5 15 11"/></svg>
+          <span>Grades every game as it lands</span>
         </li>
         <li class="hp-app-point">
-          <img class="hp-app-ico" src="/assets/wc3icons/btnflare.jpg" alt="" width="36" height="36" loading="lazy" onerror="this.style.display=&apos;none&apos;">
-          <span class="hp-app-point-label">Overlay for OBS</span>
-          <span class="hp-app-point-note">One URL into a Browser Source.</span>
+          <svg class="hp-app-glyph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="1.6"/><line x1="12" y1="2" x2="12" y2="4.6"/><line x1="12" y1="19.4" x2="12" y2="22"/><line x1="2" y1="12" x2="4.6" y2="12"/><line x1="19.4" y1="12" x2="22" y2="12"/></svg>
+          <span>Scouts your W3Champions opponent</span>
+        </li>
+        <li class="hp-app-point">
+          <svg class="hp-app-glyph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="2.1"/><path d="M8.6 8.6a4.8 4.8 0 0 0 0 6.8"/><path d="M15.4 15.4a4.8 4.8 0 0 0 0-6.8"/><path d="M5.9 5.9a8.6 8.6 0 0 0 0 12.2"/><path d="M18.1 18.1a8.6 8.6 0 0 0 0-12.2"/></svg>
+          <span>Overlay for OBS</span>
         </li>
       </ul>
+
       <a class="hp-app-cta hp-plate" href="/download">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        <span class="hp-app-cta-label">Download for Windows</span>
+        <span class="hp-app-cta-label">Download</span>
         <span class="hp-app-version" id="hp-app-version" hidden></span>
       </a>
     </div>

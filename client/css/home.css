@@ -396,10 +396,15 @@ body.hp-page {
 
 /* ══════════════════════════════════════════════════════════════
    DESKTOP BAND
-   One thin row under the hero: the app, its name and one line, the
-   three things it does, and a stone plate into /download. Hairline
-   under it at the pillar strip's weight; the hero's bronze rail sits
-   just above and a second one here would be two rails 100px apart.
+   One row: the name, three claims and the button, all centred on
+   the same line. Every item is single-line by construction, which
+   is the whole point — the version this replaced stacked a note
+   under each claim and centred each mark on its own block, so the
+   three labels sat at three different heights.
+
+   Glyphs are stroke SVGs at the weight the rest of the page's
+   controls use. No unit art here: Blizzard icons identify a game
+   thing, and "overlay for OBS" is not one.
    ══════════════════════════════════════════════════════════════ */
 
 .hp-app {
@@ -418,70 +423,77 @@ body.hp-page {
   max-width: var(--page-max);
   margin: 0 auto;
   padding: var(--sp-2) var(--page-gutter);
-  display: grid;
-  grid-template-columns: 300px minmax(0, 1fr) minmax(0, 2fr) auto;
-  align-items: center;
-  gap: var(--sp-5);
-}
-
-.hp-app-media { display: block; min-width: 0; }
-.hp-app-media img {
-  display: block;
-  width: 100%;
-  height: 76px;
-  object-fit: cover;
-  object-position: 0 50%;
-}
-
-.hp-app-copy {
   display: flex;
-  flex-direction: column;
-  gap: var(--sp-1);
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-2) var(--sp-4);
+  min-height: 60px;
+}
+
+/* Name and terms, one line. The button says Download and nothing
+   else, so the two facts that answer "should I" live here. */
+.hp-app-id {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: var(--sp-1) var(--sp-2);
+  margin: 0;
   min-width: 0;
 }
-.hp-app-title { margin: 0; font-size: var(--fs-lg); }
-.hp-app-sub {
-  margin: 0;
+.hp-app-name {
+  font-size: var(--fs-lg);
+  font-weight: 800;
+  color: var(--text);
+  white-space: nowrap;
+}
+.hp-app-free {
   font-size: var(--fs-label);
-  line-height: 1.35;
-  color: var(--text-muted);
+  color: var(--text-dim);
+  white-space: nowrap;
 }
 
-/* Three marks. The note stays at --fs-label: --fs-min is the 12.8px
-   floor exactly, and a rounding wobble there would trip the audit. */
+/* The three claims. Equal-width columns were what made this ragged:
+   the labels are 15 to 32 characters, so a fixed column left one
+   label touching the next glyph and another with 80px of air. Auto
+   widths with one gap and a carved groove between them reads as a
+   list instead. */
 .hp-app-points {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-2) 0;
+  flex: 1 1 460px;
   list-style: none;
   margin: 0;
   padding: 0;
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: var(--sp-3);
   min-width: 0;
 }
 .hp-app-point {
-  display: grid;
-  grid-template-columns: 36px minmax(0, 1fr);
-  column-gap: var(--sp-2);
+  display: flex;
   align-items: center;
+  gap: var(--sp-2);
+  padding: 0 var(--sp-3);
   min-width: 0;
-}
-.hp-app-ico {
-  width: 36px;
-  height: 36px;
-  grid-row: span 2;
-  object-fit: cover;
-  box-shadow: inset 0 0 0 1px var(--hp-outline);
-}
-.hp-app-point-label {
   font-size: var(--fs-label);
   font-weight: 700;
   color: var(--text);
+  /* A claim is atomic: it wraps as a whole item or not at all. Letting
+     the words break put "Overlay for OBS" on a second line under the
+     first claim with no groove in front of it, which read as a fault. */
+  white-space: nowrap;
 }
-.hp-app-point-note {
-  font-size: var(--fs-label);
-  line-height: 1.3;
-  color: var(--text-muted);
-  overflow-wrap: anywhere;
+.hp-app-point:first-child { padding-left: 0; }
+/* A groove, the vertical twin of .hp-pop-rule: one dark line, one
+   struck highlight beside it. */
+.hp-app-point + .hp-app-point {
+  border-left: 1px solid var(--hp-outline);
+  box-shadow: inset 1px 0 0 var(--hp-strike);
+}
+.hp-app-glyph {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  color: var(--accent-strong);
 }
 
 /* Stone, not bronze: the drop zone is the page's one primary action. */
@@ -489,6 +501,7 @@ body.hp-page {
   display: inline-flex;
   align-items: center;
   gap: var(--sp-2);
+  margin-left: auto;
   min-height: var(--hit-min);
   padding: var(--sp-2) var(--sp-4);
   font-size: var(--fs-base);
@@ -502,7 +515,7 @@ body.hp-page {
 .hp-app-version {
   font-size: var(--fs-label);
   font-weight: 600;
-  color: var(--text-muted);
+  color: var(--text-dim);
 }
 
 
@@ -915,18 +928,19 @@ body.hp-page .site-footer {
    RESPONSIVE
    ══════════════════════════════════════════════════════════════ */
 
-/* Below 1400 the band collapses to a single 60px strip: the name, the
-   three labels and the button, all on one row. The picture, the line
-   under the name and the three notes are what a wide screen adds.
-   Keeping them at 1280 cost 59px of fold and wrapped every label to
-   four lines, and the labels are the message on their own. A
-   display:none <img> is never fetched, so nothing pays for it. */
-@media (max-width: 1400px) {
-  .hp-app-media { display: none; }
-  .hp-app-sub { display: none; }
-  .hp-app-point-note { display: none; }
-  .hp-app-inner { grid-template-columns: auto minmax(0, 1fr) auto; }
-  .hp-app-point { grid-template-columns: 36px minmax(0, 1fr); }
+/* The terms go first when the row runs short. Without this the three
+   claims had 8px of slack at 1280, which is no slack at all: one font
+   substitution and the last claim drops to a second line. */
+@media (max-width: 1439px) {
+  .hp-app-free { display: none; }
+}
+
+/* Narrower than this the claims cannot share a line with the name and
+   the button, so they take their own. A wrapped flex row put the third
+   claim under the first with a groove hanging off its left edge, which
+   read as a bug rather than a layout. */
+@media (max-width: 1160px) {
+  .hp-app-points { flex: 1 1 100%; order: 3; }
 }
 
 @media (max-width: 1024px) {
@@ -947,8 +961,6 @@ body.hp-page .site-footer {
   .hp-stage-portrait { width: 40px; height: 40px; }
   .hp-stage-slot.is-loaded .hp-stage-plate { opacity: 1; }
   body.hp-page .hp-pillars-track { grid-template-columns: 1fr; }
-  .hp-app-inner { grid-template-columns: minmax(0, 1fr) auto; gap: var(--sp-3) var(--sp-4); }
-  .hp-app-points { grid-column: 1 / -1; }
 }
 
 @media (max-width: 720px) {
@@ -963,13 +975,12 @@ body.hp-page .site-footer {
   .hp-hero-inner { padding-inline: var(--sp-3); }
   .hp-hero-tagline { font-size: 1.35rem; }
   .hp-hero-sub { font-size: var(--fs-base); }
-  .hp-app-inner { grid-template-columns: 1fr; padding-inline: var(--sp-3); }
-  /* The app is Windows only, so a phone gets the name, the line and the
-     button. Three stacked marks were 150px of band nobody there can act
-     on; /download carries the same three. */
+  /* The app is Windows only, so a phone gets the name, the terms and
+     the button. Three stacked claims were 90px of band nobody there
+     can act on, and /download carries all three. */
+  .hp-app-inner { padding-inline: var(--sp-3); }
   .hp-app-points { display: none; }
-  .hp-app-sub { display: block; }
-  .hp-app-cta { width: 100%; justify-content: center; }
+  .hp-app-cta { width: 100%; justify-content: center; margin-left: 0; }
 }
 
 @media (max-width: 480px) {
