@@ -11,9 +11,16 @@
  *
  * It never starts a server. Point it at one that is up.
  *
+ * --connect attaches to a Chrome that is already listening on a CDP port
+ * rather than launching a headless one. That is the shared browser
+ * ~/.claude/bin/ensure-shared-chrome.ps1 keeps on 9222 for the
+ * chrome-devtools MCP, so the pages open in a window you can actually watch,
+ * on a real GPU, and they stay open when the run finishes.
+ *
  * Usage:
  *   node tools/live-check.js
  *   node tools/live-check.js --base=http://127.0.0.1:8080
+ *   node tools/live-check.js --connect=http://127.0.0.1:9222 --keep
  *   node tools/live-check.js --pages=index.html,about.html --width=1920x1080
  *   node tools/live-check.js --shots=client/review/home/live
  *
@@ -51,23 +58,34 @@ const IGNORE = [/favicon/i];
 const fails = [];
 
 (async () => {
-  const exe = BROWSERS.find(p => fs.existsSync(p));
-  if (!exe) { console.error('no Chrome or Edge found'); process.exit(2); }
-
-  // Software GL so the hero stage renders headless, the same flags
-  // tools/fx-bench.js uses.
-  const browser = await puppeteer.launch({
-    executablePath: exe,
-    headless: true,
-    args: ['--no-sandbox', '--disable-dev-shm-usage',
-           '--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader']
-  });
+  let browser;
+  if (args.connect) {
+    // Attach to a browser somebody is already looking at. No flags to pass:
+    // it is already running with whatever GPU the machine has.
+    browser = await puppeteer.connect({
+      browserURL: String(args.connect),
+      defaultViewport: null
+    });
+  } else {
+    const exe = BROWSERS.find(p => fs.existsSync(p));
+    if (!exe) { console.error('no Chrome or Edge found'); process.exit(2); }
+    // Software GL so the hero stage renders headless, the same flags
+    // tools/fx-bench.js uses.
+    browser = await puppeteer.launch({
+      executablePath: exe,
+      headless: true,
+      args: ['--no-sandbox', '--disable-dev-shm-usage',
+             '--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader']
+    });
+  }
 
   console.log('\n  ' + BASE + '   ' + W + 'x' + H + '\n');
 
   for (const p of PAGES) {
     const page = await browser.newPage();
-    await page.setViewport({ width: W, height: H, deviceScaleFactor: 1 });
+    // A window somebody is watching keeps its own size; forcing a viewport on
+    // an attached browser leaves the tab a different shape from the frame.
+    if (!args.connect) await page.setViewport({ width: W, height: H, deviceScaleFactor: 1 });
 
     const errors = [];
     const badResponses = [];
@@ -96,7 +114,8 @@ const fails = [];
     } catch (e) { nav = e.message; }
     await new Promise(r => setTimeout(r, Number(args.wait || 6000)));
 
-    const shape = nav ? null : await page.evaluate((vh) => {
+    const shape = nav ? null : await page.evaluate((vhArg) => {
+      const vh = vhArg || window.innerHeight;
       const h1 = document.querySelector('h1');
       const r = h1 && h1.getBoundingClientRect();
       const stage = document.getElementById('hero-stage');
@@ -108,7 +127,7 @@ const fails = [];
         stage: stage ? stage.getAttribute('data-state') + (stage.getAttribute('data-reason') ? '/' + stage.getAttribute('data-reason') : '') : null,
         models: document.querySelectorAll('.hp-stage-slot.is-loaded').length
       };
-    }, H);
+    }, args.connect ? 0 : H);
 
     const uniqErr = [...new Set(errors)];
     const uniqBad = [...new Set(badResponses)];
@@ -129,10 +148,14 @@ const fails = [];
       await page.evaluate(() => window.scrollTo(0, 0));
       await page.screenshot({ path: path.join(dir, p.replace(/\.html$/, '') + '-' + W + '-fold.png') });
     }
-    await page.close();
+    // --keep leaves the tabs open so the run ends with something on screen.
+    if (!args.keep) await page.close();
   }
 
-  await browser.close();
+  // Never close a browser we attached to: it is somebody else's window, and
+  // other agents share it.
+  if (args.connect) await browser.disconnect();
+  else await browser.close();
   console.log('\n  ' + (fails.length ? fails.length + ' page(s) with problems: ' + fails.join(', ')
                                      : 'every page clean'));
   process.exit(fails.length ? 1 : 0);
