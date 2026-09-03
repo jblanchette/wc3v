@@ -175,7 +175,8 @@
           "Curated pro Warcraft III build orders by race and matchup",
           "3D replay playback with second-level scrubbing",
           "In-browser .w3g parsing, no upload",
-          "Letter-graded comparison of your replay against a pro's"
+          "Letter-graded comparison of your replay against a pro's",
+          "Windows desktop companion that watches your replay folder, with an OBS overlay"
         ],
         "screenshot": "https://wc3v.com/assets/og-preview.png",
         "isPartOf": { "@id": "https://wc3v.com/#website" },
@@ -199,7 +200,7 @@
   <!-- The homepage's own skin: a scoped token override on body.hp-page
        plus every .hp-* component. Last, so it wins; index.html only, so
        no other page changes colour. -->
-  <link rel="stylesheet" href="css/home.css?v=1">
+  <link rel="stylesheet" href="css/home.css?v=2">
   <style>
     body { margin: 0; }
   </style>
@@ -291,6 +292,22 @@
           const el = document.getElementById('pfb-corpus');
           if (!el || !s || !s.replays) return;
           el.textContent = `${s.replays.toLocaleString()} pro replays`;
+          el.hidden = false;
+        } catch (e) {}
+      })();
+
+      // Shipped desktop version, from the same manifest the updater polls
+      // (DownloadPage.js reads it too, but that script also drives the
+      // download page's tabs and JSON-LD, so this is one fetch instead).
+      // Stays hidden on any failure.
+      (async () => {
+        try {
+          const r = await fetch('https://cdn.wc3v.com/desktop/latest.json', { cache: 'no-store' });
+          if (!r.ok) return;
+          const m = await r.json();
+          const el = document.getElementById('hp-app-version');
+          if (!el || !m || !m.version) return;
+          el.textContent = `v${m.version}`;
           el.hidden = false;
         } catch (e) {}
       })();
@@ -1011,6 +1028,51 @@
     </div>
   </div>
 
+  <!-- The desktop app, in one thin row under the hero: the app itself, its
+       name and one line, the three things it does that the website cannot,
+       and a stone plate into /download. It used to be advertised only by the
+       nav link and the last pillar at the foot of the page, which a visitor
+       who stops at the library never reaches.
+
+       The plate is stone on purpose. Bronze is the hero drop zone's, and the
+       page keeps one primary action. The image link is hidden from the
+       accessibility tree so keyboard users meet one link here, not two.
+       Copy mirrors download.html; the W3Champions line says what the card
+       shows and its title carries the opt-in and ladder-only caveats. -->
+  <section class="hp-app" aria-labelledby="hp-app-title">
+    <div class="hp-app-inner">
+      <a class="hp-app-media hp-plate" href="/download" tabindex="-1" aria-hidden="true">
+        <img src="/assets/hero/desktop-preview.webp" alt="" width="760" height="224" decoding="async">
+      </a>
+      <div class="hp-app-copy">
+        <h2 id="hp-app-title" class="hp-app-title hp-engrave">WC3V Desktop</h2>
+        <p class="hp-app-sub">It reviews your games for you. Free, Windows 10 and 11.</p>
+      </div>
+      <ul class="hp-app-points">
+        <li class="hp-app-point">
+          <img class="hp-app-ico" src="/assets/wc3icons/tsct.jpg" alt="" width="36" height="36" loading="lazy" onerror="this.style.display=&apos;none&apos;">
+          <span class="hp-app-point-label">Watches your replay folder</span>
+          <span class="hp-app-point-note">Every game graded as it lands.</span>
+        </li>
+        <li class="hp-app-point" title="Opt-in. W3Champions ladder games only.">
+          <img class="hp-app-ico" src="/assets/wc3icons/nowl.jpg" alt="" width="36" height="36" loading="lazy" onerror="this.style.display=&apos;none&apos;">
+          <span class="hp-app-point-label">Scouts your ladder opponent</span>
+          <span class="hp-app-point-note">Rank, MMR and your record, from W3Champions.</span>
+        </li>
+        <li class="hp-app-point">
+          <img class="hp-app-ico" src="/assets/wc3icons/btnflare.jpg" alt="" width="36" height="36" loading="lazy" onerror="this.style.display=&apos;none&apos;">
+          <span class="hp-app-point-label">Overlay for OBS</span>
+          <span class="hp-app-point-note">One URL into a Browser Source.</span>
+        </li>
+      </ul>
+      <a class="hp-app-cta hp-plate" href="/download">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        <span class="hp-app-cta-label">Download for Windows</span>
+        <span class="hp-app-version" id="hp-app-version" hidden></span>
+      </a>
+    </div>
+  </section>
+
   <main class="site-content">
 
     <!-- Help modal: standard replay-folder paths. Opened from the hero
@@ -1306,7 +1368,7 @@
               <img class="hp-pillar-media" src="/assets/hero/desktop-preview.webp" alt="The WC3V desktop app showing a finished game, its verdict and a link into the simulator" width="760" height="224" loading="lazy" decoding="async">
               <span class="hp-pillar-body">
                 <span class="hp-pillar-label">Desktop companion</span>
-                <span class="hp-pillar-note">Watches your replay folder and grades each game as you finish it.</span>
+                <span class="hp-pillar-note">Grades each game as you finish it, with an overlay for OBS.</span>
               </span>
             </a>
 

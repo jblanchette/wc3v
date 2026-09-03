@@ -395,6 +395,118 @@ body.hp-page {
 
 
 /* ══════════════════════════════════════════════════════════════
+   DESKTOP BAND
+   One thin row under the hero: the app, its name and one line, the
+   three things it does, and a stone plate into /download. Hairline
+   under it at the pillar strip's weight; the hero's bronze rail sits
+   just above and a second one here would be two rails 100px apart.
+   ══════════════════════════════════════════════════════════════ */
+
+.hp-app {
+  position: relative;
+  width: 100%;
+  /* body is a flex column: same trap as .hp-hero, never let it shrink. */
+  flex: 0 0 auto;
+  background:
+    var(--hp-grain),
+    linear-gradient(180deg, var(--bg-deep), var(--bg));
+  border-bottom: 1px solid var(--hp-outline);
+  box-shadow: 0 1px 0 var(--hp-strike);
+}
+
+.hp-app-inner {
+  max-width: var(--page-max);
+  margin: 0 auto;
+  padding: var(--sp-3) var(--page-gutter);
+  display: grid;
+  grid-template-columns: 300px minmax(0, 1fr) minmax(0, 2fr) auto;
+  align-items: center;
+  gap: var(--sp-5);
+}
+
+.hp-app-media { display: block; min-width: 0; }
+.hp-app-media img {
+  display: block;
+  width: 100%;
+  height: 88px;
+  object-fit: cover;
+  object-position: 0 50%;
+}
+
+.hp-app-copy {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+  min-width: 0;
+}
+.hp-app-title { margin: 0; font-size: var(--fs-lg); }
+.hp-app-sub {
+  margin: 0;
+  font-size: var(--fs-label);
+  line-height: 1.35;
+  color: var(--text-muted);
+}
+
+/* Three marks. The note stays at --fs-label: --fs-min is the 12.8px
+   floor exactly, and a rounding wobble there would trip the audit. */
+.hp-app-points {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--sp-3);
+  min-width: 0;
+}
+.hp-app-point {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr);
+  column-gap: var(--sp-2);
+  align-items: center;
+  min-width: 0;
+}
+.hp-app-ico {
+  width: 36px;
+  height: 36px;
+  grid-row: span 2;
+  object-fit: cover;
+  box-shadow: inset 0 0 0 1px var(--hp-outline);
+}
+.hp-app-point-label {
+  font-size: var(--fs-label);
+  font-weight: 700;
+  color: var(--text);
+}
+.hp-app-point-note {
+  font-size: var(--fs-label);
+  line-height: 1.3;
+  color: var(--text-muted);
+  overflow-wrap: anywhere;
+}
+
+/* Stone, not bronze: the drop zone is the page's one primary action. */
+.hp-app-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  min-height: var(--hit-min);
+  padding: var(--sp-2) var(--sp-4);
+  font-size: var(--fs-base);
+  font-weight: 800;
+  color: var(--accent-strong);
+  white-space: nowrap;
+  text-decoration: none;
+}
+.hp-app-cta:hover { color: #e6b163; text-decoration: none; }
+.hp-app-cta svg { width: 22px; height: 22px; flex-shrink: 0; }
+.hp-app-version {
+  font-size: var(--fs-label);
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+
+/* ══════════════════════════════════════════════════════════════
    RACE STAGE
    Four heroes on a slab. HeroStage.js draws into the canvas and
    toggles data-state / .is-loaded; the buttons under it are the hit
@@ -797,6 +909,15 @@ body.hp-page .site-footer {
    RESPONSIVE
    ══════════════════════════════════════════════════════════════ */
 
+/* The desktop band loses its picture first, and it goes early: below
+   1400 the three marks cannot hold a two-line entry each with the
+   picture still taking 300px, and every label wrapped to four lines.
+   A display:none <img> is never fetched, so nothing pays for it. */
+@media (max-width: 1400px) {
+  .hp-app-media { display: none; }
+  .hp-app-inner { grid-template-columns: minmax(0, 1fr) minmax(0, 2.4fr) auto; }
+}
+
 @media (max-width: 1024px) {
   .hp-stage { height: 196px; }
   .hp-stage-plate { width: 68px; height: 68px; }
@@ -815,6 +936,8 @@ body.hp-page .site-footer {
   .hp-stage-portrait { width: 40px; height: 40px; }
   .hp-stage-slot.is-loaded .hp-stage-plate { opacity: 1; }
   body.hp-page .hp-pillars-track { grid-template-columns: 1fr; }
+  .hp-app-inner { grid-template-columns: minmax(0, 1fr) auto; gap: var(--sp-3) var(--sp-4); }
+  .hp-app-points { grid-column: 1 / -1; }
 }
 
 @media (max-width: 720px) {
@@ -829,6 +952,12 @@ body.hp-page .site-footer {
   .hp-hero-inner { padding-inline: var(--sp-3); }
   .hp-hero-tagline { font-size: 1.35rem; }
   .hp-hero-sub { font-size: var(--fs-base); }
+  .hp-app-inner { grid-template-columns: 1fr; padding-inline: var(--sp-3); }
+  /* The app is Windows only, so a phone gets the name, the line and the
+     button. Three stacked marks were 150px of band nobody there can act
+     on; /download carries the same three. */
+  .hp-app-points { display: none; }
+  .hp-app-cta { width: 100%; justify-content: center; }
 }
 
 @media (max-width: 480px) {
