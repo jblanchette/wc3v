@@ -1951,10 +1951,13 @@ const getUnitInfo = (itemId) => {
   const isItemShop = !!(itemSellingBuildings[itemId]);
   const isGoldmine = (itemId == 'ngol');
 
-	const isBuildingUpgrade = (inUnitList && units[itemId].startsWith("b"));
+	// Building upgrades (Keep, Halls of the Dead, ...) are w3gjs `buildings`
+	// entries named "b_*", so inBuildingList already covers them. An old
+	// startsWith("b") test on the `units` map matched lowercase creep names
+	// instead ("brigand", "battle golem", "blue dragonspawn ...") and made
+	// those creeps buildings.
 	const isBuilding = (
-    inBuildingList || 
-    isBuildingUpgrade || 
+    inBuildingList ||
     inSpecialBuildingList ||
     inFountainList
   );
@@ -1969,7 +1972,7 @@ const getUnitInfo = (itemId) => {
 	let displayName = `Unknown (${itemId})`;
 
 	if (isBuilding) {
-		displayName = isBuildingUpgrade ? units[itemId] : buildings[itemId];
+		displayName = buildings[itemId];
 
     if (!displayName) {
       // Prefer the canonical name in allItemIds ('Goblin Merchant',
