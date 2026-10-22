@@ -1331,6 +1331,10 @@ const readCliArgs = (argv) => {
 
       // Selection rule A/B — see config.selectionRule and
       // tools/order-trace.js --selcheck.
+      case "handle-order":
+        config.handleOrderBinding = true;
+      break;
+
       case "select-rule":
         config.selectionRule = val;
       break;

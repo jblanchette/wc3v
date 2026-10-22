@@ -40,6 +40,17 @@ const config = {
 	//                  shift-click); a multi-unit SELECT is the complete new
 	//                  selection and replaces.
 	selectionRule: 'merge-resync',
+	// Bind selection handles no per-unit hint reaches by creation order
+	// (Player.bindHandlesByCreationOrder). A/B with
+	//   node tools/order-trace.js --replay=R --selcheck --handle-order
+	//   node wc3v.js --replay=R --handle-order  then  tools/anchor-audit.js
+	//
+	// OFF: binds +1-7 points more handles (13-24 selections up to +10) but
+	// enemy-position error was a wash over 8 replays (>320u: 932 off, 925 on;
+	// Goods much better, Homework Northern Isles much worse), so some bindings
+	// are wrong. Next step is grading each binding against a later subgroup
+	// focus that names the unit, not another window heuristic.
+	handleOrderBinding: false,
 	// Block a tree doodad's pathing square CENTRED on the doodad position
 	// instead of growing it +x/-y from that point. The doodad position is a
 	// centre (the renderer draws the canopy there), so the old box sat half a

@@ -85,6 +85,8 @@ if (typeof console.logger !== 'function') console.logger = () => {};
 // --selcheck report can be produced for each and compared. See config.js.
 const config = require('../config/config');
 if (args.rule && args.rule !== true) config.selectionRule = String(args.rule);
+// --handle-order turns on Player.bindHandlesByCreationOrder for an A/B.
+if (args['handle-order']) config.handleOrderBinding = true;
 
 const utils = require('../helpers/utils');
 const mappings = require('../helpers/mappings');
@@ -227,6 +229,11 @@ PlayerManager.prototype.handleAction = function (actionBlock, action) {
       ? player.groupSelections[action.groupNumber].units.map(u => `${u.itemId1}/${u.itemId2}`) : null,
     selection: before.reg,
     selectionRaw: before.raw,
+    // Live non-building units the parser has created but never bound to a
+    // selection handle. An unbound handle in the selection is either one of
+    // these (a matching problem) or a unit the parser never created at all.
+    spareUnits: player && player.units
+      ? player.units.filter(u => !u.destroyed && !u.isBuilding && u.itemId1 === null).length : 0,
     selectionAfter: null,
     selectionRawAfter: 0,
     deduped: false,
@@ -405,16 +412,21 @@ function report () {
     rows.forEach(r => {
       if (!ORDER_ACTION_IDS.has(r.actionId) || !r.selectionRaw) return;
       const k = sizeBucket(r.selectionRaw);
-      const t = res[k] || (res[k] = { orders: 0, handles: 0, bound: 0 });
+      const t = res[k] || (res[k] = { orders: 0, handles: 0, bound: 0, short: 0, coverable: 0 });
       t.orders++;
       t.handles += r.selectionRaw;
       t.bound += r.selection.length;
+      const unbound = r.selectionRaw - r.selection.length;
+      if (unbound > 0) {
+        t.short++;
+        if (r.spareUnits >= unbound) t.coverable++;
+      }
     });
     console.log('\n  orders by selection size, handles bound to a unit:');
     ['1-12', '13-24', '25+'].filter(k => res[k]).forEach(k => {
       const t = res[k];
       console.log(`    ${k.padEnd(6)} orders=${String(t.orders).padStart(5)}  bound ${(100 * t.bound / t.handles).toFixed(1).padStart(5)}%  ` +
-        `(${t.bound}/${t.handles})`);
+        `(${t.bound}/${t.handles})  short ${t.short}, of which spare units could cover ${t.coverable}`);
     });
     // Which units are wrongly held, and how often. A handful of ids dominating
     // the tally means a few units drift in and stick (a clearing bug); a long
