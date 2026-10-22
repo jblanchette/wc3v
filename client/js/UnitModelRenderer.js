@@ -298,12 +298,15 @@
         transparent: true, depthWrite: false
       }), cap, 1);
       // renderOrder 4 = above the unit-ring pool (3), so a selected unit that
-      // also has its ambient ring on shows the hoop on top. Capacity 96: WC3
-      // caps a selection at 12 units and the map caps at 8 seats.
+      // also has its ambient ring on shows the hoop on top. Capacity 576:
+      // patch 3.0 raised the selection cap from 12 to 24 units, times 24
+      // seats. push() drops anything past capacity silently, so this has to
+      // be the worst case; only mesh.count instances are drawn, and the
+      // buffers are ~46 KB.
       this._selectionPool = new RingShadowPool(this.scene, selRingGeo(), new THREE.ShaderMaterial({
         vertexShader: POOL_VS, fragmentShader: RING_FS,
         transparent: true, depthWrite: false, side: THREE.DoubleSide, forceSinglePass: true
-      }), 96, 4);
+      }), 24 * 24, 4);
     }
 
     // Player-colour THREE.Color, cached forever. The pools take the shared
@@ -322,10 +325,10 @@
     // player's colour. Runs after _updateGuideHighlight and before _flushPools.
     //
     // ClientPlayer.currentGroup is already the resolved ClientUnit[] (rebuilt
-    // only when the selection stream index actually moves) and is capped at 12
-    // by the game, so iterating it directly beats mirroring it into a Set —
-    // worst case here is 96 array reads and 96 hash lookups, typically 0-24,
-    // and it allocates nothing.
+    // only when the selection stream index actually moves) and is capped at 24
+    // by the game (12 before patch 3.0), so iterating it directly beats
+    // mirroring it into a Set: a 1v1 is at most 48 array reads and 48 hash
+    // lookups, and it allocates nothing.
     //
     // Two things this pass deliberately does NOT cover:
     //   - BUILDINGS. update() skips isBuilding, so they have no entry in

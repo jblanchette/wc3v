@@ -530,12 +530,44 @@ const ClientPlayer = class {
     const xPadding = 4;
     const yPadding = 6;
 
-    this.currentGroup.forEach(unit => {
+    // The box holds two rows. Patch 3.0 raised the selection cap to 24, and
+    // four rows would draw over the next player's box, so past 12 units show
+    // one icon per unit type with a count instead.
+    let entries = this.currentGroup.map(unit => ({ icon: unit.icon, n: 1 }));
+    if (entries.length > maxRow * 2) {
+      const byType = new Map();
+      this.currentGroup.forEach(unit => {
+        const e = byType.get(unit.itemId);
+        if (e) {
+          e.n++;
+        } else {
+          byType.set(unit.itemId, { icon: unit.icon, n: 1 });
+        }
+      });
+      entries = [...byType.values()];
+    }
+
+    entries.forEach(entry => {
       const drawX = xPadding + offsetX + (c * iconSize);
       const drawY = yPadding + offsetY + (row * iconSize);
 
-      if (unit.icon) {
-        playerStatusCtx.drawImage(unit.icon, drawX, drawY, iconSize, iconSize);
+      if (entry.icon) {
+        playerStatusCtx.drawImage(entry.icon, drawX, drawY, iconSize, iconSize);
+      }
+      if (entry.n > 1) {
+        const oldFont = playerStatusCtx.font;
+        playerStatusCtx.font = 'bold 13px Arial';
+        playerStatusCtx.textAlign = 'right';
+        playerStatusCtx.textBaseline = 'bottom';
+        playerStatusCtx.lineWidth = 3;
+        playerStatusCtx.strokeStyle = '#000';
+        playerStatusCtx.strokeText(entry.n, drawX + iconSize - 1, drawY + iconSize);
+        playerStatusCtx.fillStyle = '#FFF';
+        playerStatusCtx.fillText(entry.n, drawX + iconSize - 1, drawY + iconSize);
+        playerStatusCtx.font = oldFont;
+        playerStatusCtx.textAlign = 'start';
+        playerStatusCtx.textBaseline = 'alphabetic';
+        playerStatusCtx.lineWidth = 1;
       }
       c++;
 

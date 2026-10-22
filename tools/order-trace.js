@@ -221,6 +221,10 @@ PlayerManager.prototype.handleAction = function (actionBlock, action) {
     // What we THOUGHT was selected, in the same id space, for the comparison.
     selectionIds: player && player.selection
       ? player.selection.units.map(u => `${u.itemId1}/${u.itemId2}`) : [],
+    // What that hotkey group held before this action, so --selcheck can tell
+    // an assign that STATES the selection from one that APPENDS to the group.
+    groupIdsBefore: player && action.id === 0x17 && player.groupSelections && player.groupSelections[action.groupNumber]
+      ? player.groupSelections[action.groupNumber].units.map(u => `${u.itemId1}/${u.itemId2}`) : null,
     selection: before.reg,
     selectionRaw: before.raw,
     selectionAfter: null,
@@ -314,15 +318,57 @@ function report () {
       }
       return true;
     });
-    let exact = 0, subset = 0, wrong = 0;
+    let exact = 0, subset = 0, wrong = 0, appended = 0;
+    const appendFollow = { kept: 0, group: 0, other: 0 };
     const misses = [];
+    // Graded again by the TRUE selection size. Patch 3.0 raised the cap from 12
+    // to 24 and the combine rule was tuned on games that never passed 12, so
+    // "do big selections track worse" needs its own number.
+    const sizeBucket = (n) => (n <= 12 ? '1-12' : n <= 24 ? '13-24' : '25+');
+    const bySize = {};
     cases.forEach(r => {
       const truth = new Set(r.actionUnits);
       const ours = new Set(r.selectionIds);
       const missing = [...truth].filter(x => !ours.has(x));   // we didn't have it selected
       const extra = [...ours].filter(x => !truth.has(x));     // we wrongly had it selected
-      if (!missing.length && !extra.length) { exact++; return; }
-      if (!extra.length) { subset++; } else { wrong++; }
+      const b = bySize[sizeBucket(truth.size)] || (bySize[sizeBucket(truth.size)] = { n: 0, exact: 0, appended: 0, subset: 0, wrong: 0 });
+      b.n++;
+      if (!missing.length && !extra.length) { exact++; b.exact++; return; }
+
+      // APPEND: the assign lists the group's old members plus our whole
+      // selection. That is the player adding the selection to the group, and
+      // the selection does not change, so it is not a statement of the
+      // selection and not a miss. The DESELECT that follows one lists the real
+      // selection; it is tallied below as the standing evidence (46 of 47
+      // matched the unchanged selection, Oct 2026). Teaching
+      // Player.assignGroupHotkey to keep the selection on an append was A/B'd
+      // and lost by up to 0.7 points: overwriting the selection also resyncs
+      // one we had already drifted on.
+      const before = r.groupIdsBefore ? new Set(r.groupIdsBefore) : null;
+      const append = !!(before && !extra.length &&
+        missing.every(x => before.has(x)) &&
+        [...ours].some(x => !before.has(x)));
+      if (append) {
+        appended++;
+        b.appended++;
+        const at = trace.indexOf(r);
+        for (let i = at + 1; i < trace.length; i++) {
+          const t = trace[i];
+          if (t.playerId !== r.playerId) continue;
+          if (t.actionName === 'SelectGroupHotkeyAction' || t.actionName === 'AssignGroupHotkeyAction') break;
+          if (t.actionName !== 'ChangeSelectionAction') continue;
+          if (t.selectMode !== 2 || !t.actionUnits) break;
+          const des = new Set(t.actionUnits);
+          const same = (s) => s.size === des.size && [...s].every(x => des.has(x));
+          if (same(ours)) appendFollow.kept++;
+          else if (same(truth)) appendFollow.group++;
+          else appendFollow.other++;
+          break;
+        }
+        return;
+      }
+
+      if (!extra.length) { subset++; b.subset++; } else { wrong++; b.wrong++; }
       misses.push({ r, missing, extra });
     });
     const n = cases.length;
@@ -335,9 +381,41 @@ function report () {
     console.log(`  checks               ${n} (+${retransmits} retransmitted assigns ignored)`);
     if (n) {
       console.log(`  exact match          ${exact} (${(100 * exact / n).toFixed(1)}%)`);
+      console.log(`  append, sel. kept    ${appended} (${(100 * appended / n).toFixed(1)}%)  - added the selection to the group`);
       console.log(`  we missed units      ${subset} (${(100 * subset / n).toFixed(1)}%)  - orders under-applied`);
       console.log(`  we had wrong units   ${wrong} (${(100 * wrong / n).toFixed(1)}%)  - orders applied to units that were NOT selected`);
+      console.log(`  correct              ${(100 * (exact + appended) / n).toFixed(1)}%  (exact + append)`);
+      if (appended) {
+        console.log(`  after an append, the next DESELECT matched: our selection ${appendFollow.kept}, ` +
+          `the whole group ${appendFollow.group}, neither ${appendFollow.other}`);
+      }
+      console.log('\n  by true selection size:');
+      ['1-12', '13-24', '25+'].filter(k => bySize[k]).forEach(k => {
+        const b = bySize[k];
+        const pct = (v) => `${(100 * v / b.n).toFixed(1)}%`.padStart(7);
+        console.log(`    ${k.padEnd(6)} n=${String(b.n).padStart(5)}  correct ${pct(b.exact + b.appended)}  missed ${pct(b.subset)}  wrong ${pct(b.wrong)}`);
+      });
     }
+
+    // RESOLUTION: a selection can be the right set of handles and still move
+    // nothing, because a handle only reaches a unit once the parser has bound
+    // it to one. At every order, how many selected handles were bound? A
+    // 24-unit select gives the binder fewer per-unit hints than 12 did.
+    const res = {};
+    rows.forEach(r => {
+      if (!ORDER_ACTION_IDS.has(r.actionId) || !r.selectionRaw) return;
+      const k = sizeBucket(r.selectionRaw);
+      const t = res[k] || (res[k] = { orders: 0, handles: 0, bound: 0 });
+      t.orders++;
+      t.handles += r.selectionRaw;
+      t.bound += r.selection.length;
+    });
+    console.log('\n  orders by selection size, handles bound to a unit:');
+    ['1-12', '13-24', '25+'].filter(k => res[k]).forEach(k => {
+      const t = res[k];
+      console.log(`    ${k.padEnd(6)} orders=${String(t.orders).padStart(5)}  bound ${(100 * t.bound / t.handles).toFixed(1).padStart(5)}%  ` +
+        `(${t.bound}/${t.handles})`);
+    });
     // Which units are wrongly held, and how often. A handful of ids dominating
     // the tally means a few units drift in and stick (a clearing bug); a long
     // flat tail means the combine rule itself is wrong.

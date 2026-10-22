@@ -341,6 +341,16 @@ async function connectFallback (exe, headful, launchArgs) {
     process.stdout.write(`  viewOptions overrides: ${JSON.stringify(vov)}\n`);
   }
 
+  // --layout=replay|build|default switches layout (only 'replay' shows the
+  // player-status canvas); --statustab=units|heroes|groups picks its tab.
+  if (args.layout || args.statustab) {
+    await page.evaluate((layout, tab) => {
+      const v = window.wc3v;
+      if (layout) v.setLayoutMode(layout);
+      if (tab) v.setStatusTab(tab);
+    }, args.layout ? String(args.layout) : null, args.statustab ? String(args.statustab) : null);
+  }
+
   // Let models/GLBs stream in, then re-seek to EXACTLY the requested game
   // time and restart playback. Without this the sampled game-time window
   // drifts run to run (the settle is wall-clock), and a teleport cinematic /
