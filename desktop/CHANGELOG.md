@@ -1,5 +1,31 @@
 # WC3V Desktop: changelog
 
+## 1.0.12 — 22 Oct 2026
+
+### Some games stopped part-way through
+
+A few kinds of game made the reader give up early, so everything after
+that point was missing: the later build order, the army counts, the
+fights. One patch 3.0 game read only its first 8 minutes of 29. These
+games are now read to the end:
+
+- Night Elf games where an Ancient or a Tree was first seen while selected
+  and then trained something.
+- Games with Mirror Image, when an image reused a handle the game had
+  already given to another unit.
+- Games where a hero was revived after teleporting.
+
+### Creeps counted as buildings
+
+Brigands, Battle Golems, Blue Dragonspawn and about twenty other creeps
+whose names start with a "b" were read as buildings. Camps on Autumn
+Leaves, Amazonia, Dalaran and other ladder maps now read as creeps.
+
+### Patch 3.0
+
+Replays from patch 3.0 read as before. Selections of up to 24 units come
+through as one action and are tracked as well as the old 12-unit ones.
+
 ## 1.0.11 — 2 Sep 2026
 
 ### Wins and losses were sometimes backwards
