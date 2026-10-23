@@ -1,5 +1,15 @@
 # WC3V Desktop: changelog
 
+## 1.0.13 — 23 Oct 2026
+
+### More games are read to the end
+
+When a unit is gone, the game can hand its handle to a new unit. WC3V
+did not always know the first unit had gone, so it stopped reading at
+that point and everything after it was missing. It now lets the new unit
+take the handle and reads the rest of the game. Thanks to bubunuh for the
+fix.
+
 ## 1.0.12 — 22 Oct 2026
 
 ### Some games stopped part-way through
