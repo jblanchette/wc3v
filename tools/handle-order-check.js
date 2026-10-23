@@ -14,8 +14,15 @@
  * rank correlation between itemId2 and spawnTime, and how often a later-made
  * unit carries a smaller itemId2 (an inversion), overall and per unit type.
  *
+ * --grade checks the bindings themselves. A SELECT naming exactly one handle,
+ * followed in the same tick by a SelectSubgroup, states that handle's true
+ * unit type. At each such moment, compare it with the type of the unit the
+ * parser has bound to that handle, split by which binder made the binding.
+ * --handle-order turns on Player.bindHandlesByCreationOrder for the run.
+ *
  * Usage:
  *   node tools/handle-order-check.js --replay=NAME [--detail]
+ *   node tools/handle-order-check.js --replay=NAME --grade [--handle-order]
  */
 
 const fs = require('fs');
@@ -34,13 +41,52 @@ if (!args.replay) {
 
 if (typeof console.logger !== 'function') console.logger = () => {};
 
+const config = require('../config/config');
+if (args['handle-order']) config.handleOrderBinding = true;
+
+const utils = require('../helpers/utils');
 const PlayerManager = require('../lib/PlayerManager');
 const { doParsing } = require('../wc3v.js');
 
+// --grade samples: (player, handle) -> true type, graded against our binding.
+const grade = {
+  order: { n: 0, right: 0, wrong: [] },
+  other: { n: 0, right: 0, wrong: [] },
+  unbound: 0
+};
+const lastSingle = {};   // playerId -> { gameTime, handle } of a 1-unit SELECT
+
+const typeMatches = (unit, type) =>
+  unit.itemId === type || (unit.morphHistory || []).some(m => m.itemId === type) ||
+  unit._formBaseItemId === type;
+
 let manager = null;
 const origHandle = PlayerManager.prototype.handleAction;
-PlayerManager.prototype.handleAction = function () {
+PlayerManager.prototype.handleAction = function (actionBlock, action) {
   manager = this;
+  if (args.grade) {
+    const pid = actionBlock.playerId;
+    const player = this.players[pid];
+    const gameTime = this.eventTimer.timer.gameTime;
+    if (action.id === 0x16 && action.selectMode !== 2) {
+      const units = action.actions || [];
+      lastSingle[pid] = units.length === 1
+        ? { gameTime, handle: units[0] } : null;
+    } else if (action.id === 0x19 && player && lastSingle[pid] && lastSingle[pid].gameTime === gameTime) {
+      const { handle } = lastSingle[pid];
+      lastSingle[pid] = null;
+      const type = utils.fixItemId(action.itemId);
+      const unit = player.findUnit(handle.itemId1, handle.itemId2);
+      if (!unit) {
+        grade.unbound++;
+      } else {
+        const g = unit.boundByCreationOrder ? grade.order : grade.other;
+        g.n++;
+        if (typeMatches(unit, type)) g.right++;
+        else g.wrong.push({ gameTime, pid, had: unit.itemId, truth: type });
+      }
+    }
+  }
   return origHandle.apply(this, arguments);
 };
 
@@ -106,6 +152,20 @@ doParsing(replayPath, {}).then(() => {
 
 function report () {
   if (!manager) { console.log('no actions handled'); return; }
+  if (args.grade) {
+    console.log(`\n=== BINDING GRADE (replay=${args.replay}${args['handle-order'] ? ' handle-order' : ''}) ===`);
+    console.log('  sample = a 1-unit SELECT + same-tick SelectSubgroup naming its type');
+    [['creation-order binder', grade.order], ['all other binders', grade.other]].forEach(([label, g]) => {
+      console.log(`  ${label.padEnd(22)} n=${String(g.n).padStart(5)}  right ${g.n ? (100 * g.right / g.n).toFixed(1) : '-'}%`);
+    });
+    console.log(`  handle unbound at the sample     ${grade.unbound}`);
+    if (args.detail) {
+      grade.order.wrong.slice(0, 15).forEach(w =>
+        console.log(`    ${fmt(w.gameTime)} p${w.pid} bound to ${w.had}, truth ${w.truth}`));
+    }
+    console.log('');
+    return;
+  }
   console.log(`\n=== HANDLE ORDER vs CREATION ORDER (replay=${args.replay}) ===`);
 
   Object.values(manager.players).forEach(player => {

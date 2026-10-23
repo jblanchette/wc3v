@@ -48,8 +48,14 @@ const config = {
 	// OFF: binds +1-7 points more handles (13-24 selections up to +10) but
 	// enemy-position error was a wash over 8 replays (>320u: 932 off, 925 on;
 	// Goods much better, Homework Northern Isles much worse), so some bindings
-	// are wrong. Next step is grading each binding against a later subgroup
-	// focus that names the unit, not another window heuristic.
+	// are wrong.
+	//
+	// Graded since (tools/handle-order-check.js --grade): its bindings name the
+	// right unit TYPE 99.2-99.6% of the time (n=122-518), same as the other
+	// binders, so the type is not what goes wrong. Moving a newly bound unit
+	// to the units it was selected with made positions worse (>320u: 948 vs
+	// 932) and was removed. Still unexplained; the check that is missing is
+	// same-type swaps, which a type grade cannot see.
 	handleOrderBinding: false,
 	// Block a tree doodad's pathing square CENTRED on the doodad position
 	// instead of growing it +x/-y from that point. The doodad position is a
