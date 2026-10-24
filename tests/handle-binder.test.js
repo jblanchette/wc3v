@@ -3,10 +3,11 @@
  *
  * Covers:
  *   1. ties the simulation made are kept when the lists agree, dropped when
- *      the lists name another type
- *   2. untied units are aligned to unclaimed handles in creation order,
- *      typed handles only take their type (or a form of it)
- *   3. no unit is tied to a handle the game listed before the unit existed
+ *      the lists name another type, and give way to the creation order
+ *   2. units are aligned to handles in creation order, typed handles only
+ *      take their type (or a form of it)
+ *   3. no unit is tied to a handle that existed before the unit could have,
+ *      by its own first sighting or by a later-allocated handle's (madeBy)
  *   4. the counter → creation time fit is monotone
  *
  * Run: `node tests/handle-binder.test.js`
@@ -27,7 +28,8 @@ function check (label, fn) {
   }
 }
 
-const unit = (id, type, born, handle = null, forms = [type]) => ({ id, type, born, handle, forms: new Set(forms) });
+const unit = (id, type, born, handle = null, forms = [type], earliest = born) =>
+  ({ id, type, born, earliest, handle, forms: new Set(forms) });
 const handle = (key, first, types = []) => ({
   key, counter: Number(key.split('/')[1]), first, types: types.map(type => ({ t: first, type }))
 });
@@ -52,6 +54,15 @@ check('a form of the unit counts as its type', () => {
   assert.strictEqual(ties.get(1), '5/500');
 });
 
+check('a simulation tie out of creation order gives way to two in order', () => {
+  // WC3V tied the unit trained first to the later handle
+  const us = [unit(1, 'hrif', 10000, '2/200'), unit(2, 'hrif', 30000, '1/100')];
+  const hs = handles(handle('1/100', 40000, ['hrif']), handle('2/200', 40000, ['hrif']));
+  const ties = HandleBinder.bind(us, hs);
+  assert.strictEqual(ties.get(1), '1/100');
+  assert.strictEqual(ties.get(2), '2/200');
+});
+
 console.log('[alignment]');
 
 check('untied units take unclaimed handles in creation order', () => {
@@ -74,6 +85,19 @@ check('a typed handle only takes a unit of its type', () => {
 check('no unit is tied to a handle listed long before the unit was trained', () => {
   const ties = HandleBinder.bind([unit(1, 'hfoo', 200000)], handles(handle('1/100', 20000)));
   assert.strictEqual(ties.size, 0);
+});
+
+check('a handle allocated before one already listed cannot be a unit made after that', () => {
+  const madeBy = (counter) => (counter <= 500 ? 15000 : Infinity);
+  const ties = HandleBinder.bind([unit(1, 'hfoo', 90000)], handles(handle('1/100', 100000)), [], madeBy);
+  assert.strictEqual(ties.size, 0);
+});
+
+check('a unit may come out before WC3V\'s training time (its queue held refused orders)', () => {
+  const madeBy = () => 40000;
+  const ties = HandleBinder.bind([unit(1, 'hfoo', 90000, null, ['hfoo'], 30000)],
+    handles(handle('1/100', 100000)), [], madeBy);
+  assert.strictEqual(ties.get(1), '1/100');
 });
 
 check('with anchors, the creation time the counter implies picks among handles', () => {
