@@ -108,6 +108,16 @@ check('with anchors, the creation time the counter implies picks among handles',
   assert.strictEqual(ties.get(1), '2/2000');
 });
 
+check('handles made together only take units made together', () => {
+  // two summons WC3V never saw, then a trained unit's handle
+  const hs = handles(handle('1/1000', 30000), handle('2/1017', 30000), handle('3/1400', 31000));
+  const ties = HandleBinder.bind([unit(1, 'ugho', 25000)], hs);
+  assert.strictEqual(ties.get(1), '3/1400');
+  const twins = HandleBinder.bind([unit(1, 'hpea', 25000), unit(2, 'hpea', 25000)], hs);
+  assert.strictEqual(twins.get(1), '1/1000');
+  assert.strictEqual(twins.get(2), '2/1017');
+});
+
 console.log('[counter clock]');
 
 check('the fit is monotone and interpolates', () => {
