@@ -187,6 +187,18 @@ check('the last order of the selection is kept per handle, with its work flag', 
   assert.strictEqual(handleOf(L, 1, B).lastOrder.work, true);
 });
 
+check('units sent to harvest and then deselected one by one are not dead', () => {
+  const L = new SelectionLedger();
+  L.selectionChange(1, 1000, SELECT, [A, B, C]);
+  L.order(1, 2000, 0xD0003, 900, 900, false, true);
+  L.selectionChange(1, 2500, DESELECT, [A]);
+  L.selectionChange(1, 3000, DESELECT, [B]);
+  L.assignGroup(1, 3500, 1, [C]);
+  L.resolve();
+  assert.strictEqual(handleOf(L, 1, A).death, null);
+  assert.strictEqual(handleOf(L, 1, B).death, null);
+});
+
 check('object ids that name no unit are ignored', () => {
   const L = new SelectionLedger();
   L.preSubselection(1, 1000, 4294967295, 4294967295);
