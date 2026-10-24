@@ -292,6 +292,13 @@ const doParsing = async (input, options = {}) => {
     }
   });
 
+  // post-process: unit types a finished research changed
+  Object.values(playerManager.players).forEach(player => {
+    if (player.applyResearchForms) {
+      player.applyResearchForms();
+    }
+  });
+
   // post-process: build item stream summary per player
   Object.values(playerManager.players).forEach(player => {
     if (player.buildItemStream) {
