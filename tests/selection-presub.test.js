@@ -7,6 +7,7 @@
  *      whole new selection
  *   2. a shift-add keeps the units already selected and adds the listed ones
  *   3. a shift-added unit deselected again leaves the rest selected
+ *   4. an order for a building upgrade with nothing selected does not throw
  *
  * Run: `node tests/selection-presub.test.js`
  */
@@ -90,6 +91,15 @@ check('deselecting the shift-added unit leaves the rest selected', () => {
   // a click on the Ziggurat's portrait: the list names it, the ghoul is deselected
   p.at(3000); p.pre(ZIG); p.sel(DESELECT, GHOUL);
   assert.deepStrictEqual(p.selected(), [ 100 ]);
+});
+
+check('an upgrade ordered with nothing selected does not throw', () => {
+  const p = makePlayer();
+  p.at(1000); p.pre(ZIG); p.sel(SELECT, ZIG);
+  p.at(2000); p.sel(DESELECT, ZIG);
+  assert.deepStrictEqual(p.selected(), []);
+  // Spirit Tower (uzg1): a building, so it takes the unregistered-building path
+  p.player.useAbilityNoTarget({ itemId: 'uzg1', abilityFlags: 0 });
 });
 
 console.log('');
