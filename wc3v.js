@@ -81,6 +81,7 @@ const config = require("./config/config");
 const ReplayValidator = require("./lib/ReplayValidator");
 const BattleDetector  = require("./lib/BattleDetector");
 const DeathInference  = require("./lib/DeathInference");
+const SelectionEvidence = require("./lib/SelectionEvidence");
 const FacingInference = require("./lib/FacingInference");
 const KinematicResim  = require("./lib/KinematicResim");
 const HideInference   = require("./lib/HideInference");
@@ -288,6 +289,13 @@ const doParsing = async (input, options = {}) => {
   Object.values(playerManager.players).forEach(player => {
     if (player.postProcessWorkerAssignments) {
       player.postProcessWorkerAssignments();
+    }
+  });
+
+  // post-process: unit types a finished research changed
+  Object.values(playerManager.players).forEach(player => {
+    if (player.applyResearchForms) {
+      player.applyResearchForms();
     }
   });
 
@@ -683,6 +691,10 @@ const doParsing = async (input, options = {}) => {
   // a `lostState` on every Unit. Client uses this to render the 4-state
   // active/idle/possiblyLost/lost visual state machine.
   emitProgress('postprocess', 98, { detail: 'deaths' });
+  const selStats = new SelectionEvidence(playerManager).run();
+  console.log(`selection evidence: ${selStats.handles} handles, ${selStats.units} units, ` +
+    `tied ${selStats.tied} (${selStats.kept} as simulated, ${selStats.retied} re-tied), ` +
+    `${selStats.deaths} listed deaths`);
   const deathStats = new DeathInference(playerManager).run();
   console.log('----------------------------------');
   console.log('DEATH INFERENCE');
