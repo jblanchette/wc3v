@@ -199,6 +199,17 @@ check('units sent to harvest and then deselected one by one are not dead', () =>
   assert.strictEqual(handleOf(L, 1, B).death, null);
 });
 
+check('a shift-add PreSubselection adds to the selection; later orders reach all of it', () => {
+  const L = new SelectionLedger();
+  L.selectionChange(1, 1000, SELECT, [A, B, C]);
+  L.preSubselection(1, 2000, D.itemId1, D.itemId2);
+  L.selectionChange(1, 2000, SELECT, [D]);
+  L.order(1, 3000, 0xD0012);
+  L.resolve();
+  for (const x of [A, B, C, D]) assert.strictEqual(handleOf(L, 1, x).lastOrder.t, 3000);
+  assert.strictEqual(L.players.get(1).presub, true);
+});
+
 check('object ids that name no unit are ignored', () => {
   const L = new SelectionLedger();
   L.preSubselection(1, 1000, 4294967295, 4294967295);

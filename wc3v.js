@@ -692,7 +692,7 @@ const doParsing = async (input, options = {}) => {
   // active/idle/possiblyLost/lost visual state machine.
   emitProgress('postprocess', 98, { detail: 'deaths' });
   const selStats = new SelectionEvidence(playerManager).run();
-  console.log(`selection evidence: ${selStats.handles} handles, ${selStats.units} units, ` +
+  console.logger(`selection evidence: ${selStats.handles} handles, ${selStats.units} units, ` +
     `tied ${selStats.tied} (${selStats.kept} as simulated, ${selStats.retied} re-tied), ` +
     `${selStats.deaths} listed deaths`);
   const deathStats = new DeathInference(playerManager).run();
