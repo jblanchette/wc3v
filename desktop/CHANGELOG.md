@@ -1,5 +1,20 @@
 # WC3V Desktop: changelog
 
+## 1.0.14 — 29 Oct 2026
+
+### Army counts and losses follow the game more closely
+
+The game lists the units in every selection and control group, and leaves
+out units that have died. WC3V now reads those lists. Units that died stop
+counting toward the army, losses are booked to the fight they happened in,
+and units WC3V missed, like hired mercenaries and Hippogryph Riders, now
+show up. Thanks to bubunuh for the work.
+
+- A train order with several buildings of one type selected trains in each
+  of them (not for Night Elf).
+- Headhunters become Berserkers, and Siege Engines get Barrage, when the
+  research finishes.
+
 ## 1.0.13 — 23 Oct 2026
 
 ### More games are read to the end
