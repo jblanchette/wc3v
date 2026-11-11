@@ -9,7 +9,8 @@
  *   4. the peer rule, and a hidden unit that comes back
  *   5. handle ownership between players, enemy clicks as sightings
  *   6. last order per handle
- *   7. the end of the game: the selection the game clears is no death
+ *   7. a group the selection is added to
+ *   8. the end of the game: the selection the game clears is no death
  *
  * Run: `node tests/selection-ledger.test.js`
  */
@@ -146,6 +147,21 @@ check('a shift-add naming some companions is no full list for the peer rule', ()
   L.selectionChange(1, 3000, SELECT, [B, C]);
   L.resolve();
   assert.strictEqual(handleOf(L, 1, A).death, null);
+});
+
+check('adding the selection to a group lists the whole group; the selection stays', () => {
+  const L = new SelectionLedger();
+  L.selectionChange(1, 1000, SELECT, [A, B, C]);
+  L.assignGroup(1, 1500, 1, [A, B, C]);
+  L.selectionChange(1, 2000, DESELECT, [A, B, C]);
+  L.selectionChange(1, 2000, SELECT, [D]);
+  // shift + group key: the game lists the group with the new unit in it
+  L.assignGroup(1, 3000, 1, [A, B, C, D]);
+  // the next click drops the selection, which is still D alone
+  L.selectionChange(1, 4000, DESELECT, [D]);
+  L.selectionChange(1, 4000, SELECT, [E]);
+  L.resolve();
+  for (const x of [A, B, C, D, E]) assert.strictEqual(handleOf(L, 1, x).death, null);
 });
 
 console.log('[the end of the game]');
