@@ -9,6 +9,7 @@
  *   4. the peer rule, and a hidden unit that comes back
  *   5. handle ownership between players, enemy clicks as sightings
  *   6. last order per handle
+ *   7. the end of the game: the selection the game clears is no death
  *
  * Run: `node tests/selection-ledger.test.js`
  */
@@ -145,6 +146,45 @@ check('a shift-add naming some companions is no full list for the peer rule', ()
   L.selectionChange(1, 3000, SELECT, [B, C]);
   L.resolve();
   assert.strictEqual(handleOf(L, 1, A).death, null);
+});
+
+console.log('[the end of the game]');
+
+check('the selection the game clears when the game is over is no death', () => {
+  const L = new SelectionLedger();
+  L.selectionChange(1, 1000, SELECT, [A, B, C]);
+  L.selectionChange(2, 1000, SELECT, [D]);
+  L.playerLeft(2, 9000);
+  // the game takes the winner's selection away a moment after the loser left
+  L.selectionChange(1, 9150, DESELECT, [A, B, C]);
+  L.playerLeft(1, 9150);
+  L.resolve();
+  for (const x of [A, B, C]) {
+    assert.strictEqual(handleOf(L, 1, x).death, null);
+    assert.strictEqual(handleOf(L, 1, x).last, 9150);
+  }
+});
+
+check('a unit the game deselected before the game was over still died', () => {
+  const L = new SelectionLedger();
+  L.selectionChange(1, 1000, SELECT, [A, B, C]);
+  L.selectionChange(1, 8000, DESELECT, [B]);
+  L.playerLeft(2, 9000);
+  L.selectionChange(1, 9150, DESELECT, [A, C]);
+  L.resolve();
+  assert.deepStrictEqual(handleOf(L, 1, B).death, { at: 8000, from: 8000, kind: 'deselected' });
+  assert.strictEqual(handleOf(L, 1, A).death, null);
+});
+
+check('a player who plays on after another left: their deselects count as before', () => {
+  const L = new SelectionLedger();
+  L.selectionChange(1, 1000, SELECT, [A, B]);
+  L.playerLeft(3, 2000);
+  L.selectionChange(1, 5000, DESELECT, [B]);
+  L.selectionChange(1, 6000, DESELECT, [A]);
+  L.selectionChange(1, 6000, SELECT, [C]);
+  L.resolve();
+  assert.deepStrictEqual(handleOf(L, 1, B).death, { at: 5000, from: 5000, kind: 'deselected' });
 });
 
 console.log('[owners and orders]');
