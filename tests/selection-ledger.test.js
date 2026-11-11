@@ -149,6 +149,32 @@ check('a shift-add naming some companions is no full list for the peer rule', ()
   assert.strictEqual(handleOf(L, 1, A).death, null);
 });
 
+check('without PreSubselection, a deselect of several units at once narrows the selection', () => {
+  const L = new SelectionLedger();
+  L.selectionChange(1, 1000, SELECT, [A, B, C, D]);
+  // the hero's key: everything but the hero leaves the selection, nothing is selected
+  L.selectionChange(1, 5000, DESELECT, [B, C, D]);
+  L.selectSubgroup(1, 5000, 'Hpal', A.itemId1, A.itemId2);
+  L.resolve();
+  for (const x of [B, C, D]) {
+    assert.strictEqual(handleOf(L, 1, x).death, null);
+    assert.strictEqual(handleOf(L, 1, x).last, 5000);
+  }
+});
+
+check('with PreSubselection, units the game deselects together died together', () => {
+  const L = new SelectionLedger();
+  L.preSubselection(1, 1000, A.itemId1, A.itemId2);
+  L.preSubselection(1, 1000, B.itemId1, B.itemId2);
+  L.preSubselection(1, 1000, C.itemId1, C.itemId2);
+  L.selectionChange(1, 1000, SELECT, [A, B, C]);
+  L.selectionChange(1, 5000, DESELECT, [B, C]);
+  L.resolve();
+  assert.deepStrictEqual(handleOf(L, 1, B).death, { at: 5000, from: 5000, kind: 'deselected' });
+  assert.deepStrictEqual(handleOf(L, 1, C).death, { at: 5000, from: 5000, kind: 'deselected' });
+  assert.strictEqual(handleOf(L, 1, A).death, null);
+});
+
 check('adding the selection to a group lists the whole group; the selection stays', () => {
   const L = new SelectionLedger();
   L.selectionChange(1, 1000, SELECT, [A, B, C]);
