@@ -134,6 +134,23 @@ const doParsing = async (input, options = {}) => {
   const buffer = Buffer.isBuffer(input) ? input : fs.readFileSync(input);
   const parser = new ReplayParser();
 
+  // Since game build 6116 (patch 2.0.2) the game data uses the newer action
+  // layout (ids above 0x77 moved up by one), but w3gjs only reads it that way
+  // when the player metadata has a 0x38 record. The game's own copy of a
+  // W3Champions game, and games against the computer or in custom lobbies,
+  // have none: read the old way, each 0x7a (16 bytes) is skipped as 20, which
+  // breaks the rest of its command block and nearly every train and research
+  // order with it. Build 6115 has both layouts; its record says which.
+  {
+    let buildNo = 0;
+    parser.on("basic_replay_information", (info) => {
+      buildNo = (info && info.subheader && info.subheader.buildNo) || 0;
+    });
+    const gdp = parser.gameDataParser;
+    const parseGameData = gdp.parse.bind(gdp);
+    gdp.parse = (data, isPost202) => parseGameData(data, isPost202 || buildNo >= 6116);
+  }
+
   let replayMeta = null;
   let durationMs = 0;
 
