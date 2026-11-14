@@ -9,6 +9,8 @@
  *   4. a foreign handle (only ever clicked alone) is not bound or added
  *   5. a handle Player.bindHandlesByCreationOrder gave the wrong unit goes to
  *      the unit the lists fit, not to both
+ *   6. with PreSubselection lists, a tied unit's training time moves up to
+ *      shortly before its handle had to be made
  *
  * Run: `node tests/selection-evidence.test.js`
  */
@@ -125,6 +127,51 @@ check('a creation-order binding is no hint: the handle goes to the unit that fit
   new SelectionEvidence({ selectionLedger: L, players: { 1: player } }).run();
   assert.strictEqual(early.selectionLife && early.selectionLife.handle, '20/2000');
   assert.strictEqual(late.selectionLife, undefined);
+});
+
+check('with PreSubselection lists, a tied unit comes out shortly before its handle had to be made', () => {
+  const eventTimer = new EventTimer();
+  const trained = (type, t) => {
+    const unit = new Unit(eventTimer, null, null, type, false);
+    unit.spawnTime = t - 20000;
+    unit.trainedTime = t;
+    return unit;
+  };
+  // WC3V trained two footmen, at 1:00 and at 2:00
+  const first = trained('hfoo', 60000);
+  const second = trained('hfoo', 120000);
+  const player = { id: 1, units: [first, second], eventTimer, startingPosition: { x: 0, y: 0 } };
+  const L = new SelectionLedger();
+  // a handle allocated after the first footman's is listed at 3:00, so both were made by then
+  L.preSubselection(1, 180000, 30, 3000);
+  L.selectionChange(1, 180000, SELECT, [u(30, 3000), u(31, 3100)]);
+  L.selectSubgroup(1, 180000, 'hfoo', 30, 3000);
+  L.order(1, 181000, 0xD0003);
+  // the first footman's own handle is first listed later still
+  L.preSubselection(1, 300000, 20, 2000);
+  L.selectionChange(1, 300000, SELECT, [u(20, 2000), u(30, 3000)]);
+  L.order(1, 301000, 0xD0003);
+  new SelectionEvidence({ selectionLedger: L, players: { 1: player } }).run();
+  assert.strictEqual(first.selectionLife.handle, '20/2000');
+  assert.strictEqual(second.selectionLife.handle, '30/3000');
+  // out by 3:00 at the latest, so about 2:30, not WC3V's 1:00 and 2:00
+  assert.strictEqual(first.trainedTime, 150000);
+  assert.strictEqual(second.trainedTime, 150000);
+});
+
+check('without PreSubselection lists training times stay as WC3V has them', () => {
+  const eventTimer = new EventTimer();
+  const unit = new Unit(eventTimer, null, null, 'hfoo', false);
+  unit.spawnTime = 40000;
+  unit.trainedTime = 60000;
+  const player = { id: 1, units: [unit], eventTimer, startingPosition: { x: 0, y: 0 } };
+  const L = new SelectionLedger();
+  L.selectionChange(1, 300000, SELECT, [u(20, 2000), u(21, 2100)]);
+  L.selectSubgroup(1, 300000, 'hfoo', 20, 2000);
+  L.order(1, 301000, 0xD0003);
+  new SelectionEvidence({ selectionLedger: L, players: { 1: player } }).run();
+  assert.strictEqual(unit.selectionLife.handle, '20/2000');
+  assert.strictEqual(unit.trainedTime, 60000);
 });
 
 if (failures) {
