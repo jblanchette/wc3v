@@ -68,5 +68,18 @@ check('not in the last seconds of the game: the replay may stop before the list 
   assert.notStrictEqual(ls.state, 'possiblyLost');
 });
 
+console.log('[unlisted]');
+
+check('a trained unit the lists never show never existed, even if a battle saw it die later', () => {
+  const ghost = unit('hfoo', { selectionUnlisted: true, path: [{ x: 0, y: 0, gameTime: 400000 }] });
+  const battle = {
+    id: 'b1', startTime: 390000, endTime: 400000, participants: [{ playerId: 1, unitUuids: [ghost.uuid] }],
+    unitOutcomes: [{ unitUuid: ghost.uuid, status: 'possiblyDead', lastSeenTime: 400000, confidence: 'high' }]
+  };
+  const [ls] = run([ghost], [battle]);
+  assert.strictEqual(ls.source, 'unlisted');
+  assert.strictEqual(ls.since, 25000);
+});
+
 console.log(failures ? `\n${failures} failed` : '\nall passed');
 process.exit(failures ? 1 : 0);
