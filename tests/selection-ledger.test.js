@@ -257,6 +257,20 @@ check('an attack aimed at a unit counts as a sighting of it', () => {
   assert.strictEqual(handleOf(L, 1, A).death, null);
 });
 
+check('a click by another player is a target, one by the owner an ownTarget', () => {
+  const L = new SelectionLedger();
+  L.selectionChange(1, 1000, SELECT, [A, B]);
+  L.selectionChange(1, 2000, DESELECT, [A, B]);
+  L.selectionChange(1, 2000, SELECT, [C]);
+  L.order(1, 3000, 0xD0003, 101, 1010, true);       // the owner aims at B (a heal, a follow)
+  L.selectionChange(2, 3000, SELECT, [D, E]);
+  L.order(2, 4000, 0xD000F, 100, 1000, true);       // the enemy attacks A
+  L.resolve();
+  assert.strictEqual(handleOf(L, 1, A).lastKind, 'target');
+  assert.strictEqual(handleOf(L, 1, B).lastKind, 'ownTarget');
+  assert.strictEqual(handleOf(L, 1, B).last, 3000);
+});
+
 check('the last order of the selection is kept per handle, with its work flag', () => {
   const L = new SelectionLedger();
   L.selectionChange(1, 1000, SELECT, [A, B]);
