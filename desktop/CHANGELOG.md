@@ -1,5 +1,20 @@
 # WC3V Desktop: changelog
 
+## 1.0.15 — 15 Nov 2026
+
+### Late-game armies and losses
+
+- Games saved by the game itself from W3Champions, games against the
+  computer and custom lobby games now read every train and research order.
+  Before, most of them were missed.
+- When a game ends, the game clears every player's selection. WC3V read
+  that as the whole army dying in the last second. It no longer does.
+- Workers killed in raids are counted as losses.
+- Units no longer appear minutes before they were trained, and units the
+  game never made no longer show up in fights.
+
+Thanks to bubunuh for the work.
+
 ## 1.0.14 — 29 Oct 2026
 
 ### Army counts and losses follow the game more closely
