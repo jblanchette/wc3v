@@ -184,6 +184,7 @@ const doParsing = async (input, options = {}) => {
         result: block.result,
         gameTimeMs: globalTime
       });
+      if (playerManager.selectionLedger) playerManager.selectionLedger.playerLeft(block.playerId, globalTime);
       return;
     }
 
